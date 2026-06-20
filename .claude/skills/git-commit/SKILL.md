@@ -21,10 +21,13 @@ If a PRD was just implemented, mark it done and move it out of triage:
 
 Example: `docs/prd/triage/some-feature.md` → `docs/prd/003-some-feature.md`
 
-### 3. Inspect status
+### 3. README update (if a PRD was just implemented)
+Read `README.md` and update it to reflect any user-visible changes introduced by the implementation: new features, changed controls, new or renamed source files, new tools. Only touch what actually changed — do not rewrite sections unaffected by the work.
+
+### 4. Inspect status
 Run `git status` to see all changed files. Do NOT run `git add .` or `git add -A`.
 
-### 4. Select files
+### 5. Select files
 Based on the current conversation context (what was just built or fixed), select only the files that belong to this unit of work. Leave unrelated changes unstaged.
 
 Rules:
@@ -32,7 +35,7 @@ Rules:
 - Never stage: `.env`, secrets, generated binaries, or files unrelated to the current task.
 - When unsure whether a file belongs, leave it out and mention it.
 
-### 5. Propose and confirm
+### 6. Propose and confirm
 Present the proposed staging and message — then **wait for the user's go-ahead** before committing.
 
 Format:
@@ -43,7 +46,7 @@ Message: feat: add create_adr and get_adr tools
 
 Do not show file contents. The user can inspect diffs themselves.
 
-### 6. Commit
+### 7. Commit
 On confirmation: `git add <files>` then commit with the agreed message.
 
 Do NOT add `Co-Authored-By` trailers to commit messages.
