@@ -39,6 +39,23 @@ docs/prd/       product requirements
 tools/          helper CLI tools (see below)
 ```
 
+## PRD Roadmap
+
+Recommended implementation order for triage PRDs:
+
+| # | PRD | Notes |
+|---|-----|-------|
+| 004 | game-states (Win & Game Over overlays) | Completes core game loop; no unmet dependencies. Renderer already draws partial overlays — just needs keyboard nav and Continue path in gamestate.lua. |
+| 005 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
+| 006 | main-menu | Needs game-states first (New Game → clean playing state). |
+| 007 | refactor-state-machine | Do before adding Options screen or you refactor into a moving target. |
+| 008 | tileset-animation | Already unblocked (tileset-loading done). Can slot in anywhere before options. |
+| 009 | options-screen-shell | Needs state machine as infrastructure. |
+| 010+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first. |
+| — | sound-hooks · refactor-renderer-split | Independent; pick up when the time feels right. |
+
+**Flag:** `touch-swipe` is in triage but `swipe.lua` is already wired in `main.lua`. Verify before triaging — it may already be done.
+
 ## Tools
 
 ### curl-giphy
