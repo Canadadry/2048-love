@@ -1,15 +1,19 @@
 local config    = require("config")
 local gamestate = require("gamestate")
 local renderer  = require("renderer")
+local swipe     = require("swipe")
 
 local state
+local swiper
 
 function love.load()
     love.window.setTitle("2048")
     love.window.setMode(config.WINDOW_W, config.WINDOW_H, { resizable = true, minwidth = 300, minheight = 300 })
     love.graphics.setBackgroundColor(0.98, 0.97, 0.94)
     renderer.load()
-    state = gamestate.new()
+    state  = gamestate.new()
+    local w, h = love.graphics.getDimensions()
+    swiper = swipe.new(math.min(w, h) * 0.10)
 end
 
 function love.update(dt)
@@ -26,9 +30,36 @@ function love.keypressed(key)
     state:keypressed(key)
 end
 
-function love.resize(_w, _h)
-    -- snap all in-flight animations to their targets on resize
+function love.resize(w, h)
     for _, t in ipairs(state:anim_tiles()) do
         t._timer = t._duration
     end
+    swiper._threshold = math.min(w, h) * 0.10
 end
+
+function love.mousepressed(x, y, button)
+    if button ~= 1 then return end
+    swiper:touchpressed("mouse", x, y)
+    if state:game_over() then
+        local btn = renderer.restart_button_bounds()
+        if x >= btn.x and x <= btn.x + btn.w and y >= btn.y and y <= btn.y + btn.h then
+            state:restart()
+        end
+    end
+end
+
+function love.mousemoved(x, y)
+    local dir = swiper:touchmoved("mouse", x, y)
+    if dir and not state:game_over() and not state:win() then
+        state:queue_move(dir)
+    end
+end
+
+function love.mousereleased(x, y, button)
+    if button ~= 1 then return end
+    local dir = swiper:touchreleased("mouse", x, y)
+    if dir and not state:game_over() and not state:win() then
+        state:queue_move(dir)
+    end
+end
+

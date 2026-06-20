@@ -16,7 +16,34 @@ local function make_state(g)
     self._over   = false
     self._frozen = false
     self._tiles  = {}
+    self._queue  = {}
     return self
+end
+
+local function apply_move(self, dir)
+    local result = self._grid:move(dir)
+    if result.moved then
+        self._score = self._score + result.score_delta
+        self._grid:spawn_tile()
+        for _, m in ipairs(result.moves) do
+            self._tiles[#self._tiles + 1] = {
+                value    = m.value,
+                from_row = m.from_row, from_col = m.from_col,
+                to_row   = m.to_row,   to_col   = m.to_col,
+                _timer   = 0,
+                _duration = config.ANIM_DURATION,
+                is_done  = function(t) return t._timer >= t._duration end,
+                update   = function(t, dt) t._timer = t._timer + dt end,
+            }
+        end
+    end
+    if result.win then
+        self._win    = true
+        self._frozen = true
+    elseif self._grid:is_game_over() then
+        self._over   = true
+        self._frozen = true
+    end
 end
 
 function M.new()
@@ -32,11 +59,15 @@ function State:is_animating()
 end
 
 function State:update(dt)
-    if #self._tiles == 0 then return end
+    if #self._tiles == 0 then
+        if #self._queue > 0 and not self._frozen then
+            apply_move(self, table.remove(self._queue, 1))
+        end
+        return
+    end
     for _, t in ipairs(self._tiles) do
         t:update(dt)
     end
-    -- purge finished tiles; if all done, settle the board
     local any_alive = false
     for _, t in ipairs(self._tiles) do
         if not t:is_done() then any_alive = true; break end
@@ -48,38 +79,21 @@ end
 
 function State:keypressed(key)
     if self._frozen or self:is_animating() or not DIRS[key] then return end
+    apply_move(self, key)
+end
 
-    local result = self._grid:move(key)
-    if result.moved then
-        self._score = self._score + result.score_delta
-        -- spawn is deferred until animation completes; for now spawn immediately
-        -- (renderer will show static grid once tiles list empties)
-        self._grid:spawn_tile()
+function State:queue_move(dir)
+    self._queue[#self._queue + 1] = dir
+end
 
-        -- build tile animations from move descriptors
-        -- pixel positions are not available here (no window); tiles carry
-        -- row/col instead — renderer resolves to pixels each frame.
-        -- We store col/row as proxies and resolve in renderer.
-        for _, m in ipairs(result.moves) do
-            self._tiles[#self._tiles + 1] = {
-                value    = m.value,
-                from_row = m.from_row, from_col = m.from_col,
-                to_row   = m.to_row,   to_col   = m.to_col,
-                _timer   = 0,
-                _duration = config.ANIM_DURATION,
-                is_done  = function(t) return t._timer >= t._duration end,
-                update   = function(t, dt) t._timer = t._timer + dt end,
-            }
-        end
-    end
-
-    if result.win then
-        self._win    = true
-        self._frozen = true
-    elseif self._grid:is_game_over() then
-        self._over   = true
-        self._frozen = true
-    end
+function State:restart()
+    self._grid   = grid.new()
+    self._score  = 0
+    self._win    = false
+    self._over   = false
+    self._frozen = false
+    self._tiles  = {}
+    self._queue  = {}
 end
 
 function State:cells()     return self._grid:get_cells() end

@@ -10,7 +10,7 @@ run:
 	$(LOVE) game
 
 test:
-	cd game && lua ../tests/test_grid.lua && lua ../tests/test_tile.lua && lua ../tests/test_gamestate.lua && lua ../tests/test_tileset.lua
+	cd game && lua ../tests/test_grid.lua && lua ../tests/test_tile.lua && lua ../tests/test_gamestate.lua && lua ../tests/test_tileset.lua && lua ../tests/test_swipe.lua
 
 dl:
 	cd tools/curl-giphy && source .venv/bin/activate && python3 giphy_dl.py $(URL)

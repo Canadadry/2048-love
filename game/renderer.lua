@@ -171,7 +171,28 @@ function M.draw(cells, score, game_over, win, anim_tiles)
         love.graphics.print(msg,
             board_x + math.floor((board_px - get_font(font_sz + 8):getWidth(msg)) / 2),
             board_y + math.floor(board_px / 2) - font_sz)
+        -- restart button
+        local btn = M.restart_button_bounds()
+        love.graphics.setColor(0.93, 0.89, 0.85)
+        love.graphics.rectangle("fill", btn.x, btn.y, btn.w, btn.h, 6, 6)
+        love.graphics.setColor(0.47, 0.43, 0.40)
+        local btn_font = get_font(math.max(12, font_sz - 2))
+        love.graphics.setFont(btn_font)
+        local lbl = "New Game"
+        love.graphics.print(lbl,
+            btn.x + math.floor((btn.w - btn_font:getWidth(lbl)) / 2),
+            btn.y + math.floor((btn.h - btn_font:getHeight()) / 2))
     end
+end
+
+function M.restart_button_bounds()
+    local board_px, tile_px, _, board_x, board_y = board_metrics()
+    local font_sz = math.max(12, math.floor(tile_px * 0.30))
+    local btn_w   = math.floor(board_px * 0.4)
+    local btn_h   = math.floor(font_sz * 2.2)
+    local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
+    local btn_y   = board_y + math.floor(board_px / 2) + math.floor(font_sz * 0.5)
+    return { x = btn_x, y = btn_y, w = btn_w, h = btn_h }
 end
 
 return M
