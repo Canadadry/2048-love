@@ -1,4 +1,4 @@
-local grid = require("src.grid")
+local grid = require("grid")
 
 local M = {}
 local State = {}
