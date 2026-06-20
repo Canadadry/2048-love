@@ -46,6 +46,8 @@ Do not show file contents. The user can inspect diffs themselves.
 ### 6. Commit
 On confirmation: `git add <files>` then commit with the agreed message.
 
+Do NOT add `Co-Authored-By` trailers to commit messages.
+
 ## Commit message format
 
 ```
