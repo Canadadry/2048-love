@@ -14,16 +14,43 @@ local function tile_color(value)
     return config.TILE_COLORS[value] or config.DEFAULT_TILE_COLOR
 end
 
-function M.draw(cells, score, game_over, win)
-    local w, h    = love.graphics.getDimensions()
-    local n       = config.GRID_SIZE
+local function board_metrics()
+    local w, h     = love.graphics.getDimensions()
+    local n        = config.GRID_SIZE
     local board_px = math.floor(math.min(w, h) * 0.8)
     local tile_px  = math.floor(board_px / n)
     local pad      = math.max(4, math.floor(tile_px * 0.05))
     local board_x  = math.floor((w - board_px) / 2)
     local board_y  = math.floor((h - board_px) / 2) + 16
-    local font_sz  = math.max(12, math.floor(tile_px * 0.30))
-    local font     = get_font(font_sz)
+    return board_px, tile_px, pad, board_x, board_y
+end
+
+local function cell_to_px(r, c, tile_px, pad, board_x, board_y)
+    return board_x + (c - 1) * tile_px + pad,
+           board_y + (r - 1) * tile_px + pad
+end
+
+local function draw_tile(value, px, py, tile_px, pad, font)
+    local colors = tile_color(value)
+    local ts     = tile_px - pad * 2
+    love.graphics.setColor(colors.bg)
+    love.graphics.rectangle("fill", px, py, ts, ts, 6, 6)
+    if value ~= 0 then
+        local text = tostring(value)
+        local fw   = font:getWidth(text)
+        local fh   = font:getHeight()
+        love.graphics.setColor(colors.fg)
+        love.graphics.print(text,
+            math.floor(px + (ts - fw) / 2),
+            math.floor(py + (ts - fh) / 2))
+    end
+end
+
+function M.draw(cells, score, game_over, win, anim_tiles)
+    local board_px, tile_px, pad, board_x, board_y = board_metrics()
+    local n       = config.GRID_SIZE
+    local font_sz = math.max(12, math.floor(tile_px * 0.30))
+    local font    = get_font(font_sz)
 
     -- board background
     love.graphics.setColor(0.73, 0.68, 0.63)
@@ -31,25 +58,44 @@ function M.draw(cells, score, game_over, win)
 
     love.graphics.setFont(font)
 
-    for r = 1, n do
-        for c = 1, n do
-            local val    = cells[r][c]
-            local colors = tile_color(val)
-            local tx = board_x + (c - 1) * tile_px + pad
-            local ty = board_y + (r - 1) * tile_px + pad
-            local ts = tile_px - pad * 2
+    local animating = anim_tiles and #anim_tiles > 0
 
-            love.graphics.setColor(colors.bg)
-            love.graphics.rectangle("fill", tx, ty, ts, ts, 6, 6)
+    if animating then
+        -- Mark destination cells; animated tiles will draw there — skip static draw
+        -- to avoid a ghost tile sitting at the target while the real tile slides in.
+        -- Animated tiles always travel through cells that are empty in the post-move
+        -- grid, so they never overlap stationary tiles mid-flight.
+        local dest = {}
+        for _, t in ipairs(anim_tiles) do
+            dest[t.to_row * 10 + t.to_col] = true
+        end
 
-            if val ~= 0 then
-                local text = tostring(val)
-                local fw   = font:getWidth(text)
-                local fh   = font:getHeight()
-                love.graphics.setColor(colors.fg)
-                love.graphics.print(text,
-                    math.floor(tx + (ts - fw) / 2),
-                    math.floor(ty + (ts - fh) / 2))
+        -- Draw post-move static grid: stationary tiles stay visible; destination
+        -- cells show an empty slot until the animated tile arrives.
+        for r = 1, n do
+            for c = 1, n do
+                local px, py = cell_to_px(r, c, tile_px, pad, board_x, board_y)
+                local val = dest[r * 10 + c] and 0 or cells[r][c]
+                draw_tile(val, px, py, tile_px, pad, font)
+            end
+        end
+
+        -- Draw each animated tile at its interpolated position
+        for _, t in ipairs(anim_tiles) do
+            local progress = math.min(t._timer / t._duration, 1)
+            local fx, fy   = cell_to_px(t.from_row, t.from_col, tile_px, pad, board_x, board_y)
+            local tx, ty   = cell_to_px(t.to_row,   t.to_col,   tile_px, pad, board_x, board_y)
+            local px = math.floor(fx + (tx - fx) * progress)
+            local py = math.floor(fy + (ty - fy) * progress)
+            draw_tile(t.value, px, py, tile_px, pad, font)
+        end
+    else
+        -- Static draw from grid cells
+        for r = 1, n do
+            for c = 1, n do
+                local val    = cells[r][c]
+                local px, py = cell_to_px(r, c, tile_px, pad, board_x, board_y)
+                draw_tile(val, px, py, tile_px, pad, font)
             end
         end
     end

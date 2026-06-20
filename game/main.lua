@@ -11,10 +11,12 @@ function love.load()
     state = gamestate.new()
 end
 
-function love.update(_dt) end
+function love.update(dt)
+    state:update(dt)
+end
 
 function love.draw()
-    renderer.draw(state:cells(), state:score(), state:game_over(), state:win())
+    renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles())
 end
 
 function love.keypressed(key)
@@ -22,4 +24,9 @@ function love.keypressed(key)
     state:keypressed(key)
 end
 
-function love.resize(_w, _h) end
+function love.resize(_w, _h)
+    -- snap all in-flight animations to their targets on resize
+    for _, t in ipairs(state:anim_tiles()) do
+        t._timer = t._duration
+    end
+end

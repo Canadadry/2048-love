@@ -1,7 +1,7 @@
 ---
 title: "Slide Animation"
 description: "Tiles snap instantly to their new positions, making it hard to follow which tile moved where, especially when multiple tiles slide simultaneously."
-status: needs-triage
+status: done
 ---
 
 # Slide Animation

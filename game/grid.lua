@@ -57,25 +57,31 @@ end
 
 local function slide_row_left(row)
     local packed = {}
-    for _, v in ipairs(row) do
-        if v ~= 0 then packed[#packed + 1] = v end
+    for c, v in ipairs(row) do
+        if v ~= 0 then packed[#packed + 1] = {col = c, val = v} end
     end
     local result = {}
+    local moves = {}
     local i = 1
     local score = 0
+    local dest = 1
     while i <= #packed do
-        if packed[i + 1] and packed[i] == packed[i + 1] then
-            local val = packed[i] * 2
-            result[#result + 1] = val
+        if packed[i + 1] and packed[i].val == packed[i + 1].val then
+            local val = packed[i].val * 2
+            result[dest] = val
             score = score + val
+            moves[#moves + 1] = {from_col = packed[i].col,     to_col = dest, value = packed[i].val,     merged = true}
+            moves[#moves + 1] = {from_col = packed[i + 1].col, to_col = dest, value = packed[i + 1].val, merged = true}
             i = i + 2
         else
-            result[#result + 1] = packed[i]
+            result[dest] = packed[i].val
+            moves[#moves + 1] = {from_col = packed[i].col, to_col = dest, value = packed[i].val}
             i = i + 1
         end
+        dest = dest + 1
     end
     while #result < SIZE do result[#result + 1] = 0 end
-    return result, score
+    return result, score, moves
 end
 
 local function reverse(row)
@@ -104,40 +110,63 @@ end
 function Grid:move(direction)
     local moved = false
     local score_delta = 0
+    local all_moves = {}
 
     if direction == "left" then
         for r = 1, SIZE do
             local old = {unpack(self._board[r])}
-            local new_row, s = slide_row_left(self._board[r])
+            local new_row, s, row_moves = slide_row_left(self._board[r])
             self._board[r] = new_row
             score_delta = score_delta + s
             if not rows_equal(old, new_row) then moved = true end
+            for _, m in ipairs(row_moves) do
+                all_moves[#all_moves + 1] = {from_row=r, from_col=m.from_col, to_row=r, to_col=m.to_col, value=m.value, merged=m.merged}
+            end
         end
     elseif direction == "right" then
         for r = 1, SIZE do
             local old = {unpack(self._board[r])}
-            local new_row, s = slide_row_left(reverse(self._board[r]))
+            local new_row, s, row_moves = slide_row_left(reverse(self._board[r]))
             new_row = reverse(new_row)
             self._board[r] = new_row
             score_delta = score_delta + s
             if not rows_equal(old, new_row) then moved = true end
+            for _, m in ipairs(row_moves) do
+                -- cols were reversed: original col = SIZE+1 - reversed_col
+                all_moves[#all_moves + 1] = {
+                    from_row = r, from_col = SIZE + 1 - m.from_col,
+                    to_row   = r, to_col   = SIZE + 1 - m.to_col,
+                    value = m.value, merged = m.merged,
+                }
+            end
         end
     elseif direction == "up" then
         for c = 1, SIZE do
             local old = col(self._board, c)
-            local new_col, s = slide_row_left(old)
+            local new_col, s, row_moves = slide_row_left(old)
             set_col(self._board, c, new_col)
             score_delta = score_delta + s
             if not rows_equal(old, new_col) then moved = true end
+            for _, m in ipairs(row_moves) do
+                -- col was treated as a row: from_col maps to from_row
+                all_moves[#all_moves + 1] = {from_row=m.from_col, from_col=c, to_row=m.to_col, to_col=c, value=m.value, merged=m.merged}
+            end
         end
     elseif direction == "down" then
         for c = 1, SIZE do
             local old = col(self._board, c)
-            local new_col, s = slide_row_left(reverse(old))
+            local new_col, s, row_moves = slide_row_left(reverse(old))
             new_col = reverse(new_col)
             set_col(self._board, c, new_col)
             score_delta = score_delta + s
             if not rows_equal(old, new_col) then moved = true end
+            for _, m in ipairs(row_moves) do
+                all_moves[#all_moves + 1] = {
+                    from_row = SIZE + 1 - m.from_col, from_col = c,
+                    to_row   = SIZE + 1 - m.to_col,   to_col   = c,
+                    value = m.value, merged = m.merged,
+                }
+            end
         end
     end
 
@@ -153,7 +182,14 @@ function Grid:move(direction)
         game_over = self:_no_moves()
     end
 
-    return {moved = moved, score_delta = score_delta, win = win, game_over = game_over}
+    local filtered_moves = {}
+    for _, m in ipairs(all_moves) do
+        if m.merged or m.from_row ~= m.to_row or m.from_col ~= m.to_col then
+            filtered_moves[#filtered_moves + 1] = m
+        end
+    end
+
+    return {moved = moved, score_delta = score_delta, win = win, game_over = game_over, moves = filtered_moves}
 end
 
 function Grid:is_game_over()

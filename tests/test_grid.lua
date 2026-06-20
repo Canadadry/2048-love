@@ -206,5 +206,71 @@ test("move() works when table.unpack is nil (LuaJIT compatibility)", function()
     if not ok then error(err, 2) end
 end)
 
+-- move() returns a moves list (slide animation descriptors)
+
+test("move() descriptors carry correct from/to positions for a simple left slide", function()
+    local g = grid.new_from({
+        {0, 2, 0, 4},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    })
+    local result = g:move("left")
+    local moves = result.moves
+    eq(#moves, 2, "two tiles moved")
+    -- first descriptor: value=2 came from col 2, went to col 1
+    local m1 = moves[1]
+    eq(m1.from_row, 1);  eq(m1.from_col, 2)
+    eq(m1.to_row,   1);  eq(m1.to_col,   1)
+    eq(m1.value,    2)
+    -- second descriptor: value=4 came from col 4, went to col 2
+    local m2 = moves[2]
+    eq(m2.from_row, 1);  eq(m2.from_col, 4)
+    eq(m2.to_row,   1);  eq(m2.to_col,   2)
+    eq(m2.value,    4)
+end)
+
+test("move() merge produces two descriptors both pointing to the destination cell", function()
+    local g = grid.new_from({
+        {2, 2, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    })
+    local result = g:move("left")
+    local moves = result.moves
+    eq(#moves, 2, "two source tiles for one merge")
+    eq(moves[1].to_col, 1, "first tile goes to col 1")
+    eq(moves[2].to_col, 1, "second tile goes to col 1")
+    eq(moves[1].from_col, 1, "first tile was at col 1")
+    eq(moves[2].from_col, 2, "second tile was at col 2")
+    eq(moves[1].value, 2, "first tile value")
+    eq(moves[2].value, 2, "second tile value")
+end)
+
+test("move() with no board change returns an empty moves list", function()
+    local g = grid.new_from({
+        {2, 4, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    })
+    local result = g:move("left")
+    eq(result.moved, false)
+    eq(#result.moves, 0, "no moves when board unchanged")
+end)
+
+test("move() returns a non-empty moves list when tiles slide", function()
+    local g = grid.new_from({
+        {0, 2, 0, 4},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    })
+    local result = g:move("left")
+    eq(type(result.moves), "table", "moves should be a table")
+    eq(#result.moves > 0, true, "moves should be non-empty")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end
