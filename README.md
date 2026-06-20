@@ -15,31 +15,42 @@ make run      # normal game (win at 2048)
 make dev      # win at 32 — useful for testing the win screen
 ```
 
-Arrow keys to slide tiles. Press `Escape` to quit. The window is resizable.
+Arrow keys to slide tiles. The window is resizable.
 
 When you create a 2048 tile a **You Win** overlay appears with two options — **Continue** (keep playing) and **Restart** — navigated with Up/Down and confirmed with Enter, or tapped directly. A **Game Over** overlay appears when no moves remain; press Enter or any arrow key (or tap) to restart.
+
+Press `Escape` (or tap the **⏸** button in the top-left corner) to open the **Pause** menu. The board stays visible behind a dimmed overlay. Up/Down to navigate, Enter to confirm. Options: **Resume**, **New Game**, **Quit**. Pressing `Escape` again or selecting Resume returns instantly to the game.
 
 ## Test
 
 ```
-make test
+make test-game          # pure-Lua game logic tests (no Love2D runtime needed)
+make test-tool-tileset  # tileset-builder Python tests
+make test-tool-dl       # curl-giphy Python tests
+make test-all           # all of the above
 ```
-
-Runs the pure-Lua test suite for the game logic (no Love2D runtime needed).
 
 ## Structure
 
 ```
-game/           Love2D game source
-  main.lua      entry point (Love2D callbacks)
-  config.lua    constants and tile color map
-  gamestate.lua score tracking and input routing
-  renderer.lua  board drawing
-  grid.lua      game logic — slide, merge, spawn, win/lose detection
+game/              Love2D game source
+  main.lua         entry point (Love2D callbacks)
+  config.lua       constants and tile color map
+  gamestate.lua    score tracking, input routing, pause state
+  renderer.lua     board drawing
+  menu.lua         overlay and button rendering (win, game-over, pause)
+  grid.lua         game logic — slide, merge, spawn, win/lose detection
 tests/
-  test_grid.lua test suite for grid.lua (plain lua)
-docs/prd/       product requirements
-tools/          helper CLI tools (see below)
+  test_all.lua     test runner (runs all suites below)
+  test_grid.lua    grid logic
+  test_gamestate.lua  game state and input
+  test_pause.lua   pause menu behaviour
+  test_menu.lua    menu button bounds
+  test_tile.lua    tile animation
+  test_tileset.lua tileset loading helpers
+  test_swipe.lua   swipe gesture detection
+docs/prd/          product requirements
+tools/             helper CLI tools (see below)
 ```
 
 ## PRD Roadmap
@@ -48,12 +59,12 @@ Recommended implementation order for triage PRDs:
 
 | # | PRD | Notes |
 |---|-----|-------|
-| 005 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
-| 006 | main-menu | Needs game-states first (New Game → clean playing state). |
-| 007 | refactor-state-machine | Do before adding Options screen or you refactor into a moving target. |
-| 008 | tileset-animation | Already unblocked (tileset-loading done). Can slot in anywhere before options. |
-| 009 | options-screen-shell | Needs state machine as infrastructure. |
-| 010+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first. |
+| 006 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
+| 007 | main-menu | Needs game-states first (New Game → clean playing state). |
+| 008 | refactor-state-machine | Do before adding Options screen or you refactor into a moving target. |
+| 009 | tileset-animation | Already unblocked (tileset-loading done). Can slot in anywhere before options. |
+| 010 | options-screen-shell | Needs state machine as infrastructure. |
+| 011+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first. |
 | — | sound-hooks · refactor-renderer-split | Independent; pick up when the time feels right. |
 
 **Flag:** `touch-swipe` is in triage but `swipe.lua` is already wired in `main.lua`. Verify before triaging — it may already be done.

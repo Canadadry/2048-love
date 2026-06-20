@@ -1,0 +1,33 @@
+-- Run from: cd game && lua ../tests/test_all.lua
+love = { graphics = { getDimensions = function() return 600, 600 end } }
+
+local suites = {
+    "../tests/test_grid.lua",
+    "../tests/test_tile.lua",
+    "../tests/test_gamestate.lua",
+    "../tests/test_tileset.lua",
+    "../tests/test_swipe.lua",
+    "../tests/test_pause.lua",
+    "../tests/test_menu.lua",
+}
+
+local real_exit = os.exit
+local failed_suites = 0
+
+os.exit = function(code)
+    if (code or 0) ~= 0 then error("__suite_failed__") end
+end
+
+for _, path in ipairs(suites) do
+    local ok, err = pcall(dofile, path)
+    if not ok then
+        if type(err) ~= "string" or not err:find("__suite_failed__") then
+            print("ERROR in " .. path .. ": " .. tostring(err))
+        end
+        failed_suites = failed_suites + 1
+    end
+end
+
+local total = #suites
+print(string.format("\n=== %d/%d suites passed ===", total - failed_suites, total))
+real_exit(failed_suites > 0 and 1 or 0)

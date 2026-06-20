@@ -10,16 +10,20 @@ State.__index = State
 local DIRS = { left=true, right=true, up=true, down=true }
 
 local function make_state(g)
-    local self      = setmetatable({}, State)
-    self._grid      = g
-    self._score     = 0
-    self._win       = false
-    self._over      = false
-    self._frozen    = false
-    self._tiles     = {}
-    self._queue     = {}
-    self._win_seen  = false
-    self._cursor    = 0
+    local self           = setmetatable({}, State)
+    self._grid           = g
+    self._score          = 0
+    self._win            = false
+    self._over           = false
+    self._frozen         = false
+    self._tiles          = {}
+    self._queue          = {}
+    self._win_seen       = false
+    self._cursor         = 0
+    self._paused          = false
+    self._pause_pending   = false
+    self._pause_cursor    = 0
+    self._quit_requested  = false
     return self
 end
 
@@ -61,7 +65,14 @@ end
 
 function State:update(dt)
     if #self._tiles == 0 then
-        if #self._queue > 0 and not self._frozen then
+        if self._pause_pending then
+            self._pause_pending = false
+            self._queue        = {}
+            self._pause_cursor = 0
+            self._paused       = true
+            return
+        end
+        if #self._queue > 0 and not self._frozen and not self._paused then
             apply_move(self, table.remove(self._queue, 1))
         end
         return
@@ -75,6 +86,12 @@ function State:update(dt)
     end
     if not any_alive then
         self._tiles = {}
+        if self._pause_pending then
+            self._pause_pending = false
+            self._queue        = {}
+            self._pause_cursor = 0
+            self._paused       = true
+        end
     end
 end
 
@@ -97,6 +114,34 @@ function State:keypressed(key)
         if key == "return" or DIRS[key] then self:restart() end
         return
     end
+    if self._paused then
+        if key == "up" then
+            self._pause_cursor = math.max(0, self._pause_cursor - 1)
+        elseif key == "down" then
+            self._pause_cursor = math.min(2, self._pause_cursor + 1)
+        elseif key == "escape" then
+            self:resume()
+        elseif key == "return" then
+            if self._pause_cursor == 0 then
+                self:resume()
+            elseif self._pause_cursor == 1 then
+                self:restart()
+            elseif self._pause_cursor == 2 then
+                self._quit_requested = true
+            end
+        end
+        return
+    end
+    if key == "escape" then
+        if self:is_animating() then
+            self._pause_pending = true
+        else
+            self._queue        = {}
+            self._pause_cursor = 0
+            self._paused       = true
+        end
+        return
+    end
     if self._frozen or self:is_animating() or not DIRS[key] then return end
     apply_move(self, key)
 end
@@ -114,23 +159,33 @@ function State:continue_game()
     self._cursor   = 0
 end
 
-function State:restart()
-    self._grid     = grid.new()
-    self._score    = 0
-    self._win      = false
-    self._over     = false
-    self._frozen   = false
-    self._tiles    = {}
-    self._queue    = {}
-    self._win_seen = false
-    self._cursor   = 0
+function State:resume()
+    self._paused = false
 end
 
-function State:cells()      return self._grid:get_cells() end
-function State:score()      return self._score end
-function State:win()        return self._win end
-function State:game_over()  return self._over end
-function State:anim_tiles() return self._tiles end
-function State:cursor()     return self._cursor end
+function State:restart()
+    self._grid          = grid.new()
+    self._score         = 0
+    self._win           = false
+    self._over          = false
+    self._frozen        = false
+    self._tiles         = {}
+    self._queue         = {}
+    self._win_seen      = false
+    self._cursor        = 0
+    self._paused        = false
+    self._pause_pending = false
+    self._pause_cursor  = 0
+end
+
+function State:cells()            return self._grid:get_cells() end
+function State:score()            return self._score end
+function State:win()              return self._win end
+function State:game_over()        return self._over end
+function State:anim_tiles()       return self._tiles end
+function State:cursor()           return self._cursor end
+function State:paused()           return self._paused end
+function State:pause_cursor()     return self._pause_cursor end
+function State:quit_requested()   return self._quit_requested end
 
 return M

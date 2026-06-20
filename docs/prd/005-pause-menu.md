@@ -1,7 +1,7 @@
 ---
 title: "Pause Menu"
 description: "Pressing Escape quits the game immediately with no recovery, and there is no way to pause mid-session."
-status: needs-triage
+status: done
 ---
 
 ## Problem Statement

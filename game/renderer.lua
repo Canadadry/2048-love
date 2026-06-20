@@ -99,13 +99,14 @@ local function cell_key(r, c, n)
     return (r - 1) * n + c
 end
 
-function M.draw(cells, score, game_over, win, anim_tiles, cursor)
+function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_cursor)
     check.tbl(cells,      "cells")
     check.num(score,      "score")
     check.bool(game_over, "game_over")
     check.bool(win,       "win")
     check.tbl(anim_tiles, "anim_tiles")
-    cursor = cursor or 0
+    cursor       = cursor       or 0
+    pause_cursor = pause_cursor or 0
 
     local board_px, tile_px, pad, board_x, board_y = board_metrics()
     local n       = config.GRID_SIZE
@@ -155,10 +156,14 @@ function M.draw(cells, score, game_over, win, anim_tiles, cursor)
     love.graphics.setFont(get_font(math.max(12, font_sz - 4)))
     love.graphics.print("Score: " .. score, board_x, board_y - font_sz - 4)
 
-    if win then
+    if paused then
+        menu.draw_pause(pause_cursor)
+    elseif win then
         menu.draw_win(cursor)
     elseif game_over then
         menu.draw_game_over()
+    else
+        menu.draw_pause_icon()
     end
 end
 
