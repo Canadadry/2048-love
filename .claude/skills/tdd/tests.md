@@ -44,6 +44,31 @@ Red flags:
 - Test name describes HOW not WHAT
 - Verifying through external means instead of interface
 
+## Assertions and Tests: Complementary Layers
+
+Tests verify behavior from the outside. Assertions enforce contracts from the inside. Both are needed.
+
+When production code has assertions, a failing test tells you not just _that_ something broke but _where_ the contract was violated:
+
+```typescript
+// Without assertion: test fails with a confusing symptom deep in the stack
+function calculateTotal(items) {
+  return items.reduce((sum, item) => sum + item.price * item.qty, 0);
+}
+
+// With assertion: test fails at the exact violated contract
+function calculateTotal(items) {
+  assert(Array.isArray(items), `items must be an array, got ${typeof items}`);
+  items.forEach((item, i) => {
+    assert(item.price >= 0, `items[${i}].price must be non-negative, got ${item.price}`);
+    assert(item.qty > 0,    `items[${i}].qty must be positive, got ${item.qty}`);
+  });
+  return items.reduce((sum, item) => sum + item.price * item.qty, 0);
+}
+```
+
+Rule of thumb: if a test setup requires calling a function with specific constraints, those constraints should be asserted inside the function. The test documents the expected behavior; the assertion enforces the contract that makes it possible.
+
 ```typescript
 // BAD: Bypasses interface to verify
 test("createUser saves to database", async () => {

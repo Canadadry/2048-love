@@ -13,6 +13,8 @@ description: Test-driven development with red-green-refactor loop. Use when user
 
 **Bad tests** are coupled to implementation. They mock internal collaborators, test private methods, or verify through external means (like querying a database directly instead of using the interface). The warning sign: your test breaks when you refactor, but behavior hasn't changed. If you rename an internal function and tests fail, those tests were testing implementation, not behavior.
 
+**Assertions complement tests.** Tests verify behavior from the outside; assertions enforce contracts from the inside. Add assertions at module boundaries (preconditions: "this argument must be a positive number") and at key invariants ("after this operation, count must not be negative"). When a test fails because of an assertion, the error points directly to the violated contract rather than to a symptom far from the cause. See [interfaces-design.md](interfaces-design.md) for where assertions belong.
+
 See [tests.md](tests.md) for examples and [mocking.md](mocking.md) for mocking guidelines.
 
 ## Anti-Pattern: Horizontal Slices
@@ -94,6 +96,7 @@ After all tests pass, look for [refactor candidates](refactoring.md):
 - [ ] Deepen modules (move complexity behind simple interfaces)
 - [ ] Apply SOLID principles where natural
 - [ ] Consider what new code reveals about existing code
+- [ ] Add or strengthen assertions for assumptions the code now relies on
 - [ ] Run tests after each refactor step
 
 **Never refactor while RED.** Get to GREEN first.
@@ -106,4 +109,5 @@ After all tests pass, look for [refactor candidates](refactoring.md):
 [ ] Test would survive internal refactor
 [ ] Code is minimal for this test
 [ ] No speculative features added
+[ ] Assertions guard any new preconditions or invariants introduced
 ```
