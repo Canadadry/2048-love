@@ -1,5 +1,6 @@
 local config    = require("config")
 local gamestate = require("gamestate")
+local menu      = require("menu")
 local renderer  = require("renderer")
 local swipe     = require("swipe")
 
@@ -47,14 +48,14 @@ end
 
 local function handle_tap(x, y)
     if state:win() then
-        local b = renderer.you_win_button_bounds()
+        local b = menu.win_button_bounds()
         if hit(b.continue_btn, x, y) then
             state:continue_game()
         elseif hit(b.restart_btn, x, y) then
             state:restart()
         end
     elseif state:game_over() then
-        if hit(renderer.restart_button_bounds(), x, y) then
+        if hit(menu.game_over_button_bounds(), x, y) then
             state:restart()
         end
     end
