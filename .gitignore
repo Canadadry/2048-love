@@ -1,3 +1,6 @@
 output.png
 output.lua
 game/assets/
+tools/curl-giphy/.venv/
+tools/curl-giphy/__pycache__/
+.claude/settings.local.json
