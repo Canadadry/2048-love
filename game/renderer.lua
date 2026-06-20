@@ -1,3 +1,4 @@
+local check   = require("check")
 local config  = require("config")
 local tileset = require("tileset")
 
@@ -93,43 +94,45 @@ local function draw_tile(value, px, py, tile_px, pad, font)
     end
 end
 
+local function cell_key(r, c, n)
+    return (r - 1) * n + c
+end
+
 function M.draw(cells, score, game_over, win, anim_tiles)
+    check.tbl(cells,      "cells")
+    check.num(score,      "score")
+    check.bool(game_over, "game_over")
+    check.bool(win,       "win")
+    check.tbl(anim_tiles, "anim_tiles")
+
     local board_px, tile_px, pad, board_x, board_y = board_metrics()
     local n       = config.GRID_SIZE
     local font_sz = math.max(12, math.floor(tile_px * 0.30))
     local font    = get_font(font_sz)
 
-    -- board background
     love.graphics.setColor(0.73, 0.68, 0.63)
     love.graphics.rectangle("fill", board_x, board_y, board_px, board_px)
 
     love.graphics.setFont(font)
 
-    local animating = anim_tiles and #anim_tiles > 0
+    local animating = #anim_tiles > 0
 
     if animating then
-        -- Mark destination cells; animated tiles will draw there — skip static draw
-        -- to avoid a ghost tile sitting at the target while the real tile slides in.
-        -- Animated tiles always travel through cells that are empty in the post-move
-        -- grid, so they never overlap stationary tiles mid-flight.
         local dest = {}
         for _, t in ipairs(anim_tiles) do
-            dest[t.to_row * 10 + t.to_col] = true
+            dest[cell_key(t.to_row, t.to_col, n)] = true
         end
 
-        -- Draw post-move static grid: stationary tiles stay visible; destination
-        -- cells show an empty slot until the animated tile arrives.
         for r = 1, n do
             for c = 1, n do
                 local px, py = cell_to_px(r, c, tile_px, pad, board_x, board_y)
-                local val = dest[r * 10 + c] and 0 or cells[r][c]
+                local val = dest[cell_key(r, c, n)] and 0 or cells[r][c]
                 draw_tile(val, px, py, tile_px, pad, font)
             end
         end
 
-        -- Draw each animated tile at its interpolated position
         for _, t in ipairs(anim_tiles) do
-            local progress = math.min(t._timer / t._duration, 1)
+            local progress = t:progress()
             local fx, fy   = cell_to_px(t.from_row, t.from_col, tile_px, pad, board_x, board_y)
             local tx, ty   = cell_to_px(t.to_row,   t.to_col,   tile_px, pad, board_x, board_y)
             local px = math.floor(fx + (tx - fx) * progress)
@@ -137,7 +140,6 @@ function M.draw(cells, score, game_over, win, anim_tiles)
             draw_tile(t.value, px, py, tile_px, pad, font)
         end
     else
-        -- Static draw from grid cells
         for r = 1, n do
             for c = 1, n do
                 local val    = cells[r][c]
@@ -147,12 +149,10 @@ function M.draw(cells, score, game_over, win, anim_tiles)
         end
     end
 
-    -- score line above board
     love.graphics.setColor(0.47, 0.43, 0.40)
     love.graphics.setFont(get_font(math.max(12, font_sz - 4)))
     love.graphics.print("Score: " .. score, board_x, board_y - font_sz - 4)
 
-    -- frozen overlay
     if win then
         love.graphics.setColor(1, 1, 1, 0.55)
         love.graphics.rectangle("fill", board_x, board_y, board_px, board_px)
@@ -171,7 +171,6 @@ function M.draw(cells, score, game_over, win, anim_tiles)
         love.graphics.print(msg,
             board_x + math.floor((board_px - get_font(font_sz + 8):getWidth(msg)) / 2),
             board_y + math.floor(board_px / 2) - font_sz)
-        -- restart button
         local btn = M.restart_button_bounds()
         love.graphics.setColor(0.93, 0.89, 0.85)
         love.graphics.rectangle("fill", btn.x, btn.y, btn.w, btn.h, 6, 6)

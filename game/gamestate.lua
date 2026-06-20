@@ -1,4 +1,5 @@
 local config = require("config")
+local check  = require("check")
 local grid   = require("grid")
 local tile   = require("tile")
 
@@ -26,21 +27,18 @@ local function apply_move(self, dir)
         self._score = self._score + result.score_delta
         self._grid:spawn_tile()
         for _, m in ipairs(result.moves) do
-            self._tiles[#self._tiles + 1] = {
-                value    = m.value,
-                from_row = m.from_row, from_col = m.from_col,
-                to_row   = m.to_row,   to_col   = m.to_col,
-                _timer   = 0,
-                _duration = config.ANIM_DURATION,
-                is_done  = function(t) return t._timer >= t._duration end,
-                update   = function(t, dt) t._timer = t._timer + dt end,
-            }
+            self._tiles[#self._tiles + 1] = tile.new(
+                m.value,
+                m.from_row, m.from_col,
+                m.to_row,   m.to_col,
+                config.ANIM_DURATION
+            )
         end
     end
     if result.win then
         self._win    = true
         self._frozen = true
-    elseif self._grid:is_game_over() then
+    elseif result.game_over then
         self._over   = true
         self._frozen = true
     end
@@ -51,6 +49,7 @@ function M.new()
 end
 
 function M.new_from(cells)
+    check.grid_cells(cells, config.GRID_SIZE, "cells")
     return make_state(grid.new_from(cells))
 end
 
@@ -83,6 +82,7 @@ function State:keypressed(key)
 end
 
 function State:queue_move(dir)
+    check.one_of(dir, DIRS, "dir")
     self._queue[#self._queue + 1] = dir
 end
 
@@ -96,10 +96,10 @@ function State:restart()
     self._queue  = {}
 end
 
-function State:cells()     return self._grid:get_cells() end
-function State:score()     return self._score end
-function State:win()       return self._win end
-function State:game_over() return self._over end
+function State:cells()      return self._grid:get_cells() end
+function State:score()      return self._score end
+function State:win()        return self._win end
+function State:game_over()  return self._over end
 function State:anim_tiles() return self._tiles end
 
 return M

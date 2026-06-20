@@ -1,10 +1,12 @@
 local unpack = table.unpack or unpack  -- Lua 5.1 (LuaJIT) vs 5.2+
+local config = require("config")
+local check  = require("check")
 
 local M = {}
 local Grid = {}
 Grid.__index = Grid
 
-local SIZE = 4
+local SIZE = config.GRID_SIZE
 
 local function empty_board()
     local board = {}
@@ -45,6 +47,7 @@ function M.new()
 end
 
 function M.new_from(cells)
+    check.grid_cells(cells, SIZE, "cells")
     local self = setmetatable({}, Grid)
     self._board = empty_board()
     for r = 1, SIZE do
@@ -107,7 +110,11 @@ local function rows_equal(a, b)
     return true
 end
 
+local DIRS = { left = true, right = true, up = true, down = true }
+
 function Grid:move(direction)
+    check.one_of(direction, DIRS, "direction")
+
     local moved = false
     local score_delta = 0
     local all_moves = {}
@@ -132,7 +139,6 @@ function Grid:move(direction)
             score_delta = score_delta + s
             if not rows_equal(old, new_row) then moved = true end
             for _, m in ipairs(row_moves) do
-                -- cols were reversed: original col = SIZE+1 - reversed_col
                 all_moves[#all_moves + 1] = {
                     from_row = r, from_col = SIZE + 1 - m.from_col,
                     to_row   = r, to_col   = SIZE + 1 - m.to_col,
@@ -148,7 +154,6 @@ function Grid:move(direction)
             score_delta = score_delta + s
             if not rows_equal(old, new_col) then moved = true end
             for _, m in ipairs(row_moves) do
-                -- col was treated as a row: from_col maps to from_row
                 all_moves[#all_moves + 1] = {from_row=m.from_col, from_col=c, to_row=m.to_col, to_col=c, value=m.value, merged=m.merged}
             end
         end
@@ -208,6 +213,7 @@ function Grid:_no_moves()
 end
 
 function Grid:spawn_tile()
+    assert(#empty_cells(self._board) > 0, "spawn_tile called on a full board")
     spawn_one(self._board)
 end
 

@@ -32,9 +32,9 @@ end
 
 function love.resize(w, h)
     for _, t in ipairs(state:anim_tiles()) do
-        t._timer = t._duration
+        t:finish()
     end
-    swiper._threshold = math.min(w, h) * 0.10
+    swiper:set_threshold(math.min(w, h) * 0.10)
 end
 
 function love.mousepressed(x, y, button)
@@ -62,4 +62,3 @@ function love.mousereleased(x, y, button)
         state:queue_move(dir)
     end
 end
-

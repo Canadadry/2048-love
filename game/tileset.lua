@@ -1,8 +1,12 @@
+local check  = require("check")
 local config = require("config")
 
 local M = {}
 
 function M.parse_meta(t)
+    check.tbl(t, "tileset meta")
+    assert(type(t.tile_width)  == "number" and t.tile_width  > 0, "tile_width must be a positive number")
+    assert(type(t.tile_height) == "number" and t.tile_height > 0, "tile_height must be a positive number")
     return {
         tile_w = t.tile_width,
         tile_h = t.tile_height,
@@ -11,6 +15,7 @@ function M.parse_meta(t)
 end
 
 function M.value_to_row(value)
+    check.num(value, "value")
     if value < 2 then return nil end
     local log = math.log(value) / math.log(2)
     local row = math.floor(log + 0.5)
@@ -33,6 +38,12 @@ function M.load()
 end
 
 function M.frame_at(frame_count, fps, time)
+    check.num(frame_count, "frame_count")
+    check.num(fps,         "fps")
+    check.num(time,        "time")
+    assert(frame_count >= 1, "frame_count must be >= 1, got " .. tostring(frame_count))
+    assert(fps > 0,          "fps must be positive, got " .. tostring(fps))
+    assert(time >= 0,        "time must be non-negative, got " .. tostring(time))
     return math.floor(time * fps) % frame_count
 end
 
