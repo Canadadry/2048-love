@@ -15,7 +15,7 @@ pip install pillow
 **Create** a fresh tilesheet from a list of GIFs (row order = argument order):
 
 ```sh
-python tilesheet.py create output.png --tile-size 64 tile_2.gif tile_4.gif tile_8.gif
+python tilesheet.py create output.png --tile-width 64 tile_2.gif tile_4.gif tile_8.gif
 ```
 
 **Append** a new row to an existing tilesheet:
@@ -31,11 +31,12 @@ Both commands produce two files:
 ## Output format
 
 ```
-output.png  →  width  = max(frame_counts) * tile_size
-               height = row_count * tile_size
+output.png  →  width  = max(frame_counts) * tile_width
+               height = row_count * tile_height
 
 output.lua  →  return {
-                 tile_size = 64,
+                 tile_width = 64,
+                 tile_height = 48,
                  frame_counts = { 4, 2, 8, ... },
                }
 ```

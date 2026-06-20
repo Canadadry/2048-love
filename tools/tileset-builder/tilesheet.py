@@ -17,59 +17,63 @@ def extract_frames(gif: Image.Image) -> list:
     return frames
 
 
-def build_sheet(rows: list, tile_size: int) -> Image.Image:
+def build_sheet(rows: list, tile_w: int, tile_h: int) -> Image.Image:
     max_frames = max(len(r) for r in rows)
-    width = max_frames * tile_size
-    height = len(rows) * tile_size
-    sheet = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    sheet = Image.new("RGBA", (max_frames * tile_w, len(rows) * tile_h), (0, 0, 0, 0))
     for row_idx, frames in enumerate(rows):
         for col_idx, frame in enumerate(frames):
-            scaled = frame.resize((tile_size, tile_size), Image.BILINEAR)
-            sheet.paste(scaled, (col_idx * tile_size, row_idx * tile_size))
+            scaled = frame.resize((tile_w, tile_h), Image.BILINEAR)
+            sheet.paste(scaled, (col_idx * tile_w, row_idx * tile_h))
     return sheet
 
 
-def append_row(sheet: Image.Image, frames: list, tile_size: int) -> Image.Image:
+def append_row(sheet: Image.Image, frames: list, tile_w: int, tile_h: int) -> Image.Image:
     cur_w, cur_h = sheet.size
-    new_w = max(cur_w, len(frames) * tile_size)
-    new_h = cur_h + tile_size
-    canvas = Image.new("RGBA", (new_w, new_h), (0, 0, 0, 0))
+    new_w = max(cur_w, len(frames) * tile_w)
+    canvas = Image.new("RGBA", (new_w, cur_h + tile_h), (0, 0, 0, 0))
     canvas.paste(sheet, (0, 0))
     for col_idx, frame in enumerate(frames):
-        scaled = frame.resize((tile_size, tile_size), Image.BILINEAR)
-        canvas.paste(scaled, (col_idx * tile_size, cur_h))
+        scaled = frame.resize((tile_w, tile_h), Image.BILINEAR)
+        canvas.paste(scaled, (col_idx * tile_w, cur_h))
     return canvas
 
 
-def write_sidecar(path: str, tile_size: int, frame_counts: list) -> None:
+def write_sidecar(path: str, tile_w: int, tile_h: int, frame_counts: list) -> None:
     counts_str = ", ".join(str(c) for c in frame_counts)
     with open(path, "w") as f:
-        f.write(f"return {{\n  tile_size = {tile_size},\n  frame_counts = {{ {counts_str} }},\n}}\n")
+        f.write(
+            f"return {{\n"
+            f"  tile_width = {tile_w},\n"
+            f"  tile_height = {tile_h},\n"
+            f"  frame_counts = {{ {counts_str} }},\n"
+            f"}}\n"
+        )
 
 
 def read_sidecar(path: str) -> tuple:
     with open(path) as f:
         content = f.read()
-    tile_size = int(re.search(r"tile_size\s*=\s*(\d+)", content).group(1))
+    tile_w = int(re.search(r"tile_width\s*=\s*(\d+)", content).group(1))
+    tile_h = int(re.search(r"tile_height\s*=\s*(\d+)", content).group(1))
     counts = list(map(int, re.findall(r"frame_counts\s*=\s*\{([^}]*)\}", content)[0].split(",")))
-    return tile_size, counts
+    return tile_w, tile_h, counts
 
 
 def _sidecar_path(png_path: str) -> str:
     return os.path.splitext(png_path)[0] + ".lua"
 
 
-def cmd_create(output_png: str, tile_size: int, gif_paths: list) -> None:
+def cmd_create(output_png: str, tile_w: int, gif_paths: list) -> None:
     rows = []
     for path in gif_paths:
-        gif = Image.open(path)
-        frames = extract_frames(gif)
+        frames = extract_frames(Image.open(path))
         if not frames:
             sys.exit(f"error: {path} has zero frames")
         rows.append(frames)
-    sheet = build_sheet(rows, tile_size)
-    sheet.save(output_png)
-    write_sidecar(_sidecar_path(output_png), tile_size, [len(r) for r in rows])
+    native_w, native_h = rows[0][0].size
+    tile_h = round(native_h * tile_w / native_w)
+    build_sheet(rows, tile_w, tile_h).save(output_png)
+    write_sidecar(_sidecar_path(output_png), tile_w, tile_h, [len(r) for r in rows])
 
 
 def cmd_append(output_png: str, gif_path: str) -> None:
@@ -78,22 +82,19 @@ def cmd_append(output_png: str, gif_path: str) -> None:
         sys.exit(f"error: {output_png} not found")
     if not os.path.exists(lua):
         sys.exit(f"error: {lua} not found")
-    tile_size, frame_counts = read_sidecar(lua)
-    gif = Image.open(gif_path)
-    frames = extract_frames(gif)
+    tile_w, tile_h, frame_counts = read_sidecar(lua)
+    frames = extract_frames(Image.open(gif_path))
     if not frames:
         sys.exit(f"error: {gif_path} has zero frames")
-    sheet = Image.open(output_png).convert("RGBA")
-    sheet = append_row(sheet, frames, tile_size)
+    sheet = append_row(Image.open(output_png).convert("RGBA"), frames, tile_w, tile_h)
     sheet.save(output_png)
     frame_counts.append(len(frames))
-    write_sidecar(lua, tile_size, frame_counts)
+    write_sidecar(lua, tile_w, tile_h, frame_counts)
 
 
 def cmd_inspect(gif_paths: list) -> None:
     for path in gif_paths:
-        gif = Image.open(path)
-        frames = extract_frames(gif)
+        frames = extract_frames(Image.open(path))
         w, h = frames[0].size if frames else (0, 0)
         print(f"{path}: {len(frames)} frame(s), {w}x{h}px")
 
@@ -104,7 +105,7 @@ def main():
 
     p_create = sub.add_parser("create")
     p_create.add_argument("output")
-    p_create.add_argument("--tile-size", type=int, required=True)
+    p_create.add_argument("--tile-width", type=int, required=True)
     p_create.add_argument("gifs", nargs="+")
 
     p_append = sub.add_parser("append")
@@ -116,7 +117,7 @@ def main():
 
     args = parser.parse_args()
     if args.cmd == "create":
-        cmd_create(args.output, args.tile_size, args.gifs)
+        cmd_create(args.output, args.tile_width, args.gifs)
     elif args.cmd == "append":
         cmd_append(args.output, args.gif)
     else:
