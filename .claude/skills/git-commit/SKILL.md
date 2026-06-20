@@ -24,6 +24,8 @@ Example: `docs/prd/triage/some-feature.md` → `docs/prd/003-some-feature.md`
 ### 3. README update (if a PRD was just implemented)
 Read `README.md` and update it to reflect any user-visible changes introduced by the implementation: new features, changed controls, new or renamed source files, new tools. Only touch what actually changed — do not rewrite sections unaffected by the work.
 
+In the **PRD Roadmap** table, remove the row for the implemented PRD entirely — do not strike it through or mark it "Done".
+
 ### 4. Inspect status
 Run `git status` to see all changed files. Do NOT run `git add .` or `git add -A`.
 
