@@ -1,6 +1,10 @@
 LOVE = /Applications/love.app/Contents/MacOS/love
+LOVE_FILE = 2048.love
 
-.PHONY: run test test-tools
+.PHONY: run build test test-tools
+
+build:
+	cd game && zip -r ../$(LOVE_FILE) .
 
 run:
 	$(LOVE) game
