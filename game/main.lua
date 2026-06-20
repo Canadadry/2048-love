@@ -8,6 +8,7 @@ function love.load()
     love.window.setTitle("2048")
     love.window.setMode(config.WINDOW_W, config.WINDOW_H, { resizable = true, minwidth = 300, minheight = 300 })
     love.graphics.setBackgroundColor(0.98, 0.97, 0.94)
+    renderer.load()
     state = gamestate.new()
 end
 

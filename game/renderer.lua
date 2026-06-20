@@ -1,13 +1,32 @@
-local config = require("config")
+local config  = require("config")
+local tileset = require("tileset")
 
 local M = {}
 
+local ts_data  = nil  -- { image, quads, tile_w, tile_h } set by M.load()
 local font_cache = {}
 local function get_font(size)
     if not font_cache[size] then
         font_cache[size] = love.graphics.newFont(size)
     end
     return font_cache[size]
+end
+
+function M.load()
+    local ts = tileset.load()
+    if not ts then return end
+    local quads = {}
+    for _, v in ipairs({ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 }) do
+        local row = tileset.value_to_row(v)
+        if row then
+            quads[v] = love.graphics.newQuad(
+                0, (row - 1) * ts.meta.tile_h,
+                ts.meta.tile_w, ts.meta.tile_h,
+                ts.iw, ts.ih
+            )
+        end
+    end
+    ts_data = { image = ts.image, quads = quads, tile_w = ts.meta.tile_w, tile_h = ts.meta.tile_h }
 end
 
 local function tile_color(value)
@@ -31,18 +50,24 @@ local function cell_to_px(r, c, tile_px, pad, board_x, board_y)
 end
 
 local function draw_tile(value, px, py, tile_px, pad, font)
-    local colors = tile_color(value)
-    local ts     = tile_px - pad * 2
-    love.graphics.setColor(colors.bg)
-    love.graphics.rectangle("fill", px, py, ts, ts, 6, 6)
-    if value ~= 0 then
-        local text = tostring(value)
-        local fw   = font:getWidth(text)
-        local fh   = font:getHeight()
-        love.graphics.setColor(colors.fg)
-        love.graphics.print(text,
-            math.floor(px + (ts - fw) / 2),
-            math.floor(py + (ts - fh) / 2))
+    local sz = tile_px - pad * 2
+    if ts_data and value ~= 0 and ts_data.quads[value] then
+        local scale = sz / ts_data.tile_w
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.draw(ts_data.image, ts_data.quads[value], px, py, 0, scale, scale)
+    else
+        local colors = tile_color(value)
+        love.graphics.setColor(colors.bg)
+        love.graphics.rectangle("fill", px, py, sz, sz, 6, 6)
+        if value ~= 0 then
+            local text = tostring(value)
+            local fw   = font:getWidth(text)
+            local fh   = font:getHeight()
+            love.graphics.setColor(colors.fg)
+            love.graphics.print(text,
+                math.floor(px + (sz - fw) / 2),
+                math.floor(py + (sz - fh) / 2))
+        end
     end
 end
 

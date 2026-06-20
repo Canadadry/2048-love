@@ -1,7 +1,7 @@
 ---
 title: "Tileset Loading"
 description: "Classic color rendering is the only visual style. Players cannot customise the look of their tiles."
-status: needs-triage
+status: done
 ---
 
 # Tileset Loading (Static, First Frame)
@@ -20,13 +20,13 @@ A single PNG file laid out as a sprite sheet:
 - **13 rows**, one per tile value in order: 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192.
 - Each row is a horizontal strip of square frames. `tile_size = image_height / 13`. `frame_count = image_width / tile_size`.
 - All frames are the same size. The sheet need not be square.
-- For tiles with value > 8192, fall back to classic color rendering.
+- For tiles with value > 2048, fall back to classic color rendering.
 
 ## User Stories
 
 1. As a player, I want my tiles to display as custom graphics when a tileset is configured, so that I can personalise the game's appearance.
 2. As a player, I want the tile value number hidden when a tileset is active, so that graphics are not obscured by text.
-3. As a player, I want tiles beyond 8192 to still render (using classic colors) if the tileset doesn't cover them, so that the game remains playable after extreme merges.
+3. As a player, I want tiles beyond 2048 to still render (using classic colors) if the tileset doesn't cover them, so that the game remains playable after extreme merges.
 4. As a developer, I want to set the tileset path in `config.lua` with `nil` meaning classic colors, so that the default experience requires no file.
 
 ## Implementation Decisions
@@ -42,7 +42,7 @@ A single PNG file laid out as a sprite sheet:
 
 - Test that `tile_size` is computed correctly from a known image height.
 - Test that `get_quad(2, 0)` returns the quad for row 0 (first row).
-- Test that `get_quad(8192, 0)` returns the quad for row 12 (last row).
+- Test that `get_quad(2048, 0)` returns the quad for row 10 (last row).
 - Test that `get_quad(16384, 0)` returns `nil`.
 
 Note: tests use a mock `love.graphics` that returns a stub image with known dimensions — no actual PNG required.
