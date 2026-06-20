@@ -9,6 +9,7 @@ local suites = {
     "../tests/test_swipe.lua",
     "../tests/test_pause.lua",
     "../tests/test_menu.lua",
+    "../tests/test_main_menu.lua",
 }
 
 local real_exit = os.exit

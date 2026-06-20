@@ -1,7 +1,7 @@
 ---
 title: "Main Menu"
 description: "The game launches directly into play with no way to quit gracefully or navigate to settings."
-status: needs-triage
+status: done
 ---
 
 # Main Menu

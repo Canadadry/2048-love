@@ -27,7 +27,11 @@ function love.update(dt)
 end
 
 function love.draw()
-    renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(), state:paused(), state:pause_cursor())
+    if state:in_menu() then
+        menu.draw_main_menu(state:menu_cursor())
+    else
+        renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(), state:paused(), state:pause_cursor())
+    end
 end
 
 function love.keypressed(key)
@@ -47,6 +51,16 @@ local function hit(btn, x, y)
 end
 
 local function handle_tap(x, y)
+    if state:in_menu() then
+        local btns = menu.main_menu_button_bounds()
+        if hit(btns[1], x, y) then
+            state:keypressed("return")
+        elseif hit(btns[2], x, y) then
+            state:keypressed("down")
+            state:keypressed("return")
+        end
+        return
+    end
     if not state:paused() and not state:win() and not state:game_over() then
         if hit(menu.pause_icon_bounds(), x, y) then
             state:keypressed("escape")

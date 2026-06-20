@@ -24,6 +24,8 @@ local function make_state(g)
     self._pause_pending   = false
     self._pause_cursor    = 0
     self._quit_requested  = false
+    self._in_menu         = false
+    self._menu_cursor     = 0
     return self
 end
 
@@ -51,7 +53,9 @@ local function apply_move(self, dir)
 end
 
 function M.new()
-    return make_state(grid.new())
+    local s = make_state(grid.new())
+    s._in_menu = true
+    return s
 end
 
 function M.new_from(cells)
@@ -96,6 +100,20 @@ function State:update(dt)
 end
 
 function State:keypressed(key)
+    if self._in_menu then
+        if key == "down" then
+            self._menu_cursor = math.min(1, self._menu_cursor + 1)
+        elseif key == "up" then
+            self._menu_cursor = math.max(0, self._menu_cursor - 1)
+        elseif key == "return" then
+            if self._menu_cursor == 0 then
+                self._in_menu = false
+            else
+                self._quit_requested = true
+            end
+        end
+        return
+    end
     if self._win then
         if key == "up" then
             self._cursor = math.max(0, self._cursor - 1)
@@ -178,6 +196,8 @@ function State:restart()
     self._pause_cursor  = 0
 end
 
+function State:in_menu()          return self._in_menu end
+function State:menu_cursor()      return self._menu_cursor end
 function State:cells()            return self._grid:get_cells() end
 function State:score()            return self._score end
 function State:win()              return self._win end

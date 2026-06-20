@@ -21,6 +21,50 @@ local function board_metrics()
     return board_px, tile_px, pad, board_x, board_y
 end
 
+function M.main_menu_button_bounds()
+    local board_px, tile_px, _, board_x, board_y = board_metrics()
+    local font_sz = math.max(12, math.floor(tile_px * 0.30))
+    local btn_w   = math.floor(board_px * 0.5)
+    local btn_h   = math.floor(font_sz * 2.2)
+    local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
+    local gap     = math.floor(font_sz * 0.6)
+    local top_y   = board_y + math.floor(board_px * 0.45)
+    return {
+        { x = btn_x, y = top_y,               w = btn_w, h = btn_h, label = "New Game" },
+        { x = btn_x, y = top_y + btn_h + gap, w = btn_w, h = btn_h, label = "Quit"     },
+    }
+end
+
+function M.draw_main_menu(cursor)
+    local w, h = love.graphics.getDimensions()
+    local board_px, tile_px, _, board_x, board_y = board_metrics()
+    local font_sz    = math.max(12, math.floor(tile_px * 0.30))
+    local title_font = get_font(font_sz + 16)
+    local btn_font   = get_font(math.max(12, font_sz - 2))
+    local btns       = M.main_menu_button_bounds()
+
+    love.graphics.setColor(0.98, 0.97, 0.94)
+    love.graphics.rectangle("fill", 0, 0, w, h)
+
+    love.graphics.setColor(0.47, 0.43, 0.40)
+    love.graphics.setFont(title_font)
+    local title = "2048"
+    love.graphics.print(title,
+        board_x + math.floor((board_px - title_font:getWidth(title)) / 2),
+        board_y + math.floor(board_px * 0.20))
+
+    love.graphics.setFont(btn_font)
+    for i, b in ipairs(btns) do
+        local selected = (cursor == i - 1)
+        love.graphics.setColor(selected and { 0.96, 0.49, 0.37 } or { 0.93, 0.89, 0.85 })
+        love.graphics.rectangle("fill", b.x, b.y, b.w, b.h, 6, 6)
+        love.graphics.setColor(selected and { 1, 1, 1 } or { 0.47, 0.43, 0.40 })
+        love.graphics.print(b.label,
+            b.x + math.floor((b.w - btn_font:getWidth(b.label)) / 2),
+            b.y + math.floor((b.h - btn_font:getHeight()) / 2))
+    end
+end
+
 function M.pause_icon_bounds()
     local _, tile_px = board_metrics()
     local font_sz = math.max(12, math.floor(tile_px * 0.30))

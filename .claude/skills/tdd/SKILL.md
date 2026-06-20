@@ -72,6 +72,8 @@ GREEN: Write minimal code to pass → test passes
 
 This is your tracer bullet - proves the path works end-to-end.
 
+**Running tests**: always prefer `make test` (or the project's equivalent target) over invoking the test runner directly. Check for a `Makefile` or `package.json` test script first; use it if present.
+
 ### 3. Incremental Loop
 
 For each remaining behavior:

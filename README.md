@@ -15,6 +15,8 @@ make run      # normal game (win at 2048)
 make dev      # win at 32 — useful for testing the win screen
 ```
 
+The game opens with a **Main Menu** — Up/Down to navigate, Enter (or tap) to confirm. Select **New Game** to start playing or **Quit** to exit.
+
 Arrow keys to slide tiles. The window is resizable.
 
 When you create a 2048 tile a **You Win** overlay appears with two options — **Continue** (keep playing) and **Restart** — navigated with Up/Down and confirmed with Enter, or tapped directly. A **Game Over** overlay appears when no moves remain; press Enter or any arrow key (or tap) to restart.
@@ -36,16 +38,17 @@ make test-all           # all of the above
 game/              Love2D game source
   main.lua         entry point (Love2D callbacks)
   config.lua       constants and tile color map
-  gamestate.lua    score tracking, input routing, pause state
+  gamestate.lua    score tracking, input routing, menu and pause state
   renderer.lua     board drawing
-  menu.lua         overlay and button rendering (win, game-over, pause)
+  menu.lua         overlay and button rendering (main menu, win, game-over, pause)
   grid.lua         game logic — slide, merge, spawn, win/lose detection
 tests/
   test_all.lua     test runner (runs all suites below)
   test_grid.lua    grid logic
   test_gamestate.lua  game state and input
-  test_pause.lua   pause menu behaviour
-  test_menu.lua    menu button bounds
+  test_pause.lua      pause menu behaviour
+  test_menu.lua       menu button bounds
+  test_main_menu.lua  main menu state and navigation
   test_tile.lua    tile animation
   test_tileset.lua tileset loading helpers
   test_swipe.lua   swipe gesture detection
@@ -60,8 +63,7 @@ Recommended implementation order for triage PRDs:
 | # | PRD | Notes |
 |---|-----|-------|
 | 006 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
-| 007 | main-menu | Needs game-states first (New Game → clean playing state). |
-| 008 | refactor-state-machine | Do before adding Options screen or you refactor into a moving target. |
+| 007 | refactor-state-machine | Do before adding Options screen or you refactor into a moving target. |
 | 009 | tileset-animation | Already unblocked (tileset-loading done). Can slot in anywhere before options. |
 | 010 | options-screen-shell | Needs state machine as infrastructure. |
 | 011+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first. |
