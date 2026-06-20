@@ -15,7 +15,13 @@ pip install pillow
 **Create** a fresh tilesheet from a list of GIFs (row order = argument order):
 
 ```sh
-python tilesheet.py create output.png --tile-width 64 tile_2.gif tile_4.gif tile_8.gif
+python tilesheet.py create tile_2.gif tile_4.gif tile_8.gif
+```
+
+`--output` defaults to `output.png`; `--tile-width` defaults to the GIF's native width. Both can be overridden:
+
+```sh
+python tilesheet.py create --output sheet.png --tile-width 64 tile_2.gif tile_4.gif tile_8.gif
 ```
 
 **Append** a new row to an existing tilesheet:

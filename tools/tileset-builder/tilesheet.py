@@ -5,6 +5,10 @@ import argparse
 from PIL import Image
 
 
+class SizeMismatchError(Exception):
+    pass
+
+
 def extract_frames(gif: Image.Image) -> list:
     frames = []
     try:
@@ -86,7 +90,7 @@ def _sidecar_path(png_path: str) -> str:
     return os.path.splitext(png_path)[0] + ".lua"
 
 
-def cmd_create(output_png: str, tile_w: int, gif_paths: list, mode: str = "strict") -> None:
+def cmd_create(output_png: str, tile_w: int | None, gif_paths: list, mode: str = "strict") -> None:
     rows = []
     for path in gif_paths:
         frames = extract_frames(Image.open(path))
@@ -94,6 +98,8 @@ def cmd_create(output_png: str, tile_w: int, gif_paths: list, mode: str = "stric
             sys.exit(f"error: {path} has zero frames")
         rows.append(frames)
     native_w, native_h = rows[0][0].size
+    if tile_w is None:
+        tile_w = native_w
     tile_h = round(native_h * tile_w / native_w)
     try:
         build_sheet(rows, tile_w, tile_h, mode).save(output_png)
@@ -109,9 +115,16 @@ def cmd_append(output_png: str, gif_path: str, mode: str = "strict") -> None:
     if not os.path.exists(lua):
         sys.exit(f"error: {lua} not found")
     tile_w, tile_h, frame_counts = read_sidecar(lua)
+    if not os.path.exists(gif_path):
+        sys.exit(f"error: {gif_path} not found")
     frames = extract_frames(Image.open(gif_path))
     if not frames:
         sys.exit(f"error: {gif_path} has zero frames")
+    gif_w, gif_h = frames[0].size
+    if mode == "strict" and gif_w * tile_h != gif_h * tile_w:
+        raise SizeMismatchError(
+            f"tileset tile is {tile_w}x{tile_h} but gif is {gif_w}x{gif_h}"
+        )
     try:
         sheet = append_row(Image.open(output_png).convert("RGBA"), frames, tile_w, tile_h, mode)
     except ValueError as e:
@@ -147,13 +160,13 @@ def main():
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_create = sub.add_parser("create")
-    p_create.add_argument("output")
-    p_create.add_argument("--tile-width", type=int, required=True)
+    p_create.add_argument("--output", default="output.png")
+    p_create.add_argument("--tile-width", type=int)
     p_create.add_argument("gifs", nargs="+")
     _add_mode_flags(p_create)
 
     p_append = sub.add_parser("append")
-    p_append.add_argument("output")
+    p_append.add_argument("--output", default="output.png")
     p_append.add_argument("gif")
     _add_mode_flags(p_append)
 
@@ -164,7 +177,11 @@ def main():
     if args.cmd == "create":
         cmd_create(args.output, args.tile_width, args.gifs, _mode(args))
     elif args.cmd == "append":
-        cmd_append(args.output, args.gif, _mode(args))
+        try:
+            cmd_append(args.output, args.gif, _mode(args))
+        except SizeMismatchError as e:
+            sys.stderr.write(f"error: {e} — use --shrink or --crop\n")
+            sys.exit(1)
     else:
         cmd_inspect(args.gifs)
 

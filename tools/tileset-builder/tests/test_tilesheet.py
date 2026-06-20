@@ -1,12 +1,17 @@
 from PIL import Image
 import sys, os, tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from tilesheet import build_sheet, append_row, write_sidecar, read_sidecar, cmd_create, scale_frame
+from tilesheet import build_sheet, append_row, write_sidecar, read_sidecar, cmd_create, cmd_append, scale_frame, main, SizeMismatchError
 import pytest
 
 
 def solid(color, w=8, h=8):
     return Image.new("RGBA", (w, h), color)
+
+
+def save_gif(path: str, w: int, h: int, n_frames: int = 1) -> None:
+    frames = [Image.new("RGB", (w, h), (255, 0, 0)).convert("P") for _ in range(n_frames)]
+    frames[0].save(path, save_all=True, append_images=frames[1:])
 
 
 # --- build_sheet ---
@@ -127,6 +132,160 @@ def test_create_derives_tile_height_from_aspect_ratio():
         for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
             if os.path.exists(p):
                 os.unlink(p)
+
+
+# --- cmd_create: optional tile_width ---
+
+
+def test_create_no_tile_width_preserves_native_height():
+    with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
+        gif_path = f.name
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        png_path = f.name
+    try:
+        save_gif(gif_path, w=40, h=25)
+        cmd_create(png_path, tile_w=None, gif_paths=[gif_path])
+        _, tile_h, _ = read_sidecar(os.path.splitext(png_path)[0] + ".lua")
+        assert tile_h == 25
+    finally:
+        for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
+            if os.path.exists(p):
+                os.unlink(p)
+
+
+def test_create_no_tile_width_uses_gif_native_width():
+    with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
+        gif_path = f.name
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        png_path = f.name
+    try:
+        save_gif(gif_path, w=40, h=20)
+        cmd_create(png_path, tile_w=None, gif_paths=[gif_path])
+        tile_w, tile_h, _ = read_sidecar(os.path.splitext(png_path)[0] + ".lua")
+        assert tile_w == 40
+    finally:
+        for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
+            if os.path.exists(p):
+                os.unlink(p)
+
+
+# --- CLI: optional tile_width and default output ---
+
+def test_cli_create_no_tile_width_uses_native_width(monkeypatch, tmp_path):
+    gif_path = str(tmp_path / "test.gif")
+    png_path = str(tmp_path / "out.png")
+    save_gif(gif_path, w=32, h=16)
+    monkeypatch.setattr("sys.argv", ["tilesheet", "create", "--output", png_path, gif_path])
+    main()
+    tile_w, _, _ = read_sidecar(str(tmp_path / "out.lua"))
+    assert tile_w == 32
+
+
+def test_cli_create_default_output_is_output_png(monkeypatch, tmp_path):
+    gif_path = str(tmp_path / "test.gif")
+    save_gif(gif_path, w=20, h=10)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("sys.argv", ["tilesheet", "create", gif_path])
+    main()
+    assert (tmp_path / "output.png").exists()
+    assert (tmp_path / "output.lua").exists()
+
+
+
+# --- cmd_append: size mismatch detection ---
+
+def test_append_exits_cleanly_when_gif_not_found(tmp_path):
+    gif1 = str(tmp_path / "first.gif")
+    png = str(tmp_path / "sheet.png")
+    save_gif(gif1, w=32, h=32)
+    cmd_create(png, tile_w=None, gif_paths=[gif1])
+    with pytest.raises(SystemExit):
+        cmd_append(png, "/nonexistent/path.gif")
+
+
+def test_append_raises_on_aspect_ratio_mismatch(tmp_path):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "second.gif")
+    png = str(tmp_path / "sheet.png")
+    save_gif(gif1, w=32, h=32)
+    save_gif(gif2, w=16, h=24)  # different aspect ratio
+    cmd_create(png, tile_w=None, gif_paths=[gif1])
+    with pytest.raises(SizeMismatchError):
+        cmd_append(png, gif2)
+
+
+def test_append_no_raise_on_same_aspect_different_size(tmp_path):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "second.gif")
+    png = str(tmp_path / "sheet.png")
+    save_gif(gif1, w=32, h=32)
+    save_gif(gif2, w=16, h=16)  # same 1:1 aspect, just smaller — must not raise
+    cmd_create(png, tile_w=None, gif_paths=[gif1])
+    cmd_append(png, gif2)
+
+
+def test_append_no_raise_when_sizes_match(tmp_path):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "second.gif")
+    png = str(tmp_path / "sheet.png")
+    save_gif(gif1, w=32, h=32)
+    save_gif(gif2, w=32, h=32)
+    cmd_create(png, tile_w=None, gif_paths=[gif1])
+    cmd_append(png, gif2)  # must not raise
+
+
+def test_append_no_raise_with_shrink_flag_on_mismatch(tmp_path):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "second.gif")
+    png = str(tmp_path / "sheet.png")
+    save_gif(gif1, w=32, h=32)
+    save_gif(gif2, w=16, h=24)  # different aspect ratio
+    cmd_create(png, tile_w=None, gif_paths=[gif1])
+    cmd_append(png, gif2, mode="shrink")  # must not raise
+
+
+def test_append_mismatch_error_contains_both_sizes(tmp_path):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "second.gif")
+    png = str(tmp_path / "sheet.png")
+    save_gif(gif1, w=32, h=32)
+    save_gif(gif2, w=16, h=24)
+    cmd_create(png, tile_w=None, gif_paths=[gif1])
+    with pytest.raises(SizeMismatchError) as exc:
+        cmd_append(png, gif2)
+    msg = str(exc.value)
+    assert "32x32" in msg  # tileset tile size
+    assert "16x24" in msg  # gif native size
+
+
+def test_cli_append_prints_size_mismatch_and_suggests_flag(monkeypatch, tmp_path, capsys):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "second.gif")
+    png = str(tmp_path / "sheet.png")
+    save_gif(gif1, w=32, h=32)
+    save_gif(gif2, w=16, h=24)  # different aspect ratio
+    cmd_create(png, tile_w=None, gif_paths=[gif1])
+    monkeypatch.setattr("sys.argv", ["tilesheet", "append", "--output", png, gif2])
+    with pytest.raises(SystemExit):
+        main()
+    err = capsys.readouterr().err
+    assert "32x32" in err
+    assert "16x24" in err
+    assert "--shrink" in err or "--crop" in err
+
+
+def test_cli_append_default_output_is_output_png(monkeypatch, tmp_path):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "second.gif")
+    save_gif(gif1, w=20, h=10)
+    save_gif(gif2, w=20, h=10)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr("sys.argv", ["tilesheet", "create", gif1])
+    main()
+    monkeypatch.setattr("sys.argv", ["tilesheet", "append", gif2])
+    main()
+    _, _, frame_counts = read_sidecar(str(tmp_path / "output.lua"))
+    assert len(frame_counts) == 2
 
 
 # --- sidecar ---
