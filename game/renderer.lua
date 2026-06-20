@@ -15,18 +15,38 @@ end
 function M.load()
     local ts = tileset.load()
     if not ts then return end
-    local quads = {}
-    for _, v in ipairs({ 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 }) do
+    local quads        = {}
+    local frame_counts = {}
+    local values       = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 }
+    for i, v in ipairs(values) do
         local row = tileset.value_to_row(v)
         if row then
-            quads[v] = love.graphics.newQuad(
-                0, (row - 1) * ts.meta.tile_h,
-                ts.meta.tile_w, ts.meta.tile_h,
-                ts.iw, ts.ih
-            )
+            local n = (ts.meta.frame_counts and ts.meta.frame_counts[i]) or 1
+            frame_counts[v] = n
+            quads[v] = {}
+            for f = 0, n - 1 do
+                quads[v][f] = love.graphics.newQuad(
+                    f * ts.meta.tile_w, (row - 1) * ts.meta.tile_h,
+                    ts.meta.tile_w, ts.meta.tile_h,
+                    ts.iw, ts.ih
+                )
+            end
         end
     end
-    ts_data = { image = ts.image, quads = quads, tile_w = ts.meta.tile_w, tile_h = ts.meta.tile_h }
+    ts_data = {
+        image        = ts.image,
+        quads        = quads,
+        frame_counts = frame_counts,
+        tile_w       = ts.meta.tile_w,
+        tile_h       = ts.meta.tile_h,
+        anim_time    = 0,
+    }
+end
+
+function M.update(dt)
+    if ts_data then
+        ts_data.anim_time = ts_data.anim_time + dt
+    end
 end
 
 local function tile_color(value)
@@ -52,9 +72,11 @@ end
 local function draw_tile(value, px, py, tile_px, pad, font)
     local sz = tile_px - pad * 2
     if ts_data and value ~= 0 and ts_data.quads[value] then
+        local n     = ts_data.frame_counts[value]
+        local frame = tileset.frame_at(n, config.TILESET_ANIM_FPS, ts_data.anim_time)
         local scale = sz / ts_data.tile_w
         love.graphics.setColor(1, 1, 1)
-        love.graphics.draw(ts_data.image, ts_data.quads[value], px, py, 0, scale, scale)
+        love.graphics.draw(ts_data.image, ts_data.quads[value][frame], px, py, 0, scale, scale)
     else
         local colors = tile_color(value)
         love.graphics.setColor(colors.bg)

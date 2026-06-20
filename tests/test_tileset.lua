@@ -52,5 +52,23 @@ test("value_to_row returns nil for non-power-of-2", function()
     eq(tileset.value_to_row(1),  nil, "1 is not a valid tile")
 end)
 
+-- frame_at: returns frame index for a given time
+test("frame_at returns 0 at time 0", function()
+    eq(tileset.frame_at(4, 8, 0.0), 0, "frame at t=0")
+end)
+
+test("frame_at returns 1 at one frame interval", function()
+    eq(tileset.frame_at(4, 8, 1/8), 1, "frame at t=1/fps")
+end)
+
+test("frame_at wraps to 0 after a full cycle", function()
+    -- 4 frames at 8fps: cycle period = 4/8 = 0.5s
+    eq(tileset.frame_at(4, 8, 0.5), 0, "wrap after full cycle")
+end)
+
+test("frame_at single-frame tile always returns 0", function()
+    eq(tileset.frame_at(1, 8, 999), 0, "single frame never changes")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

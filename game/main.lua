@@ -14,6 +14,7 @@ end
 
 function love.update(dt)
     state:update(dt)
+    renderer.update(dt)
 end
 
 function love.draw()

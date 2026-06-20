@@ -32,4 +32,8 @@ function M.load()
     return { image = image, meta = meta, iw = iw, ih = ih }
 end
 
+function M.frame_at(frame_count, fps, time)
+    return math.floor(time * fps) % frame_count
+end
+
 return M
