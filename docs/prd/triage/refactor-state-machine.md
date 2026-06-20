@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Refactor: State Machine"
+description: "After PRD 005, gamestate.lua handles menu, playing, you_win, and game_over through ad-hoc conditionals. Adding more screens will make this unmaintainable."
+status: needs-triage
+---
 
-# PRD 006 — Refactor: State Machine
+# Refactor: State Machine
 
 ## Problem Statement
 

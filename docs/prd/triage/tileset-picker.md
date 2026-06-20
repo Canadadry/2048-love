@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Tileset Picker"
+description: "Changing the active tileset requires manually editing config.lua. Players cannot switch tilesets at runtime."
+status: needs-triage
+---
 
-# PRD 010 — Tileset Picker
+# Tileset Picker
 
 ## Problem Statement
 

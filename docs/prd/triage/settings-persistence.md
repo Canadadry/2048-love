@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Settings Persistence"
+description: "All settings reset to defaults on every launch. Players must reconfigure each session."
+status: needs-triage
+---
 
-# PRD 012 — Settings Persistence
+# Settings Persistence
 
 ## Problem Statement
 

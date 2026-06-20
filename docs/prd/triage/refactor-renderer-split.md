@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Refactor: Renderer Split"
+description: "renderer.lua has grown into a shallow, hard-to-navigate module that mixes unrelated concerns after gaining tileset, HUD, and overlay responsibilities."
+status: needs-triage
+---
 
-# PRD 014 — Refactor: Renderer Split
+# Refactor: Renderer Split
 
 ## Problem Statement
 

@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Merge Pop/Scale Effect"
+description: "Merges are visually silent — the new tile just appears at the destination. Players miss the satisfaction of a visible merge event."
+status: needs-triage
+---
 
-# PRD 004 — Merge Pop/Scale Effect
+# Merge Pop/Scale Effect
 
 ## Problem Statement
 

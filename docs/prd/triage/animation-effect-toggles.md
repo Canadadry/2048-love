@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Animation & Effect Toggles"
+description: "Slide animation and merge pop/scale effect are always on. Players on low-end hardware or with a preference for instant feedback cannot disable them."
+status: needs-triage
+---
 
-# PRD 011 — Animation & Effect Toggles
+# Animation & Effect Toggles
 
 ## Problem Statement
 

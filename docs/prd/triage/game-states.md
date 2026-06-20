@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Game States: Win & Game Over Overlays"
+description: "After PRD 001, the game freezes silently when a player wins or runs out of moves. There is no feedback and no way to restart without quitting."
+status: needs-triage
+---
 
-# PRD 002 — Game States: Win & Game Over Overlays
+# Game States: Win & Game Over Overlays
 
 ## Problem Statement
 

@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Tileset Animation"
+description: "After PRD 007, tileset tiles are static — only the first frame is ever shown. Tilesets with multiple frames per row appear frozen."
+status: needs-triage
+---
 
-# PRD 008 — Tileset Animation (Frame Cycling)
+# Tileset Animation (Frame Cycling)
 
 ## Problem Statement
 

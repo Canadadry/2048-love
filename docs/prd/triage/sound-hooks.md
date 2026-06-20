@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Sound Hooks"
+description: "There is no audio infrastructure. Adding sound effects later will require touching multiple call sites scattered across game logic and state modules."
+status: needs-triage
+---
 
-# PRD 013 — Sound Hooks
+# Sound Hooks
 
 ## Problem Statement
 

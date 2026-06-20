@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Slide Animation"
+description: "Tiles snap instantly to their new positions, making it hard to follow which tile moved where, especially when multiple tiles slide simultaneously."
+status: needs-triage
+---
 
-# PRD 003 — Slide Animation
+# Slide Animation
 
 ## Problem Statement
 

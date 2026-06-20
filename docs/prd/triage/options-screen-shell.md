@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Options Screen Shell"
+description: "There is no way to access settings from within the game. Future PRDs need a screen to host controls, but that screen doesn't exist yet."
+status: needs-triage
+---
 
-# PRD 009 — Options Screen Shell
+# Options Screen Shell
 
 ## Problem Statement
 

@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Tileset Loading"
+description: "Classic color rendering is the only visual style. Players cannot customise the look of their tiles."
+status: needs-triage
+---
 
-# PRD 007 — Tileset Loading (Static, First Frame)
+# Tileset Loading (Static, First Frame)
 
 ## Problem Statement
 

@@ -1,6 +1,10 @@
-Status: needs-triage
+---
+title: "Main Menu"
+description: "The game launches directly into play with no way to quit gracefully or navigate to settings."
+status: needs-triage
+---
 
-# PRD 005 — Main Menu
+# Main Menu
 
 ## Problem Statement
 
