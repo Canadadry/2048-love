@@ -7,8 +7,6 @@ local statemachine = require("statemachine")
 local M    = {}
 local DIRS = { left=true, right=true, up=true, down=true }
 
--- ── Shared context ─────────────────────────────────────────────────────────────
-
 local function make_ctx(g)
     return {
         grid           = g,
@@ -17,11 +15,8 @@ local function make_ctx(g)
         tiles          = {},
         queue          = {},
         quit_requested = false,
-        switch         = nil,  -- set in build(), after sm is created
     }
 end
-
--- ── Base state: default accessors shared by all states ─────────────────────────
 
 local Base = {}
 Base.__index = Base
@@ -38,14 +33,11 @@ function Base:cursor()         return 0 end
 function Base:pause_cursor()   return 0 end
 function Base:menu_cursor()    return 0 end
 function Base:quit_requested() return self._ctx.quit_requested end
-
--- No-op actions (safe to call from any state via the machine's __index)
 function Base:resume()        end
 function Base:continue_game() end
 function Base:restart()       end
 function Base:queue_move()    end
 
--- Default update: drain animation tiles (win/pause/game_over states inherit this)
 function Base:update(dt)
     local ctx = self._ctx
     if #ctx.tiles == 0 then return end
@@ -56,8 +48,6 @@ function Base:update(dt)
     end
     if not any_alive then ctx.tiles = {} end
 end
-
--- ── apply_move (shared helper) ─────────────────────────────────────────────────
 
 local function apply_move(ctx, dir)
     local result = ctx.grid:move(dir)
@@ -77,8 +67,6 @@ local function apply_move(ctx, dir)
     end
 end
 
--- ── restart (shared helper) ────────────────────────────────────────────────────
-
 local function do_restart(ctx)
     ctx.grid     = grid.new()
     ctx.score    = 0
@@ -87,8 +75,6 @@ local function do_restart(ctx)
     ctx.queue    = {}
     ctx.switch("playing")
 end
-
--- ── menu_state ────────────────────────────────────────────────────────────────
 
 local MenuState = setmetatable({}, Base)
 MenuState.__index = MenuState
@@ -114,13 +100,11 @@ function MenuState:keypressed(key)
     end
 end
 
--- ── win_state ─────────────────────────────────────────────────────────────────
-
 local WinState = setmetatable({}, Base)
 WinState.__index = WinState
 
 local function make_win_state(ctx)
-    return setmetatable({ _ctx = ctx, _cursor = 0 }, WinState)
+    return setmetatable({ _ctx = ctx }, WinState)
 end
 
 function WinState:win()    return true end
@@ -153,8 +137,6 @@ function WinState:keypressed(key)
     end
 end
 
--- ── game_over_state ───────────────────────────────────────────────────────────
-
 local GameOverState = setmetatable({}, Base)
 GameOverState.__index = GameOverState
 
@@ -172,13 +154,11 @@ function GameOverState:keypressed(key)
     if key == "return" or DIRS[key] then self:restart() end
 end
 
--- ── paused_state ──────────────────────────────────────────────────────────────
-
 local PausedState = setmetatable({}, Base)
 PausedState.__index = PausedState
 
 local function make_paused_state(ctx)
-    return setmetatable({ _ctx = ctx, _cursor = 0 }, PausedState)
+    return setmetatable({ _ctx = ctx }, PausedState)
 end
 
 function PausedState:paused()       return true end
@@ -214,13 +194,11 @@ function PausedState:keypressed(key)
     end
 end
 
--- ── playing_state ─────────────────────────────────────────────────────────────
-
 local PlayingState = setmetatable({}, Base)
 PlayingState.__index = PlayingState
 
 local function make_playing_state(ctx)
-    return setmetatable({ _ctx = ctx, _pause_pending = false }, PlayingState)
+    return setmetatable({ _ctx = ctx }, PlayingState)
 end
 
 function PlayingState:enter()
@@ -281,14 +259,12 @@ function PlayingState:keypressed(key)
     apply_move(ctx, key)
 end
 
-function PlayingState:resize(w, h)
+function PlayingState:resize()
     for _, t in ipairs(self._ctx.tiles) do t:finish() end
 end
 
--- ── Factory ───────────────────────────────────────────────────────────────────
-
 local function build(ctx, initial_name)
-    local sm  -- forward declaration; captured by ctx.switch closure below
+    local sm
 
     local states = {
         menu      = make_menu_state(ctx),
