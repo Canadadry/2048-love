@@ -11,10 +11,13 @@ A Love2D implementation of the 2048 puzzle game — designed to run with animate
 ## Play
 
 ```
-make run
+make run      # normal game (win at 2048)
+make dev      # win at 32 — useful for testing the win screen
 ```
 
 Arrow keys to slide tiles. Press `Escape` to quit. The window is resizable.
+
+When you create a 2048 tile a **You Win** overlay appears with two options — **Continue** (keep playing) and **Restart** — navigated with Up/Down and confirmed with Enter, or tapped directly. A **Game Over** overlay appears when no moves remain; press Enter or any arrow key (or tap) to restart.
 
 ## Test
 
@@ -45,7 +48,6 @@ Recommended implementation order for triage PRDs:
 
 | # | PRD | Notes |
 |---|-----|-------|
-| 004 | game-states (Win & Game Over overlays) | Completes core game loop; no unmet dependencies. Renderer already draws partial overlays — just needs keyboard nav and Continue path in gamestate.lua. |
 | 005 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
 | 006 | main-menu | Needs game-states first (New Game → clean playing state). |
 | 007 | refactor-state-machine | Do before adding Options screen or you refactor into a moving target. |

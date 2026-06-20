@@ -178,7 +178,7 @@ function Grid:move(direction)
     local win = false
     for r = 1, SIZE do
         for c = 1, SIZE do
-            if self._board[r][c] == 2048 then win = true end
+            if self._board[r][c] >= config.WIN_TILE then win = true end
         end
     end
 

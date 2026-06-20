@@ -20,6 +20,8 @@ M.TILE_COLORS        = {
 }
 M.DEFAULT_TILE_COLOR = { bg = { 0.24, 0.23, 0.20 }, fg = { 1.00, 1.00, 1.00 } }
 
+M.WIN_TILE           = 2048
+
 M.ANIM_DURATION      = 0.1
 
 M.TILESET            = ""

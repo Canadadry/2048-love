@@ -98,12 +98,13 @@ local function cell_key(r, c, n)
     return (r - 1) * n + c
 end
 
-function M.draw(cells, score, game_over, win, anim_tiles)
+function M.draw(cells, score, game_over, win, anim_tiles, cursor)
     check.tbl(cells,      "cells")
     check.num(score,      "score")
     check.bool(game_over, "game_over")
     check.bool(win,       "win")
     check.tbl(anim_tiles, "anim_tiles")
+    cursor = cursor or 0
 
     local board_px, tile_px, pad, board_x, board_y = board_metrics()
     local n       = config.GRID_SIZE
@@ -156,12 +157,26 @@ function M.draw(cells, score, game_over, win, anim_tiles)
     if win then
         love.graphics.setColor(1, 1, 1, 0.55)
         love.graphics.rectangle("fill", board_x, board_y, board_px, board_px)
+        local title_font = get_font(font_sz + 8)
         love.graphics.setColor(0.47, 0.43, 0.40)
-        love.graphics.setFont(get_font(font_sz + 8))
-        local msg = "You win!"
+        love.graphics.setFont(title_font)
+        local msg = "You Win!"
         love.graphics.print(msg,
-            board_x + math.floor((board_px - get_font(font_sz + 8):getWidth(msg)) / 2),
-            board_y + math.floor(board_px / 2) - font_sz)
+            board_x + math.floor((board_px - title_font:getWidth(msg)) / 2),
+            board_y + math.floor(board_px * 0.30))
+        local bounds = M.you_win_button_bounds()
+        local btn_font = get_font(math.max(12, font_sz - 2))
+        love.graphics.setFont(btn_font)
+        for i, b in ipairs({ bounds.continue_btn, bounds.restart_btn }) do
+            local selected = (cursor == i - 1)
+            love.graphics.setColor(selected and {0.96, 0.49, 0.37} or {0.93, 0.89, 0.85})
+            love.graphics.rectangle("fill", b.x, b.y, b.w, b.h, 6, 6)
+            love.graphics.setColor(selected and {1, 1, 1} or {0.47, 0.43, 0.40})
+            local lbl = b.label
+            love.graphics.print(lbl,
+                b.x + math.floor((b.w - btn_font:getWidth(lbl)) / 2),
+                b.y + math.floor((b.h - btn_font:getHeight()) / 2))
+        end
     elseif game_over then
         love.graphics.setColor(0.24, 0.23, 0.20, 0.55)
         love.graphics.rectangle("fill", board_x, board_y, board_px, board_px)
@@ -192,6 +207,20 @@ function M.restart_button_bounds()
     local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
     local btn_y   = board_y + math.floor(board_px / 2) + math.floor(font_sz * 0.5)
     return { x = btn_x, y = btn_y, w = btn_w, h = btn_h }
+end
+
+function M.you_win_button_bounds()
+    local board_px, tile_px, _, board_x, board_y = board_metrics()
+    local font_sz = math.max(12, math.floor(tile_px * 0.30))
+    local btn_w   = math.floor(board_px * 0.5)
+    local btn_h   = math.floor(font_sz * 2.2)
+    local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
+    local gap     = math.floor(font_sz * 0.6)
+    local top_y   = board_y + math.floor(board_px * 0.52)
+    return {
+        continue_btn = { x = btn_x, y = top_y,              w = btn_w, h = btn_h, label = "Continue" },
+        restart_btn  = { x = btn_x, y = top_y + btn_h + gap, w = btn_w, h = btn_h, label = "Restart"  },
+    }
 end
 
 return M

@@ -7,6 +7,10 @@ local state
 local swiper
 
 function love.load()
+    for _, v in ipairs(arg or {}) do
+        local n = v:match("^%-%-win%-tile=(%d+)$")
+        if n then config.WIN_TILE = tonumber(n); break end
+    end
     love.window.setTitle("2048")
     love.window.setMode(config.WINDOW_W, config.WINDOW_H, { resizable = true, minwidth = 300, minheight = 300 })
     love.graphics.setBackgroundColor(0.98, 0.97, 0.94)
@@ -22,7 +26,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles())
+    renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor())
 end
 
 function love.keypressed(key)
@@ -37,15 +41,29 @@ function love.resize(w, h)
     swiper:set_threshold(math.min(w, h) * 0.10)
 end
 
-function love.mousepressed(x, y, button)
-    if button ~= 1 then return end
-    swiper:touchpressed("mouse", x, y)
-    if state:game_over() then
-        local btn = renderer.restart_button_bounds()
-        if x >= btn.x and x <= btn.x + btn.w and y >= btn.y and y <= btn.y + btn.h then
+local function hit(btn, x, y)
+    return x >= btn.x and x <= btn.x + btn.w and y >= btn.y and y <= btn.y + btn.h
+end
+
+local function handle_tap(x, y)
+    if state:win() then
+        local b = renderer.you_win_button_bounds()
+        if hit(b.continue_btn, x, y) then
+            state:continue_game()
+        elseif hit(b.restart_btn, x, y) then
+            state:restart()
+        end
+    elseif state:game_over() then
+        if hit(renderer.restart_button_bounds(), x, y) then
             state:restart()
         end
     end
+end
+
+function love.mousepressed(x, y, button)
+    if button ~= 1 then return end
+    swiper:touchpressed("mouse", x, y)
+    handle_tap(x, y)
 end
 
 function love.mousemoved(x, y)
@@ -60,5 +78,27 @@ function love.mousereleased(x, y, button)
     local dir = swiper:touchreleased("mouse", x, y)
     if dir and not state:game_over() and not state:win() then
         state:queue_move(dir)
+    end
+end
+
+function love.touchpressed(id, x, y)
+    swiper:touchpressed(id, x, y)
+end
+
+function love.touchmoved(id, x, y)
+    local dir = swiper:touchmoved(id, x, y)
+    if dir and not state:game_over() and not state:win() then
+        state:queue_move(dir)
+    end
+end
+
+function love.touchreleased(id, x, y)
+    local dir = swiper:touchreleased(id, x, y)
+    if dir then
+        if not state:game_over() and not state:win() then
+            state:queue_move(dir)
+        end
+    else
+        handle_tap(x, y)
     end
 end
