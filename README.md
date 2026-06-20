@@ -38,17 +38,19 @@ make test-all           # all of the above
 game/              Love2D game source
   main.lua         entry point (Love2D callbacks)
   config.lua       constants and tile color map
-  gamestate.lua    score tracking, input routing, menu and pause state
+  statemachine.lua state machine (switch, lifecycle dispatch)
+  gamestate.lua    game state tables (menu, playing, paused, win, game_over) wired onto the machine
   renderer.lua     board drawing
   menu.lua         overlay and button rendering (main menu, win, game-over, pause)
   grid.lua         game logic — slide, merge, spawn, win/lose detection
 tests/
   test_all.lua     test runner (runs all suites below)
   test_grid.lua    grid logic
-  test_gamestate.lua  game state and input
-  test_pause.lua      pause menu behaviour
-  test_menu.lua       menu button bounds
-  test_main_menu.lua  main menu state and navigation
+  test_gamestate.lua     game state and input
+  test_statemachine.lua  state machine mechanics
+  test_pause.lua         pause menu behaviour
+  test_menu.lua          menu button bounds
+  test_main_menu.lua     main menu state and navigation
   test_tile.lua    tile animation
   test_tileset.lua tileset loading helpers
   test_swipe.lua   swipe gesture detection
@@ -62,8 +64,7 @@ Recommended implementation order for triage PRDs:
 
 | # | PRD | Notes |
 |---|-----|-------|
-| 006 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
-| 007 | refactor-state-machine | Do before adding Options screen or you refactor into a moving target. |
+| 008 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
 | 009 | tileset-animation | Already unblocked (tileset-loading done). Can slot in anywhere before options. |
 | 010 | options-screen-shell | Needs state machine as infrastructure. |
 | 011+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first. |

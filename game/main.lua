@@ -40,9 +40,7 @@ function love.keypressed(key)
 end
 
 function love.resize(w, h)
-    for _, t in ipairs(state:anim_tiles()) do
-        t:finish()
-    end
+    state:resize(w, h)
     swiper:set_threshold(math.min(w, h) * 0.10)
 end
 
