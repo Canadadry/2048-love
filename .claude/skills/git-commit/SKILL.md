@@ -10,12 +10,21 @@ description: Clean git commit workflow — run tests, select relevant files from
 ### 1. Run tests
 Run the project test suite. If tests fail, stop and report — do not proceed to commit.
 
-For this project: `go test ./...`
+For this project: `make test`
 
-### 2. Inspect status
+### 2. PRD graduation (if applicable)
+If a PRD was just implemented, mark it done and move it out of triage:
+
+1. Set `status: done` in the PRD frontmatter.
+2. Move the file from `docs/prd/triage/` to `docs/prd/`.
+3. Rename it with the next sequential number prefix: check existing files in `docs/prd/` (e.g. `001-mvp.md`, `002-slide-animation.md`) and use the next number (zero-padded to 3 digits).
+
+Example: `docs/prd/triage/some-feature.md` → `docs/prd/003-some-feature.md`
+
+### 3. Inspect status
 Run `git status` to see all changed files. Do NOT run `git add .` or `git add -A`.
 
-### 3. Select files
+### 4. Select files
 Based on the current conversation context (what was just built or fixed), select only the files that belong to this unit of work. Leave unrelated changes unstaged.
 
 Rules:
@@ -23,7 +32,7 @@ Rules:
 - Never stage: `.env`, secrets, generated binaries, or files unrelated to the current task.
 - When unsure whether a file belongs, leave it out and mention it.
 
-### 4. Propose and confirm
+### 5. Propose and confirm
 Present the proposed staging and message — then **wait for the user's go-ahead** before committing.
 
 Format:
@@ -34,7 +43,7 @@ Message: feat: add create_adr and get_adr tools
 
 Do not show file contents. The user can inspect diffs themselves.
 
-### 5. Commit
+### 6. Commit
 On confirmation: `git add <files>` then commit with the agreed message.
 
 ## Commit message format
