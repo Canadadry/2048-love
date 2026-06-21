@@ -27,7 +27,12 @@ Read `README.md` and update it to reflect any user-visible changes introduced by
 In the **PRD Roadmap** table, remove the row for the implemented PRD entirely — do not strike it through or mark it "Done".
 
 ### 4. Inspect status
-Run `git status` to see all changed files. Do NOT run `git add .` or `git add -A`.
+Run these three scripts (separate calls, each small enough to review on its own) instead of ad hoc `git diff`/`diff` invocations:
+- `.claude/skills/git-commit/scripts/status.sh` — overview of changed files.
+- `.claude/skills/git-commit/scripts/staged-diff.sh [path...]` — staged diff, rename-aware.
+- `.claude/skills/git-commit/scripts/unstaged-diff.sh [path...]` — unstaged diff, rename-aware.
+
+Pass paths to scope a diff, e.g. `unstaged-diff.sh docs/prd/`. Do NOT run `git add .` or `git add -A`.
 
 ### 5. Select files
 Based on the current conversation context (what was just built or fixed), select only the files that belong to this unit of work. Leave unrelated changes unstaged.
