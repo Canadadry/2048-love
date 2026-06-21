@@ -26,6 +26,9 @@ local suites = {
     "../tests/test_renderer_board.lua",
     "../tests/test_renderer_tile_draw.lua",
     "../tests/test_renderer_hud.lua",
+    -- runs last: replaces the global `love` stub wholesale, dropping
+    -- love.filesystem, which settings.lua/tileset.lua need in earlier suites.
+    "lib/ui/painter/painter_test.lua",
 }
 
 local real_exit = os.exit

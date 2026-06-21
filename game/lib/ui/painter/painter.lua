@@ -54,6 +54,26 @@ local function Object(param)
     }, "Painter")
 end
 
+local function Interactive(param)
+    param = param or {}
+    return kind.Set({
+        kind = "Interactive",
+        onTap = param.onTap,
+    }, "Painter")
+end
+
+local function Group(param)
+    param = param or {}
+    local painters = param.painters or {}
+    for _, p in ipairs(painters) do
+        kind.Check(p, "Painter")
+    end
+    return kind.Set({
+        kind = "Group",
+        painters = painters,
+    }, "Painter")
+end
+
 local function Draw(box, painter)
     kind.Check(painter, "Painter")
     if painter.kind == "Rectangle" then
@@ -84,6 +104,12 @@ local function Draw(box, painter)
         love.graphics.printf(wrapped_text, box.x, box.y, box.w, painter.align)
     elseif painter.kind == "Object" then
         painter.draw(painter.data, box.x, box.y, box.w, box.h)
+    elseif painter.kind == "Interactive" then
+        -- invisible: only matters to ui.HitTest
+    elseif painter.kind == "Group" then
+        for _, p in ipairs(painter.painters) do
+            Draw(box, p)
+        end
     end
 end
 
@@ -111,6 +137,16 @@ local function Measure(userdata, painter)
         return { x = w, y = h }
     elseif painter.kind == "Object" then
         return painter.measure(painter.data)
+    elseif painter.kind == "Interactive" then
+        return { x = 0, y = 0 }
+    elseif painter.kind == "Group" then
+        local mx, my = 0, 0
+        for _, p in ipairs(painter.painters) do
+            local m = Measure(userdata, p)
+            mx = math.max(mx, m.x)
+            my = math.max(my, m.y)
+        end
+        return { x = mx, y = my }
     end
     if painter.kind == nil then
         error("invalid painter : no kind")
@@ -134,6 +170,14 @@ local function Wrap(userdata, painter, width)
         return painter.font:getHeight() * #wrapped_text
     elseif painter.kind == "Object" then
         return painter.measure(painter.data, width)
+    elseif painter.kind == "Interactive" then
+        return 0
+    elseif painter.kind == "Group" then
+        local m = 0
+        for _, p in ipairs(painter.painters) do
+            m = math.max(m, Wrap(userdata, p, width))
+        end
+        return m
     end
     error("invalid painter " .. painter.kind)
 end
@@ -151,6 +195,8 @@ return {
     Image = Image,
     NinePatch = NinePatch,
     Object = Object,
+    Interactive = Interactive,
+    Group = Group,
     Draw = Draw,
     Measure = Measure,
     Wrap = Wrap,

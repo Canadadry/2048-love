@@ -1,5 +1,14 @@
 love = {
-    graphics   = { getDimensions = function() return 600, 600 end },
+    graphics   = {
+        getDimensions = function() return 600, 600 end,
+        newFont = function(size)
+            return {
+                getWidth  = function(self, s) return #s * 7 end,
+                getHeight = function(self) return 18 end,
+                getWrap   = function(self, text, width) return 0, { text } end,
+            }
+        end,
+    },
     filesystem = {
         getDirectoryItems = function(_) return {} end,
         read              = function(_) return nil end,
@@ -60,6 +69,44 @@ test("pause_icon_bounds is at least 44x44 for touch targets", function()
     local b = menu.pause_icon_bounds()
     if b.w < 44 then error("width " .. b.w .. " < 44") end
     if b.h < 44 then error("height " .. b.h .. " < 44") end
+end)
+
+local function button_centers(tree)
+    local centers = {}
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter and cmd.painter.kind == "Group" then
+            table.insert(centers, { x = cmd.x + cmd.w / 2, y = cmd.y + cmd.h / 2 })
+        end
+    end
+    return centers
+end
+
+test("main_menu_hit_test routes taps to the right callback, and a miss fires none", function()
+    local centers = button_centers(menu.main_menu_tree(0, {}))
+    if #centers ~= 3 then error("expected 3 buttons, got " .. #centers) end
+
+    local fired
+    local callbacks = {
+        on_new_game = function() fired = "new_game" end,
+        on_options  = function() fired = "options" end,
+        on_quit     = function() fired = "quit" end,
+    }
+
+    fired = nil
+    menu.main_menu_hit_test(0, callbacks, centers[1].x, centers[1].y)
+    if fired ~= "new_game" then error("expected new_game, got " .. tostring(fired)) end
+
+    fired = nil
+    menu.main_menu_hit_test(0, callbacks, centers[2].x, centers[2].y)
+    if fired ~= "options" then error("expected options, got " .. tostring(fired)) end
+
+    fired = nil
+    menu.main_menu_hit_test(0, callbacks, centers[3].x, centers[3].y)
+    if fired ~= "quit" then error("expected quit, got " .. tostring(fired)) end
+
+    fired = nil
+    menu.main_menu_hit_test(0, callbacks, 5, 5)
+    if fired ~= nil then error("expected no callback to fire on a miss, got " .. tostring(fired)) end
 end)
 
 print(string.format("\n%d passed, %d failed", pass, fail))

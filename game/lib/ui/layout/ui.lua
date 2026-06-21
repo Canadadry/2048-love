@@ -62,9 +62,42 @@ local function DrawTree(tree)
     compute.DrawCommand(tree.Node, 1, tree.Commands)
 end
 
+local function find_interactive(painter)
+    if painter == nil then
+        return nil
+    end
+    if painter.kind == "Interactive" then
+        return painter.onTap
+    end
+    if painter.kind == "Group" then
+        for i = #painter.painters, 1, -1 do
+            local found = find_interactive(painter.painters[i])
+            if found then
+                return found
+            end
+        end
+    end
+    return nil
+end
+
+local function HitTest(tree, x, y)
+    kind.Check(tree, "Tree")
+    for i = #tree.Commands, 1, -1 do
+        local cmd = tree.Commands[i]
+        if x >= cmd.x and x <= cmd.x + cmd.w and y >= cmd.y and y <= cmd.y + cmd.h then
+            local cb = find_interactive(cmd.painter)
+            if cb then
+                return cb
+            end
+        end
+    end
+    return nil
+end
+
 return {
     Tree = Tree,
     Node = Node,
     Leaf = Leaf,
     DrawTree = DrawTree,
+    HitTest = HitTest,
 }

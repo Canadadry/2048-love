@@ -1,4 +1,7 @@
-local config = require("config")
+local config  = require("config")
+local builder = require("lib.ui.layout.builder")
+local ui      = require("lib.ui.layout.ui")
+local painter = require("lib.ui.painter.painter")
 
 local M = {}
 
@@ -21,48 +24,93 @@ local function board_metrics()
     return board_px, tile_px, pad, board_x, board_y
 end
 
-function M.main_menu_button_bounds()
-    local board_px, tile_px, _, board_x, board_y = board_metrics()
+local MENU_BG_COLOR          = { 250, 247, 240, 255 }
+local MENU_ACCENT_COLOR      = { 245, 125, 94, 255 }
+local MENU_NORMAL_BTN_COLOR  = { 237, 227, 217, 255 }
+local MENU_NORMAL_TEXT_COLOR = { 120, 110, 102, 255 }
+local MENU_WHITE_COLOR       = { 255, 255, 255, 255 }
+
+local function main_menu_sizes()
+    local board_px, tile_px = board_metrics()
     local font_sz = math.max(12, math.floor(tile_px * 0.30))
     local btn_w   = math.floor(board_px * 0.5)
     local btn_h   = math.floor(font_sz * 2.2)
-    local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
     local gap     = math.floor(font_sz * 0.6)
-    local top_y   = board_y + math.floor(board_px * 0.35)
-    return {
-        { x = btn_x, y = top_y,                     w = btn_w, h = btn_h, label = "New Game" },
-        { x = btn_x, y = top_y + (btn_h + gap),     w = btn_w, h = btn_h, label = "Options"  },
-        { x = btn_x, y = top_y + (btn_h + gap) * 2, w = btn_w, h = btn_h, label = "Quit"      },
-    }
+    return font_sz, btn_w, btn_h, gap
+end
+
+local function main_menu_button(label, btn_w, btn_h, btn_font, selected, onTap)
+    return builder.Node(
+        string.format("w-%d h-%d center", btn_w, btn_h),
+        painter.Group {
+            painters = {
+                painter.Rectangle {
+                    color   = selected and MENU_ACCENT_COLOR or MENU_NORMAL_BTN_COLOR,
+                    rounded = 6,
+                    segment = 8,
+                },
+                painter.Interactive { onTap = onTap },
+            }
+        },
+        {
+            builder.Leaf("grow-x h-fit", painter.Text {
+                text  = label,
+                align = "center",
+                font  = btn_font,
+                color = selected and MENU_WHITE_COLOR or MENU_NORMAL_TEXT_COLOR,
+            }),
+        }
+    )
+end
+
+local function build_main_menu_tree(cursor, callbacks)
+    callbacks = callbacks or {}
+    local w, h = love.graphics.getDimensions()
+    local font_sz, btn_w, btn_h, gap = main_menu_sizes()
+    local title_font = get_font(font_sz + 16)
+    local btn_font   = get_font(math.max(12, font_sz - 2))
+
+    local tree = painter.Tree()
+    builder.Build(tree, builder.Node(
+        string.format("w-%d h-%d center", w, h),
+        painter.Rectangle { color = MENU_BG_COLOR },
+        {
+            builder.Node(string.format("col gap-%d center", gap), nil, {
+                builder.Leaf("grow-x h-fit", painter.Text {
+                    text  = "2048",
+                    align = "center",
+                    font  = title_font,
+                    color = MENU_NORMAL_TEXT_COLOR,
+                }),
+                main_menu_button("New Game", btn_w, btn_h, btn_font, cursor == 0, callbacks.on_new_game),
+                main_menu_button("Options",  btn_w, btn_h, btn_font, cursor == 1, callbacks.on_options),
+                main_menu_button("Quit",     btn_w, btn_h, btn_font, cursor == 2, callbacks.on_quit),
+            }),
+        }
+    ))
+    return tree
+end
+
+function M.main_menu_tree(cursor, callbacks)
+    local tree = build_main_menu_tree(cursor, callbacks)
+    ui.DrawTree(tree)
+    return tree
 end
 
 function M.draw_main_menu(cursor)
-    local w, h = love.graphics.getDimensions()
-    local board_px, tile_px, _, board_x, board_y = board_metrics()
-    local font_sz    = math.max(12, math.floor(tile_px * 0.30))
-    local title_font = get_font(font_sz + 16)
-    local btn_font   = get_font(math.max(12, font_sz - 2))
-    local btns       = M.main_menu_button_bounds()
+    local tree = M.main_menu_tree(cursor, nil)
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter then
+            painter.Draw(cmd, cmd.painter)
+        end
+    end
+end
 
-    love.graphics.setColor(0.98, 0.97, 0.94)
-    love.graphics.rectangle("fill", 0, 0, w, h)
-
-    love.graphics.setColor(0.47, 0.43, 0.40)
-    love.graphics.setFont(title_font)
-    local title = "2048"
-    love.graphics.print(title,
-        board_x + math.floor((board_px - title_font:getWidth(title)) / 2),
-        board_y + math.floor(board_px * 0.20))
-
-    love.graphics.setFont(btn_font)
-    for i, b in ipairs(btns) do
-        local selected = (cursor == i - 1)
-        love.graphics.setColor(selected and { 0.96, 0.49, 0.37 } or { 0.93, 0.89, 0.85 })
-        love.graphics.rectangle("fill", b.x, b.y, b.w, b.h, 6, 6)
-        love.graphics.setColor(selected and { 1, 1, 1 } or { 0.47, 0.43, 0.40 })
-        love.graphics.print(b.label,
-            b.x + math.floor((b.w - btn_font:getWidth(b.label)) / 2),
-            b.y + math.floor((b.h - btn_font:getHeight()) / 2))
+function M.main_menu_hit_test(cursor, callbacks, x, y)
+    local tree = M.main_menu_tree(cursor, callbacks)
+    local cb = ui.HitTest(tree, x, y)
+    if cb then
+        cb()
     end
 end
 
