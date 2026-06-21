@@ -2,6 +2,8 @@
 
 ## Before any task
 
+Start with `git pull` to make sure the working tree is up to date.
+
 Read `README.md` first. It has the project layout, controls, and PRD roadmap — don't guess at any of that from memory.
 
 ## Shell usage
