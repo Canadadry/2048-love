@@ -27,10 +27,11 @@ function Swipe:touchmoved(id, x, y)
     check.num(y, "y")
     local s = self._starts[id]
     if not s then return nil end
+    if s.fired then return nil end
     local dx = x - s.x
     local dy = y - s.y
     if math.max(math.abs(dx), math.abs(dy)) < self._threshold then return nil end
-    s.x = x; s.y = y; s.fired = true
+    s.fired = true
     if math.abs(dx) >= math.abs(dy) then
         return dx > 0 and "right" or "left"
     else

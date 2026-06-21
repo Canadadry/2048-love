@@ -78,12 +78,23 @@ test("touchreleased returns nil after touchmoved already consumed the gesture", 
     eq(s:touchreleased(1, 210, 106), nil)
 end)
 
-test("touchmoved fires again from new origin after first fire (continuous drag)", function()
+test("touchmoved returns nil on second call after first fire (single-fire per gesture)", function()
     local s = swipe.new(50)
     s:touchpressed(1, 100, 100)
-    eq(s:touchmoved(1, 200, 102), "right")  -- first fire, origin resets to (200,102)
-    eq(s:touchmoved(1, 220, 102), nil)       -- below threshold from new origin
-    eq(s:touchmoved(1, 100, 102), "left")   -- second fire from new origin
+    eq(s:touchmoved(1, 200, 102), "right")  -- first fire
+    eq(s:touchmoved(1, 100, 102), nil)      -- already fired, ignored
+end)
+
+test("only one direction fires across a full drag with continued movement", function()
+    local s = swipe.new(50)
+    local fires = 0
+    s:touchpressed(1, 100, 100)
+    if s:touchmoved(1, 130, 100) then fires = fires + 1 end -- below threshold
+    if s:touchmoved(1, 200, 100) then fires = fires + 1 end -- fires here
+    if s:touchmoved(1, 260, 100) then fires = fires + 1 end -- already fired, ignored
+    if s:touchmoved(1, 320, 100) then fires = fires + 1 end -- already fired, ignored
+    if s:touchreleased(1, 320, 100) then fires = fires + 1 end -- already fired, ignored
+    eq(fires, 1)
 end)
 
 test("touchreleased still fires when touchmoved never crossed threshold", function()

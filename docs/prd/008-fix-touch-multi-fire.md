@@ -1,7 +1,7 @@
 ---
 title: "Fix Touch Multi-Fire"
 description: "A single swipe gesture on a real touch device queues multiple tile moves instead of one."
-status: needs-triage
+status: done
 ---
 
 # Fix Touch Multi-Fire
