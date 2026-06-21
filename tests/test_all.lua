@@ -1,7 +1,11 @@
 -- Run from: cd game && lua ../tests/test_all.lua
 love = {
     graphics   = { getDimensions = function() return 600, 600 end },
-    filesystem = { getDirectoryItems = function(_) return {} end },
+    filesystem = {
+        getDirectoryItems = function(_) return {} end,
+        read              = function(_) return nil end,
+        write             = function(_, _) return true end,
+    },
 }
 
 local suites = {
@@ -15,6 +19,8 @@ local suites = {
     "../tests/test_main_menu.lua",
     "../tests/test_options.lua",
     "../tests/test_optionsmodel.lua",
+    "../tests/test_settings.lua",
+    "../tests/test_main.lua",
     "../tests/test_statemachine.lua",
 }
 

@@ -25,6 +25,8 @@ Press `Escape` (or tap the **⏸** button in the top-left corner) to open the **
 
 Select **Options** from the main menu (between New Game and Quit) to open the **Options** screen — a two-row list, **Win Tile** then **Theme**. Up/Down moves focus between the rows (wrapping at both ends); the focused row is highlighted. Left/Right cycles the focused row's value immediately — no confirm step. **Win Tile** toggles between `32` (dev) and `2048` (prod) — the same value `--win-tile` sets at launch, but changeable mid-session. **Theme** cycles through the built tilesheets in `game/assets/` (plus a "None (classic)" entry). Enter has no effect on this screen. Press `Escape` to return to the main menu.
 
+Both settings persist across launches — they're saved to disk as soon as you change them, and restored on the next launch. `--win-tile` at launch still overrides a saved Win Tile value.
+
 ## Test
 
 ```
@@ -47,6 +49,7 @@ game/              Love2D game source
   menu.lua         overlay and button rendering (main menu, win, game-over, pause, options)
   options.lua      options screen state (win-tile toggle, escape back to menu)
   optionsmodel.lua row-focus/value-cycling model backing the Options screen (pure, no Love2D dependency)
+  settings.lua     persists option values to disk (load/save/get/set) via love.filesystem
   grid.lua         game logic — slide, merge, spawn, win/lose detection
 tests/
   test_all.lua     test runner (runs all suites below)
@@ -58,6 +61,8 @@ tests/
   test_main_menu.lua     main menu state and navigation
   test_options.lua       options screen state and navigation
   test_optionsmodel.lua  row-focus/value-cycling model
+  test_settings.lua      settings persistence (save/load round-trip, missing/corrupt file)
+  test_main.lua          startup wiring (settings seeded into config)
   test_tile.lua    tile animation
   test_tileset.lua tileset loading helpers
   test_swipe.lua   swipe gesture detection
@@ -73,7 +78,7 @@ Recommended implementation order for triage PRDs:
 | # | PRD | Notes |
 |---|-----|-------|
 | 012 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
-| 013+ | animation-effect-toggles · settings-persistence | All need options screen first (now available — see PRD 010). |
+| 013+ | animation-effect-toggles | Needs options screen first (now available — see PRD 010). |
 | — | sound-hooks · refactor-renderer-split | Independent; pick up when the time feels right. |
 
 **Flag:** `touch-swipe` is in triage but `swipe.lua` is already wired in `main.lua`. Verify before triaging — it may already be done.

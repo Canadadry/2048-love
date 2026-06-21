@@ -4,6 +4,7 @@ end
 
 local gamestate = require("gamestate")
 local config    = require("config")
+local settings  = require("settings")
 
 local pass, fail = 0, 0
 
@@ -89,6 +90,25 @@ test("left/right on the Theme row cycle config.TILESET through available themes,
     eq(config.TILESET, "", "theme wraps back to None sentinel")
     s:keypressed("left")
     eq(config.TILESET, "jurassic-park", "left wraps backward to the last theme")
+    config.TILESET = ""
+end)
+
+-- ── Settings persistence ──────────────────────────────────────────────────────
+
+test("toggling Win Tile persists the new value via settings.set", function()
+    config.TILESET = ""
+    local s = in_options()
+    s:keypressed("right")
+    eq(settings.get("win_tile", nil), 32, "win_tile persisted on toggle")
+    s:keypressed("left")
+end)
+
+test("cycling Theme persists the new value via settings.set", function()
+    config.TILESET = ""
+    local s = in_options()
+    s:keypressed("down")
+    s:keypressed("right")
+    eq(settings.get("theme", nil), "jurassic-park", "theme persisted on cycle")
     config.TILESET = ""
 end)
 

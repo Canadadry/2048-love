@@ -1,6 +1,10 @@
 love = {
     graphics   = { getDimensions = function() return 600, 600 end },
-    filesystem = { getDirectoryItems = function(_) return {} end },
+    filesystem = {
+        getDirectoryItems = function(_) return {} end,
+        read              = function(_) return nil end,
+        write             = function(_, _) return true end,
+    },
 }
 local menu = require("menu")
 

@@ -1,6 +1,7 @@
 local config       = require("config")
 local tileset      = require("tileset")
 local optionsmodel = require("optionsmodel")
+local settings     = require("settings")
 
 local WIN_TILE_ROW = 1
 local THEME_ROW     = 2
@@ -42,8 +43,10 @@ function M.new(ctx, Base)
             local row = self._model:focused_row()
             if row == WIN_TILE_ROW then
                 config.WIN_TILE = self._model:row_value(WIN_TILE_ROW)
+                settings.set("win_tile", config.WIN_TILE)
             else
                 config.TILESET = self._model:row_value(THEME_ROW)
+                settings.set("theme", config.TILESET)
             end
         end
     end

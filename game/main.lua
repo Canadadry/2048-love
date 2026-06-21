@@ -3,22 +3,29 @@ local gamestate = require("gamestate")
 local menu      = require("menu")
 local renderer  = require("renderer")
 local swipe     = require("swipe")
+local settings  = require("settings")
 
 local state
 local swiper
 
 function love.load()
+    love.filesystem.setIdentity("2048")
+    settings.load()
+    config.WIN_TILE = settings.get("win_tile", config.WIN_TILE)
+    config.TILESET  = settings.get("theme", config.TILESET)
     for _, v in ipairs(arg or {}) do
         local n = v:match("^%-%-win%-tile=(%d+)$")
-        if n then config.WIN_TILE = tonumber(n); break end
+        if n then
+            config.WIN_TILE = tonumber(n); break
+        end
     end
     love.window.setTitle("2048")
     love.window.setMode(config.WINDOW_W, config.WINDOW_H, { resizable = true, minwidth = 300, minheight = 300 })
     love.graphics.setBackgroundColor(0.98, 0.97, 0.94)
     renderer.load()
-    state  = gamestate.new()
+    state      = gamestate.new()
     local w, h = love.graphics.getDimensions()
-    swiper = swipe.new(math.min(w, h) * 0.10)
+    swiper     = swipe.new(math.min(w, h) * 0.10)
 end
 
 function love.update(dt)
@@ -32,7 +39,8 @@ function love.draw()
     elseif state:in_options() then
         menu.draw_options(state:win_tile(), state:theme(), state:focused_row())
     else
-        renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(), state:paused(), state:pause_cursor())
+        renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(),
+            state:paused(), state:pause_cursor())
     end
 end
 
