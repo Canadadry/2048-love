@@ -1,7 +1,7 @@
 ---
 title: "Tileset Builder: Max Sheet Width Guard"
 description: "tilesheet.py builds sheets wide enough to fit every row's full frame count at the chosen tile width, with no ceiling — a GIF with enough frames can produce a sheet wider than any GPU's max texture size, which only surfaces as a crash at game launch."
-status: needs-triage
+status: done
 ---
 
 # Tileset Builder: Max Sheet Width Guard

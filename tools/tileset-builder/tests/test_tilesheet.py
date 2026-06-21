@@ -1,7 +1,7 @@
 from PIL import Image
 import sys, os, tempfile
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from tilesheet import build_sheet, append_row, write_sidecar, read_sidecar, cmd_create, cmd_append, scale_frame, main, SizeMismatchError
+from tilesheet import build_sheet, append_row, write_sidecar, read_sidecar, cmd_create, cmd_append, scale_frame, main, SizeMismatchError, downsample_frames, MAX_SHEET_WIDTH
 import pytest
 
 
@@ -10,8 +10,34 @@ def solid(color, w=8, h=8):
 
 
 def save_gif(path: str, w: int, h: int, n_frames: int = 1) -> None:
-    frames = [Image.new("RGB", (w, h), (255, 0, 0)).convert("P") for _ in range(n_frames)]
+    # Spread RGB widely per frame — near-identical colors (e.g. i % 256 for
+    # small i) get collapsed by Pillow's GIF quantizer, silently dropping frames.
+    frames = [
+        Image.new("RGB", (w, h), ((i * 28) % 256, (i * 60) % 256, (i * 90) % 256)).convert("P")
+        for i in range(n_frames)
+    ]
     frames[0].save(path, save_all=True, append_images=frames[1:])
+
+
+# --- downsample_frames ---
+
+def test_downsample_frames_noop_when_within_limit():
+    frames = [1, 2, 3]
+    assert downsample_frames(frames, limit=5) == [1, 2, 3]
+
+
+def test_downsample_frames_strides_to_fit_limit():
+    frames = list(range(113))
+    result = downsample_frames(frames, limit=64)
+    assert len(result) <= 64
+    assert result[0] == 0
+    assert result == frames[::2][:64]
+
+
+def test_downsample_frames_limit_one_returns_single_frame():
+    frames = list(range(10))
+    result = downsample_frames(frames, limit=1)
+    assert result == [0]
 
 
 # --- build_sheet ---
@@ -111,6 +137,62 @@ def test_scale_frame_crop_fills_tile_no_transparency():
     assert out.size == (8, 8)
     assert out.getpixel((0, 0))[3] == 255
     assert out.getpixel((7, 7))[3] == 255
+
+
+# --- cmd_create: max sheet width ---
+
+def test_create_downsamples_row_exceeding_max_sheet_width():
+    with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
+        gif_path = f.name
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        png_path = f.name
+    try:
+        tile_w = 4096
+        limit = MAX_SHEET_WIDTH // tile_w  # 4
+        save_gif(gif_path, w=40, h=20, n_frames=9)  # 9 > limit
+        cmd_create(png_path, tile_w=tile_w, gif_paths=[gif_path], mode="shrink", tile_h=8)
+        _, _, frame_counts = read_sidecar(os.path.splitext(png_path)[0] + ".lua")
+        assert frame_counts[0] <= limit
+        sheet = Image.open(png_path)
+        assert sheet.size == (frame_counts[0] * tile_w, 8)
+    finally:
+        for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
+            if os.path.exists(p):
+                os.unlink(p)
+
+
+def test_create_downsample_prints_notice_naming_gif_and_counts(tmp_path, capsys):
+    gif_path = str(tmp_path / "many_frames.gif")
+    png_path = str(tmp_path / "out.png")
+    tile_w = 4096
+    limit = MAX_SHEET_WIDTH // tile_w  # 4
+    save_gif(gif_path, w=40, h=20, n_frames=9)
+    cmd_create(png_path, tile_w=tile_w, gif_paths=[gif_path], mode="shrink", tile_h=8)
+    out = capsys.readouterr().out
+    assert "many_frames.gif" in out
+    assert "9" in out
+    _, _, frame_counts = read_sidecar(os.path.splitext(png_path)[0] + ".lua")
+    assert str(frame_counts[0]) in out
+
+
+def test_create_row_within_limit_is_untouched(capsys, tmp_path):
+    gif_path = str(tmp_path / "few_frames.gif")
+    png_path = str(tmp_path / "out.png")
+    save_gif(gif_path, w=40, h=20, n_frames=3)  # well within the limit
+    cmd_create(png_path, tile_w=4096, gif_paths=[gif_path], mode="shrink", tile_h=8)
+    _, _, frame_counts = read_sidecar(os.path.splitext(png_path)[0] + ".lua")
+    assert frame_counts == [3]
+    assert capsys.readouterr().out == ""
+
+
+def test_create_tile_width_exceeding_max_sheet_width_exits_cleanly(tmp_path):
+    gif_path = str(tmp_path / "test.gif")
+    png_path = str(tmp_path / "out.png")
+    save_gif(gif_path, w=40, h=20, n_frames=2)
+    with pytest.raises(SystemExit):
+        cmd_create(png_path, tile_w=MAX_SHEET_WIDTH + 1, gif_paths=[gif_path], mode="shrink", tile_h=8)
+    assert not os.path.exists(png_path)
+    assert not os.path.exists(os.path.splitext(png_path)[0] + ".lua")
 
 
 # --- cmd_create aspect ratio ---
@@ -407,6 +489,26 @@ def test_cli_append_default_output_is_output_png(monkeypatch, tmp_path):
     main()
     _, _, frame_counts = read_sidecar(str(tmp_path / "output.lua"))
     assert len(frame_counts) == 2
+
+
+# --- cmd_append: max sheet width ---
+
+def test_append_downsamples_row_exceeding_max_sheet_width(tmp_path, capsys):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "many_frames.gif")
+    png = str(tmp_path / "sheet.png")
+    tile_w = 4096
+    limit = MAX_SHEET_WIDTH // tile_w  # 4
+    save_gif(gif1, w=40, h=20, n_frames=1)
+    save_gif(gif2, w=40, h=20, n_frames=9)  # 9 > limit
+    cmd_create(png, tile_w=tile_w, gif_paths=[gif1], mode="shrink", tile_h=8)
+    cmd_append(png, gif2, mode="shrink")
+    out = capsys.readouterr().out
+    assert "many_frames.gif" in out
+    assert "9" in out
+    _, _, frame_counts = read_sidecar(os.path.splitext(png)[0] + ".lua")
+    assert frame_counts[1] <= limit
+    assert str(frame_counts[1]) in out
 
 
 # --- sidecar ---

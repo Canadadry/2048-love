@@ -5,6 +5,9 @@ import argparse
 from PIL import Image
 
 
+MAX_SHEET_WIDTH = 16384  # common GPU texture-size floor
+
+
 class SizeMismatchError(Exception):
     pass
 
@@ -50,6 +53,34 @@ def scale_frame(frame: Image.Image, tile_w: int, tile_h: int, mode: str = "stric
             y = (sh - tile_h) // 2
             return scaled.crop((x, y, x + tile_w, y + tile_h))
     return frame.resize((tile_w, tile_h), Image.BILINEAR)
+
+
+def downsample_frames(frames: list, limit: int) -> list:
+    if len(frames) <= limit:
+        return frames
+    stride = -(-len(frames) // limit)  # ceil division
+    return frames[::stride]
+
+
+def _max_frames_for_tile_width(tile_w: int) -> int:
+    limit = MAX_SHEET_WIDTH // tile_w
+    if limit < 1:
+        sys.exit(
+            f"error: tile width {tile_w}px exceeds max sheet width {MAX_SHEET_WIDTH}px; "
+            "not even a single frame fits"
+        )
+    return limit
+
+
+def _downsample_with_notice(frames: list, limit: int, row_idx: int, gif_path: str) -> list:
+    downsampled = downsample_frames(frames, limit)
+    if len(downsampled) < len(frames):
+        print(
+            f"row {row_idx} ({os.path.basename(gif_path)}): "
+            f"downsampled {len(frames)} -> {len(downsampled)} frames "
+            f"to fit {MAX_SHEET_WIDTH}px max sheet width"
+        )
+    return downsampled
 
 
 def build_sheet(rows: list, tile_w: int, tile_h: int, mode: str = "strict") -> Image.Image:
@@ -112,6 +143,8 @@ def cmd_create(output_png: str, tile_w: int | None, gif_paths: list, mode: str =
         tile_w = native_w
     if tile_h is None:
         tile_h = round(native_h * tile_w / native_w)
+    limit = _max_frames_for_tile_width(tile_w)
+    rows = [_downsample_with_notice(frames, limit, row_idx, gif_paths[row_idx]) for row_idx, frames in enumerate(rows)]
     try:
         build_sheet(rows, tile_w, tile_h, mode).save(output_png)
     except RowScaleError as e:
@@ -136,6 +169,8 @@ def cmd_append(output_png: str, gif_path: str, mode: str = "strict") -> None:
         raise SizeMismatchError(
             f"tileset tile is {tile_w}x{tile_h} but gif is {gif_w}x{gif_h}"
         )
+    limit = _max_frames_for_tile_width(tile_w)
+    frames = _downsample_with_notice(frames, limit, len(frame_counts), gif_path)
     try:
         sheet = append_row(Image.open(output_png).convert("RGBA"), frames, tile_w, tile_h, mode)
     except ValueError as e:

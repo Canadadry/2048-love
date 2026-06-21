@@ -38,6 +38,8 @@ When `--tile-height` is given, it is no longer derived from the first GIF's aspe
 python tilesheet.py append output.png tile_16.gif
 ```
 
+If a row's frame count would make the sheet wider than 16384px (the common GPU texture-size floor), `create`/`append` automatically downsample that row — keeping frames evenly spread across the original clip — and print a notice naming the GIF and the before/after frame count. A tile width that alone exceeds 16384px is a hard error, since not even one frame would fit.
+
 Both commands produce two files:
 - `output.png` — sprite sheet, 13 rows × N frames, all frames `tile_size × tile_size`
 - `output.lua` — sidecar read by the game, contains `tile_size` and per-row `frame_counts`
