@@ -49,6 +49,7 @@ function Base:restart()       end
 function Base:to_main_menu()  end
 function Base:select_menu_item() end
 function Base:queue_move()    end
+function Base:tap_row()       end
 
 local function update_particles(ctx, dt)
     if #ctx.win_particles == 0 then return end

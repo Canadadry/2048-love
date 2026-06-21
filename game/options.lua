@@ -37,6 +37,23 @@ function M.new(ctx, Base)
         })
     end
 
+    local function persist_focused_row(self)
+        local row = self._model:focused_row()
+        if row == WIN_TILE_ROW then
+            config.WIN_TILE = self._model:row_value(WIN_TILE_ROW)
+            settings.set("win_tile", config.WIN_TILE)
+        elseif row == THEME_ROW then
+            config.TILESET = self._model:row_value(THEME_ROW)
+            settings.set("theme", config.TILESET)
+        elseif row == ANIMATIONS_ROW then
+            config.ANIMATIONS_ENABLED = self._model:row_value(ANIMATIONS_ROW)
+            settings.set("animations_enabled", config.ANIMATIONS_ENABLED)
+        else
+            config.EFFECTS_ENABLED = self._model:row_value(EFFECTS_ROW)
+            settings.set("effects_enabled", config.EFFECTS_ENABLED)
+        end
+    end
+
     function OptionsState:keypressed(key)
         if key == "escape" then
             ctx.switch("menu")
@@ -46,21 +63,17 @@ function M.new(ctx, Base)
             self._model:down()
         elseif key == "left" or key == "right" then
             if key == "left" then self._model:left() else self._model:right() end
-            local row = self._model:focused_row()
-            if row == WIN_TILE_ROW then
-                config.WIN_TILE = self._model:row_value(WIN_TILE_ROW)
-                settings.set("win_tile", config.WIN_TILE)
-            elseif row == THEME_ROW then
-                config.TILESET = self._model:row_value(THEME_ROW)
-                settings.set("theme", config.TILESET)
-            elseif row == ANIMATIONS_ROW then
-                config.ANIMATIONS_ENABLED = self._model:row_value(ANIMATIONS_ROW)
-                settings.set("animations_enabled", config.ANIMATIONS_ENABLED)
-            else
-                config.EFFECTS_ENABLED = self._model:row_value(EFFECTS_ROW)
-                settings.set("effects_enabled", config.EFFECTS_ENABLED)
-            end
+            persist_focused_row(self)
         end
+    end
+
+    function OptionsState:tap_row(i)
+        if self._model:focused_row() ~= i then
+            self._model:focus_row(i)
+            return
+        end
+        self._model:right()
+        persist_focused_row(self)
     end
 
     return setmetatable({ _ctx = ctx }, OptionsState)

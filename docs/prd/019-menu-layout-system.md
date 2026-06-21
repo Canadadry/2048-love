@@ -1,7 +1,7 @@
 ---
 title: "Real Layout System for the Main Menu"
 description: "menu.lua hand-computes pixel positions for the main menu by re-deriving board_metrics() and manually offsetting x/y for the title and three buttons, instead of using the vendored lib/ui layout system."
-status: ready
+status: done
 ---
 
 # Real Layout System for the Main Menu
@@ -71,3 +71,5 @@ Hit-testing is unified by extending `lib/ui` itself with a small, generic, reusa
 This PRD was originally registered without a grilling session, at the user's explicit request, as a placeholder. This document reflects the outcome of that grilling session: all of the original placeholder TBDs (scope, hit-testing design, `board_metrics()` handling, API contract) have been resolved as recorded above.
 
 A second, narrower grilling session resolved the `painter.Group` design once the `Frame.painters` array field was replaced by a composite painter kind: `Group` is a general-purpose compositor (not limited to "one visual + one Interactive"), nesting is allowed, multiple `Interactive`s in one `Group` are supported with last-drawn-wins precedence, construction-time `kind.Check` validates every child, and an empty/all-zero-sized `Group` behaves like a `nil` painter — all recorded above. Implementation may proceed against this PRD.
+
+The main menu (this PRD's actual scope) is implemented. As a follow-up, the Options, Win, and Game Over screens were also rebuilt on the same `lib/ui`/`Interactive`/`HitTest` groundwork (full-window overlays for Win/Game Over, a full-window centered column for Options, plus basic tap support on Options: tap-to-focus-row, tap-to-cycle-value, and a Back button). The Pause screen remains on the old hand-rolled bounds/draw pattern, untouched.

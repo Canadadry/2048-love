@@ -44,6 +44,10 @@ function Model:right()
     self._value_indices[i] = self._value_indices[i] % n + 1
 end
 
+function Model:focus_row(i)
+    self._focused_row = i
+end
+
 function Model:row_value(i)
     local row = self._rows[i]
     return row.values[self._value_indices[i]]

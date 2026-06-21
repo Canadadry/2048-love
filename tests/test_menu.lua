@@ -109,5 +109,83 @@ test("main_menu_hit_test routes taps to the right callback, and a miss fires non
     if fired ~= nil then error("expected no callback to fire on a miss, got " .. tostring(fired)) end
 end)
 
+test("win_hit_test routes taps to continue/restart, and a miss fires none", function()
+    local centers = button_centers(menu.win_tree(0, {}))
+    if #centers ~= 2 then error("expected 2 buttons, got " .. #centers) end
+
+    local fired
+    local callbacks = {
+        on_continue = function() fired = "continue" end,
+        on_restart  = function() fired = "restart" end,
+    }
+
+    fired = nil
+    menu.win_hit_test(0, callbacks, centers[1].x, centers[1].y)
+    if fired ~= "continue" then error("expected continue, got " .. tostring(fired)) end
+
+    fired = nil
+    menu.win_hit_test(0, callbacks, centers[2].x, centers[2].y)
+    if fired ~= "restart" then error("expected restart, got " .. tostring(fired)) end
+
+    fired = nil
+    menu.win_hit_test(0, callbacks, 5, 5)
+    if fired ~= nil then error("expected no callback to fire on a miss, got " .. tostring(fired)) end
+end)
+
+test("game_over_hit_test routes a tap to restart, and a miss fires none", function()
+    local centers = button_centers(menu.game_over_tree({}))
+    if #centers ~= 1 then error("expected 1 button, got " .. #centers) end
+
+    local fired
+    local callbacks = { on_restart = function() fired = "restart" end }
+
+    fired = nil
+    menu.game_over_hit_test(callbacks, centers[1].x, centers[1].y)
+    if fired ~= "restart" then error("expected restart, got " .. tostring(fired)) end
+
+    fired = nil
+    menu.game_over_hit_test(callbacks, 5, 5)
+    if fired ~= nil then error("expected no callback to fire on a miss, got " .. tostring(fired)) end
+end)
+
+local function interactive_centers(tree)
+    local centers = {}
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter and (cmd.painter.kind == "Group" or cmd.painter.kind == "Interactive") then
+            table.insert(centers, { x = cmd.x + cmd.w / 2, y = cmd.y + cmd.h / 2 })
+        end
+    end
+    return centers
+end
+
+test("options_hit_test routes a tap to the matching row index, and a miss fires none", function()
+    local centers = interactive_centers(menu.options_tree(2048, "", true, true, 1, {}))
+    if #centers ~= 5 then error("expected 4 rows + 1 back button, got " .. #centers) end
+
+    local tapped
+    local callbacks = { on_row_tap = function(i) tapped = i end }
+
+    for i = 1, 4 do
+        tapped = nil
+        menu.options_hit_test(2048, "", true, true, 1, callbacks, centers[i].x, centers[i].y)
+        if tapped ~= i then error("expected row " .. i .. ", got " .. tostring(tapped)) end
+    end
+
+    tapped = nil
+    menu.options_hit_test(2048, "", true, true, 1, callbacks, 5, 5)
+    if tapped ~= nil then error("expected no callback to fire on a miss, got " .. tostring(tapped)) end
+end)
+
+test("options_hit_test routes a tap on the Back button to on_back", function()
+    local centers = interactive_centers(menu.options_tree(2048, "", true, true, 1, {}))
+    local back_center = centers[#centers]
+
+    local fired
+    local callbacks = { on_back = function() fired = true end }
+
+    menu.options_hit_test(2048, "", true, true, 1, callbacks, back_center.x, back_center.y)
+    if fired ~= true then error("expected on_back to fire") end
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

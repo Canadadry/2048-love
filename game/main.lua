@@ -73,7 +73,18 @@ local function handle_tap(x, y)
         if state:quit_requested() then love.event.quit() end
         return
     end
-    if not state:paused() and not state:win() and not state:game_over() and not state:in_options() then
+    if state:in_options() then
+        menu.options_hit_test(
+            state:win_tile(), state:theme(), state:animations_enabled(), state:effects_enabled(), state:focused_row(),
+            {
+                on_row_tap = function(i) state:tap_row(i) end,
+                on_back    = function() state:keypressed("escape") end,
+            },
+            x, y)
+        renderer.set_tileset(config.TILESET)
+        return
+    end
+    if not state:paused() and not state:win() and not state:game_over() then
         if hit(menu.pause_icon_bounds(), x, y) then
             state:keypressed("escape")
             return
@@ -91,16 +102,14 @@ local function handle_tap(x, y)
             love.event.quit()
         end
     elseif state:win() then
-        local b = menu.win_button_bounds()
-        if hit(b.continue_btn, x, y) then
-            state:continue_game()
-        elseif hit(b.restart_btn, x, y) then
-            state:restart()
-        end
+        menu.win_hit_test(state:cursor(), {
+            on_continue = function() state:continue_game() end,
+            on_restart  = function() state:restart() end,
+        }, x, y)
     elseif state:game_over() then
-        if hit(menu.game_over_button_bounds(), x, y) then
-            state:restart()
-        end
+        menu.game_over_hit_test({
+            on_restart = function() state:restart() end,
+        }, x, y)
     end
 end
 

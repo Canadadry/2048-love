@@ -172,6 +172,35 @@ test("toggling Effects persists the new value via settings.set", function()
     s:keypressed("left")
 end)
 
+-- ── Tap a row ─────────────────────────────────────────────────────────────────
+
+test("tapping an unfocused row focuses it without changing its value", function()
+    local s = in_options()
+    s:tap_row(2)
+    eq(s:focused_row(), 2, "tap focuses the Theme row")
+    eq(s:win_tile(), 2048, "Win Tile value unchanged by a focus-only tap")
+end)
+
+test("tapping the already-focused row cycles its value forward, like right()", function()
+    local s = in_options()
+    s:tap_row(2)                  -- move focus off Win Tile first
+    s:tap_row(1)                  -- focus-only tap: lands on Win Tile, no cycle
+    eq(s:focused_row(), 1, "now focused on Win Tile")
+    eq(s:win_tile(), 2048, "focus-only tap left the value untouched")
+    s:tap_row(1)                  -- second tap: row already focused, cycles
+    eq(s:win_tile(), 32, "second tap on the focused row cycles the value forward")
+    s:tap_row(1)                  -- revert
+end)
+
+test("tapping the already-focused Win Tile row persists the new value via settings.set", function()
+    local s = in_options()
+    s:tap_row(2)
+    s:tap_row(1)
+    s:tap_row(1)
+    eq(settings.get("win_tile", nil), 32, "win_tile persisted on tap-cycle")
+    s:tap_row(1)                  -- revert
+end)
+
 -- ── Enter is a no-op ──────────────────────────────────────────────────────────
 
 test("return has no observable effect on the Options screen", function()

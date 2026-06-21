@@ -30,7 +30,7 @@ local MENU_NORMAL_BTN_COLOR  = { 237, 227, 217, 255 }
 local MENU_NORMAL_TEXT_COLOR = { 120, 110, 102, 255 }
 local MENU_WHITE_COLOR       = { 255, 255, 255, 255 }
 
-local function main_menu_sizes()
+local function menu_sizes()
     local board_px, tile_px = board_metrics()
     local font_sz = math.max(12, math.floor(tile_px * 0.30))
     local btn_w   = math.floor(board_px * 0.5)
@@ -39,7 +39,7 @@ local function main_menu_sizes()
     return font_sz, btn_w, btn_h, gap
 end
 
-local function main_menu_button(label, btn_w, btn_h, btn_font, selected, onTap)
+local function menu_button(label, btn_w, btn_h, btn_font, selected, onTap)
     return builder.Node(
         string.format("w-%d h-%d center", btn_w, btn_h),
         painter.Group {
@@ -66,7 +66,7 @@ end
 local function build_main_menu_tree(cursor, callbacks)
     callbacks = callbacks or {}
     local w, h = love.graphics.getDimensions()
-    local font_sz, btn_w, btn_h, gap = main_menu_sizes()
+    local font_sz, btn_w, btn_h, gap = menu_sizes()
     local title_font = get_font(font_sz + 16)
     local btn_font   = get_font(math.max(12, font_sz - 2))
 
@@ -82,9 +82,9 @@ local function build_main_menu_tree(cursor, callbacks)
                     font  = title_font,
                     color = MENU_NORMAL_TEXT_COLOR,
                 }),
-                main_menu_button("New Game", btn_w, btn_h, btn_font, cursor == 0, callbacks.on_new_game),
-                main_menu_button("Options",  btn_w, btn_h, btn_font, cursor == 1, callbacks.on_options),
-                main_menu_button("Quit",     btn_w, btn_h, btn_font, cursor == 2, callbacks.on_quit),
+                menu_button("New Game", btn_w, btn_h, btn_font, cursor == 0, callbacks.on_new_game),
+                menu_button("Options",  btn_w, btn_h, btn_font, cursor == 1, callbacks.on_options),
+                menu_button("Quit",     btn_w, btn_h, btn_font, cursor == 2, callbacks.on_quit),
             }),
         }
     ))
@@ -118,65 +118,87 @@ local function theme_label(name)
     return name == "" and "None (classic)" or name
 end
 
-local ACCENT_COLOR = { 0.96, 0.49, 0.37 }
-local NORMAL_COLOR  = { 0.47, 0.43, 0.40 }
-
 local function bool_label(enabled)
     return enabled and "ON" or "OFF"
 end
 
-function M.draw_options(win_tile, theme, animations_enabled, effects_enabled, focused_row)
+local function options_row(i, label, value, focused, body_font, callbacks)
+    local text = label .. ":  <  " .. value .. "  >"
+    return builder.Node("grow-x h-fit py-4", painter.Interactive {
+        onTap = function()
+            if callbacks.on_row_tap then
+                callbacks.on_row_tap(i)
+            end
+        end,
+    }, {
+        builder.Leaf("grow-x h-fit", painter.Text {
+            text  = text,
+            align = "center",
+            font  = body_font,
+            color = focused and MENU_ACCENT_COLOR or MENU_NORMAL_TEXT_COLOR,
+        }),
+    })
+end
+
+local function build_options_tree(win_tile, theme, animations_enabled, effects_enabled, focused_row, callbacks)
+    callbacks = callbacks or {}
     local w, h = love.graphics.getDimensions()
-    local board_px, tile_px, _, board_x, board_y = board_metrics()
-    local font_sz     = math.max(12, math.floor(tile_px * 0.30))
-    local title_font  = get_font(font_sz + 16)
-    local body_font   = get_font(math.max(12, font_sz - 2))
-    local hint_font   = get_font(math.max(10, font_sz - 6))
+    local font_sz, btn_w, btn_h = menu_sizes()
+    local title_font = get_font(font_sz + 16)
+    local body_font  = get_font(math.max(12, font_sz - 2))
+    local hint_font  = get_font(math.max(10, font_sz - 6))
+    local row_gap    = math.floor(font_sz * 0.3)
 
-    love.graphics.setColor(0.98, 0.97, 0.94)
-    love.graphics.rectangle("fill", 0, 0, w, h)
+    local tree = painter.Tree()
+    builder.Build(tree, builder.Node(
+        string.format("w-%d h-%d center", w, h),
+        painter.Rectangle { color = MENU_BG_COLOR },
+        {
+            builder.Node(string.format("col gap-%d center", row_gap), nil, {
+                builder.Leaf("grow-x h-fit", painter.Text {
+                    text  = "Options",
+                    align = "center",
+                    font  = title_font,
+                    color = MENU_NORMAL_TEXT_COLOR,
+                }),
+                options_row(1, "Win Tile",   win_tile,                       focused_row == 1, body_font, callbacks),
+                options_row(2, "Theme",      theme_label(theme),             focused_row == 2, body_font, callbacks),
+                options_row(3, "Animations", bool_label(animations_enabled), focused_row == 3, body_font, callbacks),
+                options_row(4, "Effects",    bool_label(effects_enabled),    focused_row == 4, body_font, callbacks),
+                builder.Leaf("grow-x h-fit", painter.Text {
+                    text  = "Up/Down to focus a row, Left/Right to change its value, or tap a row",
+                    align = "center",
+                    font  = hint_font,
+                    color = MENU_NORMAL_TEXT_COLOR,
+                }),
+                menu_button("Back", btn_w, btn_h, body_font, false, callbacks.on_back),
+            }),
+        }
+    ))
+    return tree
+end
 
-    love.graphics.setColor(NORMAL_COLOR)
-    love.graphics.setFont(title_font)
-    local title = "Options"
-    love.graphics.print(title,
-        board_x + math.floor((board_px - title_font:getWidth(title)) / 2),
-        board_y + math.floor(board_px * 0.20))
+function M.options_tree(win_tile, theme, animations_enabled, effects_enabled, focused_row, callbacks)
+    local tree = build_options_tree(win_tile, theme, animations_enabled, effects_enabled, focused_row, callbacks)
+    ui.DrawTree(tree)
+    return tree
+end
 
-    love.graphics.setFont(body_font)
-    local line_h = body_font:getHeight() + 4
-    local row_y  = board_y + math.floor(board_px * 0.45)
+function M.draw_options(win_tile, theme, animations_enabled, effects_enabled, focused_row)
+    local tree = M.options_tree(win_tile, theme, animations_enabled, effects_enabled, focused_row, nil)
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter then
+            painter.Draw(cmd, cmd.painter)
+        end
+    end
+end
 
-    local win_tile_msg = "Win Tile:  <  " .. win_tile .. "  >"
-    love.graphics.setColor(focused_row == 1 and ACCENT_COLOR or NORMAL_COLOR)
-    love.graphics.print(win_tile_msg,
-        board_x + math.floor((board_px - body_font:getWidth(win_tile_msg)) / 2),
-        row_y)
-
-    local theme_msg = "Theme:  <  " .. theme_label(theme) .. "  >"
-    love.graphics.setColor(focused_row == 2 and ACCENT_COLOR or NORMAL_COLOR)
-    love.graphics.print(theme_msg,
-        board_x + math.floor((board_px - body_font:getWidth(theme_msg)) / 2),
-        row_y + line_h)
-
-    local animations_msg = "Animations:  <  " .. bool_label(animations_enabled) .. "  >"
-    love.graphics.setColor(focused_row == 3 and ACCENT_COLOR or NORMAL_COLOR)
-    love.graphics.print(animations_msg,
-        board_x + math.floor((board_px - body_font:getWidth(animations_msg)) / 2),
-        row_y + line_h * 2)
-
-    local effects_msg = "Effects:  <  " .. bool_label(effects_enabled) .. "  >"
-    love.graphics.setColor(focused_row == 4 and ACCENT_COLOR or NORMAL_COLOR)
-    love.graphics.print(effects_msg,
-        board_x + math.floor((board_px - body_font:getWidth(effects_msg)) / 2),
-        row_y + line_h * 3)
-
-    love.graphics.setColor(NORMAL_COLOR)
-    love.graphics.setFont(hint_font)
-    local hint = "Up/Down to focus a row, Left/Right to change its value"
-    love.graphics.print(hint,
-        board_x + math.floor((board_px - hint_font:getWidth(hint)) / 2),
-        row_y + line_h * 4 + 6)
+function M.options_hit_test(win_tile, theme, animations_enabled, effects_enabled, focused_row, callbacks, x, y)
+    local tree = M.options_tree(win_tile, theme, animations_enabled, effects_enabled, focused_row, callbacks)
+    local cb = ui.HitTest(tree, x, y)
+    if cb then
+        cb()
+    end
 end
 
 function M.pause_icon_bounds()
@@ -218,28 +240,91 @@ function M.pause_button_bounds()
     }
 end
 
-function M.win_button_bounds()
-    local board_px, tile_px, _, board_x, board_y = board_metrics()
-    local font_sz = math.max(12, math.floor(tile_px * 0.30))
-    local btn_w   = math.floor(board_px * 0.5)
-    local btn_h   = math.floor(font_sz * 2.2)
-    local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
-    local gap     = math.floor(font_sz * 0.6)
-    local top_y   = board_y + math.floor(board_px * 0.52)
-    return {
-        continue_btn = { x = btn_x, y = top_y,               w = btn_w, h = btn_h, label = "Continue" },
-        restart_btn  = { x = btn_x, y = top_y + btn_h + gap, w = btn_w, h = btn_h, label = "Restart"  },
-    }
+local WIN_DIM_COLOR = { 255, 255, 255, 140 }
+
+local function build_win_tree(cursor, callbacks)
+    callbacks = callbacks or {}
+    local w, h = love.graphics.getDimensions()
+    local font_sz, btn_w, btn_h, gap = menu_sizes()
+    local title_font = get_font(font_sz + 8)
+    local btn_font   = get_font(math.max(12, font_sz - 2))
+
+    local tree = painter.Tree()
+    builder.Build(tree, builder.Node(
+        string.format("w-%d h-%d center", w, h),
+        painter.Rectangle { color = WIN_DIM_COLOR },
+        {
+            builder.Node(string.format("col gap-%d center", gap), nil, {
+                builder.Leaf("grow-x h-fit", painter.Text {
+                    text  = "You Win!",
+                    align = "center",
+                    font  = title_font,
+                    color = MENU_NORMAL_TEXT_COLOR,
+                }),
+                menu_button("Continue", btn_w, btn_h, btn_font, cursor == 0, callbacks.on_continue),
+                menu_button("Restart",  btn_w, btn_h, btn_font, cursor == 1, callbacks.on_restart),
+            }),
+        }
+    ))
+    return tree
 end
 
-function M.game_over_button_bounds()
-    local board_px, tile_px, _, board_x, board_y = board_metrics()
-    local font_sz = math.max(12, math.floor(tile_px * 0.30))
-    local btn_w   = math.floor(board_px * 0.4)
-    local btn_h   = math.floor(font_sz * 2.2)
-    local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
-    local btn_y   = board_y + math.floor(board_px / 2) + math.floor(font_sz * 0.5)
-    return { x = btn_x, y = btn_y, w = btn_w, h = btn_h }
+function M.win_tree(cursor, callbacks)
+    local tree = build_win_tree(cursor, callbacks)
+    ui.DrawTree(tree)
+    return tree
+end
+
+function M.win_hit_test(cursor, callbacks, x, y)
+    local tree = M.win_tree(cursor, callbacks)
+    local cb = ui.HitTest(tree, x, y)
+    if cb then
+        cb()
+    end
+end
+
+local GAME_OVER_DIM_COLOR = { 61, 59, 51, 140 }
+
+local function build_game_over_tree(callbacks)
+    callbacks = callbacks or {}
+    local w, h = love.graphics.getDimensions()
+    local font_sz, _, btn_h, gap = menu_sizes()
+    local board_px = board_metrics()
+    local btn_w = math.floor(board_px * 0.4)
+    local title_font = get_font(font_sz + 8)
+    local btn_font   = get_font(math.max(12, font_sz - 2))
+
+    local tree = painter.Tree()
+    builder.Build(tree, builder.Node(
+        string.format("w-%d h-%d center", w, h),
+        painter.Rectangle { color = GAME_OVER_DIM_COLOR },
+        {
+            builder.Node(string.format("col gap-%d center", gap), nil, {
+                builder.Leaf("grow-x h-fit", painter.Text {
+                    text  = "Game Over",
+                    align = "center",
+                    font  = title_font,
+                    color = MENU_WHITE_COLOR,
+                }),
+                menu_button("New Game", btn_w, btn_h, btn_font, false, callbacks.on_restart),
+            }),
+        }
+    ))
+    return tree
+end
+
+function M.game_over_tree(callbacks)
+    local tree = build_game_over_tree(callbacks)
+    ui.DrawTree(tree)
+    return tree
+end
+
+function M.game_over_hit_test(callbacks, x, y)
+    local tree = M.game_over_tree(callbacks)
+    local cb = ui.HitTest(tree, x, y)
+    if cb then
+        cb()
+    end
 end
 
 function M.draw_pause(pause_cursor)
@@ -280,57 +365,22 @@ local function draw_win_particles(particles)
 end
 
 function M.draw_win(cursor, particles)
-    local board_px, tile_px, _, board_x, board_y = board_metrics()
-    local font_sz    = math.max(12, math.floor(tile_px * 0.30))
-    local title_font = get_font(font_sz + 8)
-    local btn_font   = get_font(math.max(12, font_sz - 2))
-    local bounds     = M.win_button_bounds()
-
-    love.graphics.setColor(1, 1, 1, 0.55)
-    love.graphics.rectangle("fill", board_x, board_y, board_px, board_px)
-    love.graphics.setColor(0.47, 0.43, 0.40)
-    love.graphics.setFont(title_font)
-    local msg = "You Win!"
-    love.graphics.print(msg,
-        board_x + math.floor((board_px - title_font:getWidth(msg)) / 2),
-        board_y + math.floor(board_px * 0.30))
-    love.graphics.setFont(btn_font)
-    for i, b in ipairs({ bounds.continue_btn, bounds.restart_btn }) do
-        local selected = (cursor == i - 1)
-        love.graphics.setColor(selected and { 0.96, 0.49, 0.37 } or { 0.93, 0.89, 0.85 })
-        love.graphics.rectangle("fill", b.x, b.y, b.w, b.h, 6, 6)
-        love.graphics.setColor(selected and { 1, 1, 1 } or { 0.47, 0.43, 0.40 })
-        local lbl = b.label
-        love.graphics.print(lbl,
-            b.x + math.floor((b.w - btn_font:getWidth(lbl)) / 2),
-            b.y + math.floor((b.h - btn_font:getHeight()) / 2))
+    local tree = M.win_tree(cursor, nil)
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter then
+            painter.Draw(cmd, cmd.painter)
+        end
     end
     draw_win_particles(particles)
 end
 
 function M.draw_game_over()
-    local board_px, tile_px, _, board_x, board_y = board_metrics()
-    local font_sz  = math.max(12, math.floor(tile_px * 0.30))
-    local btn      = M.game_over_button_bounds()
-    local btn_font = get_font(math.max(12, font_sz - 2))
-    local title_font = get_font(font_sz + 8)
-
-    love.graphics.setColor(0.24, 0.23, 0.20, 0.55)
-    love.graphics.rectangle("fill", board_x, board_y, board_px, board_px)
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.setFont(title_font)
-    local msg = "Game Over"
-    love.graphics.print(msg,
-        board_x + math.floor((board_px - title_font:getWidth(msg)) / 2),
-        board_y + math.floor(board_px / 2) - font_sz)
-    love.graphics.setColor(0.93, 0.89, 0.85)
-    love.graphics.rectangle("fill", btn.x, btn.y, btn.w, btn.h, 6, 6)
-    love.graphics.setColor(0.47, 0.43, 0.40)
-    love.graphics.setFont(btn_font)
-    local lbl = "New Game"
-    love.graphics.print(lbl,
-        btn.x + math.floor((btn.w - btn_font:getWidth(lbl)) / 2),
-        btn.y + math.floor((btn.h - btn_font:getHeight()) / 2))
+    local tree = M.game_over_tree(nil)
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter then
+            painter.Draw(cmd, cmd.painter)
+        end
+    end
 end
 
 return M
