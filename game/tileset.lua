@@ -48,6 +48,11 @@ function M.load(name)
     local meta  = M.parse_meta(chunk())
     local image = love.graphics.newImage(png_path)
     local iw, ih = image:getDimensions()
+    local max_tex = love.graphics.getSystemLimits().texturesize
+    print(string.format("tileset.load(%q): image %dx%d, GPU max texture size %d", name, iw, ih, max_tex))
+    assert(iw <= max_tex and ih <= max_tex, string.format(
+        "tileset '%s' image is %dx%d but this GPU's max texture size is %d — rebuild it with a smaller --tile-width/--tile-height or fewer frames",
+        name, iw, ih, max_tex))
     return { image = image, meta = meta, iw = iw, ih = ih }
 end
 
