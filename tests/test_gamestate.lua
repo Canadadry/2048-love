@@ -1,6 +1,7 @@
 -- gamestate.lua requires "grid" which in turn is a plain Lua module, but
 -- gamestate also requires no Love2D calls at construction time.
 local gamestate = require("gamestate")
+local config    = require("config")
 
 local pass, fail = 0, 0
 
@@ -205,6 +206,40 @@ test("arrow key in game_over state restarts the game", function()
     s:update(1.0)
     s:keypressed("up")
     eq(s:game_over(), false, "game_over cleared by arrow key")
+end)
+
+-- ── PRD 017: Animation & Effect Toggles ──────────────────────────────────────
+
+test("a move produces no anim_tiles when animations are disabled, snapping immediately", function()
+    config.ANIMATIONS_ENABLED = false
+    local s = gamestate.new_from({
+        {0, 2, 0, 4},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    })
+    s:keypressed("left")
+    eq(s:is_animating(), false, "should not be animating when animations are disabled")
+    config.ANIMATIONS_ENABLED = true
+end)
+
+test("a merge still slides but skips the pop when effects are disabled", function()
+    config.EFFECTS_ENABLED = false
+    local s = gamestate.new_from({
+        {2, 2, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    })
+    s:keypressed("left")
+    eq(s:is_animating(), true, "slide animation still runs")
+    local tiles = s:anim_tiles()
+    eq(#tiles > 0, true, "merge still produces sliding tiles")
+    s:update(config.ANIM_DURATION + config.MERGE_EFFECT_DURATION / 2)
+    for _, t in ipairs(tiles) do
+        eq(t.scale, 1.0, "scale never pops when effects are disabled")
+    end
+    config.EFFECTS_ENABLED = true
 end)
 
 print(string.format("\n%d passed, %d failed", pass, fail))

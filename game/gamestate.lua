@@ -33,6 +33,8 @@ function Base:in_menu()        return false end
 function Base:in_options()     return false end
 function Base:win_tile()       return config.WIN_TILE end
 function Base:theme()          return config.TILESET end
+function Base:animations_enabled() return config.ANIMATIONS_ENABLED end
+function Base:effects_enabled()    return config.EFFECTS_ENABLED end
 function Base:focused_row()    return 0 end
 function Base:cursor()         return 0 end
 function Base:pause_cursor()   return 0 end
@@ -60,10 +62,13 @@ local function apply_move(ctx, dir)
     if result.moved then
         ctx.score = ctx.score + result.score_delta
         ctx.grid:spawn_tile()
-        for _, m in ipairs(result.moves) do
-            ctx.tiles[#ctx.tiles + 1] = tile.new(
-                m.value, m.from_row, m.from_col, m.to_row, m.to_col, config.ANIM_DURATION, m.merged
-            )
+        if config.ANIMATIONS_ENABLED then
+            for _, m in ipairs(result.moves) do
+                ctx.tiles[#ctx.tiles + 1] = tile.new(
+                    m.value, m.from_row, m.from_col, m.to_row, m.to_col, config.ANIM_DURATION,
+                    m.merged and config.EFFECTS_ENABLED
+                )
+            end
         end
     end
     if result.win and not ctx.win_seen then

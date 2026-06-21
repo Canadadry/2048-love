@@ -11,8 +11,10 @@ local swiper
 function love.load()
     love.filesystem.setIdentity("2048")
     settings.load()
-    config.WIN_TILE = settings.get("win_tile", config.WIN_TILE)
-    config.TILESET  = settings.get("theme", config.TILESET)
+    config.WIN_TILE          = settings.get("win_tile", config.WIN_TILE)
+    config.TILESET           = settings.get("theme", config.TILESET)
+    config.ANIMATIONS_ENABLED = settings.get("animations_enabled", config.ANIMATIONS_ENABLED)
+    config.EFFECTS_ENABLED    = settings.get("effects_enabled", config.EFFECTS_ENABLED)
     for _, v in ipairs(arg or {}) do
         local n = v:match("^%-%-win%-tile=(%d+)$")
         if n then
@@ -37,7 +39,7 @@ function love.draw()
     if state:in_menu() then
         menu.draw_main_menu(state:menu_cursor())
     elseif state:in_options() then
-        menu.draw_options(state:win_tile(), state:theme(), state:focused_row())
+        menu.draw_options(state:win_tile(), state:theme(), state:animations_enabled(), state:effects_enabled(), state:focused_row())
     else
         renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(),
             state:paused(), state:pause_cursor())

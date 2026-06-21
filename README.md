@@ -23,9 +23,9 @@ When you create a 2048 tile a **You Win** overlay appears with two options — *
 
 Press `Escape` (or tap the **⏸** button in the top-left corner) to open the **Pause** menu. The board stays visible behind a dimmed overlay. Up/Down to navigate, Enter to confirm. Options: **Resume**, **New Game**, **Main Menu**, **Quit**. Pressing `Escape` again or selecting Resume returns instantly to the game.
 
-Select **Options** from the main menu (between New Game and Quit) to open the **Options** screen — a two-row list, **Win Tile** then **Theme**. Up/Down moves focus between the rows (wrapping at both ends); the focused row is highlighted. Left/Right cycles the focused row's value immediately — no confirm step. **Win Tile** toggles between `32` (dev) and `2048` (prod) — the same value `--win-tile` sets at launch, but changeable mid-session. **Theme** cycles through the built tilesheets in `game/assets/` (plus a "None (classic)" entry). Enter has no effect on this screen. Press `Escape` to return to the main menu.
+Select **Options** from the main menu (between New Game and Quit) to open the **Options** screen — a four-row list: **Win Tile**, **Theme**, **Animations**, **Effects**. Up/Down moves focus between the rows (wrapping at both ends); the focused row is highlighted. Left/Right cycles the focused row's value immediately — no confirm step. **Win Tile** toggles between `32` (dev) and `2048` (prod) — the same value `--win-tile` sets at launch, but changeable mid-session. **Theme** cycles through the built tilesheets in `game/assets/` (plus a "None (classic)" entry). **Animations** toggles the slide animation on/off — when off, moves snap to their destination instantly. **Effects** toggles the merge pop/scale effect on/off, independent of slide animation. Enter has no effect on this screen. Press `Escape` to return to the main menu.
 
-Both settings persist across launches — they're saved to disk as soon as you change them, and restored on the next launch. `--win-tile` at launch still overrides a saved Win Tile value.
+All four settings persist across launches — they're saved to disk as soon as you change them, and restored on the next launch. `--win-tile` at launch still overrides a saved Win Tile value.
 
 ## Test
 
@@ -77,14 +77,6 @@ docs/prd/          product requirements
 themes/            theme manifests (one Giphy URL per line) consumed by theme-builder
 tools/             helper CLI tools (see below)
 ```
-
-## PRD Roadmap
-
-Recommended implementation order for triage PRDs:
-
-| # | PRD | Notes |
-|---|-----|-------|
-| 017 | animation-effect-toggles | Needs options screen first (now available — see PRD 010). |
 
 ## Tools
 

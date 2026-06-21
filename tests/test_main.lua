@@ -34,11 +34,15 @@ love.window = { setTitle = function() end, setMode = function() end }
 love.graphics.setBackgroundColor = function() end
 
 local function with_restored_config(fn)
-    local saved_win_tile = config.WIN_TILE
-    local saved_tileset  = config.TILESET
+    local saved_win_tile          = config.WIN_TILE
+    local saved_tileset           = config.TILESET
+    local saved_animations        = config.ANIMATIONS_ENABLED
+    local saved_effects           = config.EFFECTS_ENABLED
     fn()
-    config.WIN_TILE = saved_win_tile
-    config.TILESET  = saved_tileset
+    config.WIN_TILE          = saved_win_tile
+    config.TILESET           = saved_tileset
+    config.ANIMATIONS_ENABLED = saved_animations
+    config.EFFECTS_ENABLED    = saved_effects
 end
 
 -- ── Tracer bullet ─────────────────────────────────────────────────────────────
@@ -52,6 +56,19 @@ test("startup seeds config.WIN_TILE and config.TILESET from saved settings", fun
         dofile("main.lua")
         love.load()
         eq(config.WIN_TILE, 32, "config.WIN_TILE seeded from saved settings")
+    end)
+end)
+
+test("startup seeds config.ANIMATIONS_ENABLED and config.EFFECTS_ENABLED from saved settings", function()
+    with_restored_config(function()
+        reset_fs()
+        settings.set("animations_enabled", false)
+        settings.set("effects_enabled", false)
+        arg = {}
+        dofile("main.lua")
+        love.load()
+        eq(config.ANIMATIONS_ENABLED, false, "config.ANIMATIONS_ENABLED seeded from saved settings")
+        eq(config.EFFECTS_ENABLED, false, "config.EFFECTS_ENABLED seeded from saved settings")
     end)
 end)
 

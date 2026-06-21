@@ -73,7 +73,11 @@ end
 local ACCENT_COLOR = { 0.96, 0.49, 0.37 }
 local NORMAL_COLOR  = { 0.47, 0.43, 0.40 }
 
-function M.draw_options(win_tile, theme, focused_row)
+local function bool_label(enabled)
+    return enabled and "ON" or "OFF"
+end
+
+function M.draw_options(win_tile, theme, animations_enabled, effects_enabled, focused_row)
     local w, h = love.graphics.getDimensions()
     local board_px, tile_px, _, board_x, board_y = board_metrics()
     local font_sz     = math.max(12, math.floor(tile_px * 0.30))
@@ -107,12 +111,24 @@ function M.draw_options(win_tile, theme, focused_row)
         board_x + math.floor((board_px - body_font:getWidth(theme_msg)) / 2),
         row_y + line_h)
 
+    local animations_msg = "Animations:  <  " .. bool_label(animations_enabled) .. "  >"
+    love.graphics.setColor(focused_row == 3 and ACCENT_COLOR or NORMAL_COLOR)
+    love.graphics.print(animations_msg,
+        board_x + math.floor((board_px - body_font:getWidth(animations_msg)) / 2),
+        row_y + line_h * 2)
+
+    local effects_msg = "Effects:  <  " .. bool_label(effects_enabled) .. "  >"
+    love.graphics.setColor(focused_row == 4 and ACCENT_COLOR or NORMAL_COLOR)
+    love.graphics.print(effects_msg,
+        board_x + math.floor((board_px - body_font:getWidth(effects_msg)) / 2),
+        row_y + line_h * 3)
+
     love.graphics.setColor(NORMAL_COLOR)
     love.graphics.setFont(hint_font)
     local hint = "Up/Down to focus a row, Left/Right to change its value"
     love.graphics.print(hint,
         board_x + math.floor((board_px - hint_font:getWidth(hint)) / 2),
-        row_y + line_h * 2 + 6)
+        row_y + line_h * 4 + 6)
 end
 
 function M.pause_icon_bounds()
