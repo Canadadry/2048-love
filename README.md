@@ -64,10 +64,9 @@ Recommended implementation order for triage PRDs:
 
 | # | PRD | Notes |
 |---|-----|-------|
-| 008 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
-| 009 | tileset-animation | Already unblocked (tileset-loading done). Can slot in anywhere before options. |
-| 010 | options-screen-shell | Needs state machine as infrastructure. |
-| 011+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first. |
+| 010 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
+| 011 | options-screen-shell | Needs state machine as infrastructure. |
+| 012+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first. |
 | — | sound-hooks · refactor-renderer-split | Independent; pick up when the time feels right. |
 
 **Flag:** `touch-swipe` is in triage but `swipe.lua` is already wired in `main.lua`. Verify before triaging — it may already be done.

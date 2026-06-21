@@ -12,7 +12,7 @@ Classic color rendering is the only visual style. Players cannot customise the l
 
 ## Solution
 
-Load a tileset PNG from a configurable path and render each tile value from the corresponding sprite sheet row. Only the first animation frame is used in this PRD — frame cycling comes in PRD 008.
+Load a tileset PNG from a configurable path and render each tile value from the corresponding sprite sheet row. Only the first animation frame is used in this PRD — frame cycling comes in PRD 004.
 
 ## Tileset Format
 
@@ -49,7 +49,7 @@ Note: tests use a mock `love.graphics` that returns a stub image with known dime
 
 ## Out of Scope
 
-- Frame animation (PRD 008).
+- Frame animation (PRD 004).
 - Tileset selection UI (PRD 010).
 - Hot-reloading the tileset at runtime.
 
