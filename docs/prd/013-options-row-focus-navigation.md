@@ -1,7 +1,7 @@
 ---
 title: "Options Row Focus Navigation"
 description: "Win Tile and Theme on the Options screen use inconsistent, simultaneously-live controls (Left/Right always edits Win Tile, Up/Down always edits Theme); this replaces them with a single row-focus model."
-status: needs-triage
+status: done
 ---
 
 # Options Row Focus Navigation

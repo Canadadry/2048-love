@@ -1,5 +1,16 @@
-local config  = require("config")
-local tileset = require("tileset")
+local config       = require("config")
+local tileset      = require("tileset")
+local optionsmodel = require("optionsmodel")
+
+local WIN_TILE_ROW = 1
+local THEME_ROW     = 2
+
+local function index_of(values, value)
+    for i, v in ipairs(values) do
+        if v == value then return i end
+    end
+    return 1
+end
 
 local M = {}
 
@@ -7,29 +18,33 @@ function M.new(ctx, Base)
     local OptionsState = setmetatable({}, Base)
     OptionsState.__index = OptionsState
 
-    function OptionsState:in_options()     return true end
-    function OptionsState:tileset_names()  return self._names end
-    function OptionsState:tileset_cursor() return self._cursor end
+    function OptionsState:in_options()  return true end
+    function OptionsState:focused_row() return self._model:focused_row() end
 
     function OptionsState:enter()
-        self._names = tileset.list_available()
-        self._cursor = 1
-        for i, name in ipairs(self._names) do
-            if name == config.TILESET then self._cursor = i; break end
-        end
+        local win_tile_values = { 32, 2048 }
+        local theme_values    = tileset.list_available()
+        self._model = optionsmodel.new({
+            { label = "Win Tile", values = win_tile_values, value_index = index_of(win_tile_values, config.WIN_TILE) },
+            { label = "Theme",    values = theme_values,    value_index = index_of(theme_values, config.TILESET) },
+        })
     end
 
     function OptionsState:keypressed(key)
         if key == "escape" then
             ctx.switch("menu")
-        elseif key == "left" or key == "right" then
-            config.WIN_TILE = (config.WIN_TILE == 2048) and 32 or 2048
-        elseif key == "down" then
-            self._cursor = math.min(#self._names, self._cursor + 1)
         elseif key == "up" then
-            self._cursor = math.max(1, self._cursor - 1)
-        elseif key == "return" then
-            config.TILESET = self._names[self._cursor]
+            self._model:up()
+        elseif key == "down" then
+            self._model:down()
+        elseif key == "left" or key == "right" then
+            if key == "left" then self._model:left() else self._model:right() end
+            local row = self._model:focused_row()
+            if row == WIN_TILE_ROW then
+                config.WIN_TILE = self._model:row_value(WIN_TILE_ROW)
+            else
+                config.TILESET = self._model:row_value(THEME_ROW)
+            end
         end
     end
 

@@ -23,7 +23,7 @@ When you create a 2048 tile a **You Win** overlay appears with two options — *
 
 Press `Escape` (or tap the **⏸** button in the top-left corner) to open the **Pause** menu. The board stays visible behind a dimmed overlay. Up/Down to navigate, Enter to confirm. Options: **Resume**, **New Game**, **Main Menu**, **Quit**. Pressing `Escape` again or selecting Resume returns instantly to the game.
 
-Select **Options** from the main menu (between New Game and Quit) to open the **Options** screen. Left/Right toggles the **Win Tile** between `32` (dev) and `2048` (prod) — the same value `--win-tile` sets at launch, but changeable mid-session. Up/Down selects a **Theme** from the list of built tilesheets in `game/assets/` (plus a "None (classic)" entry); Enter applies it immediately. Press `Escape` to return to the main menu.
+Select **Options** from the main menu (between New Game and Quit) to open the **Options** screen — a two-row list, **Win Tile** then **Theme**. Up/Down moves focus between the rows (wrapping at both ends); the focused row is highlighted. Left/Right cycles the focused row's value immediately — no confirm step. **Win Tile** toggles between `32` (dev) and `2048` (prod) — the same value `--win-tile` sets at launch, but changeable mid-session. **Theme** cycles through the built tilesheets in `game/assets/` (plus a "None (classic)" entry). Enter has no effect on this screen. Press `Escape` to return to the main menu.
 
 ## Test
 
@@ -46,7 +46,7 @@ game/              Love2D game source
   renderer.lua     board drawing
   menu.lua         overlay and button rendering (main menu, win, game-over, pause, options)
   options.lua      options screen state (win-tile toggle, escape back to menu)
-  optionsmodel.lua row-focus/value-cycling model (pure, unwired — prep for a future options redesign)
+  optionsmodel.lua row-focus/value-cycling model backing the Options screen (pure, no Love2D dependency)
   grid.lua         game logic — slide, merge, spawn, win/lose detection
 tests/
   test_all.lua     test runner (runs all suites below)

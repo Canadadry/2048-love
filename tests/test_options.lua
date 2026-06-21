@@ -41,6 +41,23 @@ test("escape from options returns to menu", function()
     eq(s:in_options(), false, "should have left options")
 end)
 
+-- ── Row focus ─────────────────────────────────────────────────────────────────
+
+test("entering options defaults focus to the first row (Win Tile)", function()
+    local s = in_options()
+    eq(s:focused_row(), 1, "focus starts on Win Tile")
+end)
+
+test("down/up move focus between rows, wrapping at both ends", function()
+    local s = in_options()
+    s:keypressed("down")
+    eq(s:focused_row(), 2, "down moves focus to Theme")
+    s:keypressed("down")
+    eq(s:focused_row(), 1, "down wraps from Theme back to Win Tile")
+    s:keypressed("up")
+    eq(s:focused_row(), 2, "up wraps from Win Tile to Theme")
+end)
+
 -- ── Win tile toggle ───────────────────────────────────────────────────────────
 
 test("win_tile defaults to 2048", function()
@@ -48,55 +65,52 @@ test("win_tile defaults to 2048", function()
     eq(s:win_tile(), 2048, "default win tile is 2048")
 end)
 
-test("right arrow in options toggles win_tile to 32", function()
+test("left/right on the Win Tile row toggle config.WIN_TILE immediately, without affecting focus or Theme", function()
+    config.TILESET = ""
     local s = in_options()
     s:keypressed("right")
     eq(s:win_tile(), 32, "win tile toggled to 32 (dev mode)")
-    s:keypressed("right")
+    eq(s:focused_row(), 1, "focus stays on Win Tile")
+    eq(config.TILESET, "", "Theme untouched by Win Tile toggling")
+    s:keypressed("left")
     eq(s:win_tile(), 2048, "win tile toggled back to 2048 (prod mode)")
 end)
 
 -- ── Theme switcher ────────────────────────────────────────────────────────────
 
-test("entering options lists None plus available themes, cursor on active theme", function()
+test("left/right on the Theme row cycle config.TILESET through available themes, wrapping, applied immediately", function()
     config.TILESET = ""
     local s = in_options()
-    local names = s:tileset_names()
-    eq(names[1], "", "None sentinel first")
-    eq(names[2], "jurassic-park", "available theme listed")
-    eq(s:tileset_cursor(), 1, "cursor defaults to active theme (None)")
+    s:keypressed("down")
+    eq(s:focused_row(), 2, "focus on Theme")
+    s:keypressed("right")
+    eq(config.TILESET, "jurassic-park", "theme advanced without needing return")
+    s:keypressed("right")
+    eq(config.TILESET, "", "theme wraps back to None sentinel")
+    s:keypressed("left")
+    eq(config.TILESET, "jurassic-park", "left wraps backward to the last theme")
+    config.TILESET = ""
 end)
 
-test("down/up moves the theme cursor, clamped at both ends", function()
-    config.TILESET = ""
-    local s = in_options()
-    eq(s:tileset_cursor(), 1, "starts at None")
-    s:keypressed("up")
-    eq(s:tileset_cursor(), 1, "clamped at top")
-    s:keypressed("down")
-    eq(s:tileset_cursor(), 2, "moves to jurassic-park")
-    s:keypressed("down")
-    eq(s:tileset_cursor(), 2, "clamped at bottom (only 2 entries)")
-    s:keypressed("up")
-    eq(s:tileset_cursor(), 1, "moves back to None")
-end)
+-- ── Enter is a no-op ──────────────────────────────────────────────────────────
 
-test("return on a theme entry sets it as the active tileset", function()
+test("return has no observable effect on the Options screen", function()
     config.TILESET = ""
     local s = in_options()
-    s:keypressed("down")
     s:keypressed("return")
-    eq(config.TILESET, "jurassic-park", "active tileset confirmed")
-    config.TILESET = ""
+    eq(s:in_options(), true, "still in options")
+    eq(s:focused_row(), 1, "focus unchanged by return")
+    eq(s:win_tile(), 2048, "win tile unchanged by return")
+    eq(config.TILESET, "", "theme unchanged by return")
 end)
 
-test("return on None sets the active tileset back to classic rendering", function()
-    config.TILESET = "jurassic-park"
+-- ── Escape always returns to menu ─────────────────────────────────────────────
+
+test("escape returns to the main menu regardless of which row has focus", function()
     local s = in_options()
-    eq(s:tileset_cursor(), 2, "cursor starts on the active theme")
-    s:keypressed("up")
-    s:keypressed("return")
-    eq(config.TILESET, "", "active tileset cleared to None")
+    s:keypressed("down")
+    s:keypressed("escape")
+    eq(s:in_menu(), true, "should be back in menu even with Theme focused")
 end)
 
 print(string.format("\n%d passed, %d failed", pass, fail))
