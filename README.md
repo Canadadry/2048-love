@@ -45,7 +45,11 @@ game/              Love2D game source
   config.lua       constants and tile color map
   statemachine.lua state machine (switch, lifecycle dispatch)
   gamestate.lua    game state tables (menu, playing, paused, win, game_over) wired onto the machine
-  renderer.lua     board drawing
+  renderer/        board, tile, and HUD drawing
+    init.lua       orchestrates the sub-modules below; public interface (load, update, draw, set_tileset)
+    board.lua      board geometry and background
+    tile_draw.lua  tileset/quad state and per-tile drawing (classic + tileset)
+    hud.lua        score display
   menu.lua         overlay and button rendering (main menu, win, game-over, pause, options)
   options.lua      options screen state (win-tile toggle, escape back to menu)
   optionsmodel.lua row-focus/value-cycling model backing the Options screen (pure, no Love2D dependency)
@@ -62,6 +66,9 @@ tests/
   test_options.lua       options screen state and navigation
   test_optionsmodel.lua  row-focus/value-cycling model
   test_settings.lua      settings persistence (save/load round-trip, missing/corrupt file)
+  test_renderer_board.lua      board geometry
+  test_renderer_tile_draw.lua  tile color fallback
+  test_renderer_hud.lua        score position
   test_main.lua          startup wiring (settings seeded into config)
   test_tile.lua    tile animation
   test_tileset.lua tileset loading helpers
@@ -79,7 +86,7 @@ Recommended implementation order for triage PRDs:
 |---|-----|-------|
 | 012 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
 | 013+ | animation-effect-toggles | Needs options screen first (now available — see PRD 010). |
-| — | sound-hooks · refactor-renderer-split | Independent; pick up when the time feels right. |
+| — | sound-hooks | Independent; pick up when the time feels right. |
 
 **Flag:** `touch-swipe` is in triage but `swipe.lua` is already wired in `main.lua`. Verify before triaging — it may already be done.
 

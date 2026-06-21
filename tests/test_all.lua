@@ -22,6 +22,9 @@ local suites = {
     "../tests/test_settings.lua",
     "../tests/test_main.lua",
     "../tests/test_statemachine.lua",
+    "../tests/test_renderer_board.lua",
+    "../tests/test_renderer_tile_draw.lua",
+    "../tests/test_renderer_hud.lua",
 }
 
 local real_exit = os.exit
