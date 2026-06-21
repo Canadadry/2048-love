@@ -1,10 +1,10 @@
-# lib/ui example: rebuilding the main menu buttons
+# lib/ui example: a standalone main menu
 
-This is a hands-on companion to `lib/ui/README.md`, built specifically to
-prepare for the `/grill-me` session that `docs/prd/triage/menu-layout-system.md`
-requires before any layout-system implementation starts. Read this before
-that session — it gives you working code and real numbers to argue about
-instead of abstractions.
+A minimal, self-contained demo of `lib/ui` — builds a title plus three
+buttons, centered on screen, using only `lib/ui`'s `builder` DSL and
+`painter` module. It doesn't import or depend on any of the game's own code
+(`menu.lua`, `renderer/`, etc.) — this is what using `lib/ui` from scratch
+looks like.
 
 ## Run it
 
@@ -18,115 +18,91 @@ way `tests/test_all.lua` does, so it runs under plain `lua`.
 
 ## What it does
 
-It takes the **real** `menu.lua` code — `menu.main_menu_button_bounds()`,
-unmodified — and prints the three button boxes it hand-computes today:
+Builds this tree:
+
+```lua
+local function Button(label)
+    return builder.Node(
+        "w-240 h-60 center",
+        painter.Rectangle { color = { 237, 227, 217, 255 }, rounded = 6, segment = 8 },
+        { builder.Leaf("grow-x h-fit", painter.Text { text = label, align = "center" }) }
+    )
+end
+
+local tree = painter.Tree()
+builder.Build(tree, builder.Node(
+    string.format("w-%d h-%d center", SCREEN_W, SCREEN_H),
+    nil,
+    {
+        builder.Node("col gap-16 center", nil, {
+            builder.Leaf("grow-x h-fit", painter.Text { text = "2048", align = "center" }),
+            Button("New Game"),
+            Button("Options"),
+            Button("Quit"),
+        }),
+    }
+))
+ui.DrawTree(tree)
+```
+
+and prints the computed layout:
 
 ```
-hand-rolled (menu.main_menu_button_bounds):
-  New Game   x=180 y=244 w=240 h=79
-  Options    x=180 y=344 w=240 h=79
-  Quit       x=180 y=444 w=240 h=79
+lib/ui main menu, computed via ui.DrawTree:
+  <group>   x=0 y=0 w=600 h=600
+  <group>   x=180 y=179 w=240 h=242
+  Text      x=180 y=179 w=240 h=14
+  Rectangle x=180 y=209 w=240 h=60
+  Text      x=180 y=232 w=240 h=14
+  Rectangle x=180 y=285 w=240 h=60
+  Text      x=180 y=308 w=240 h=14
+  Rectangle x=180 y=361 w=240 h=60
+  Text      x=180 y=384 w=240 h=14
 ```
 
-Then it builds the *same three buttons* as a `lib/ui` tree and prints what
-`ui.DrawTree` computes for them:
-
-```
-lib/ui (computed via ui.DrawTree):
-  rect       x=180 y=244 w=240 h=79
-  rect       x=180 y=344 w=240 h=79
-  rect       x=180 y=444 w=240 h=79
-```
-
-Same pixels. That's the point: this isn't a toy demo unrelated to the game,
-it's proof that `lib/ui` can reproduce a screen `menu.lua` already draws,
-without hand-deriving `top_y + (btn_h + gap) * i` for each button.
+No pixel math anywhere — the screen-sized root frame centers the column,
+the column stacks its children with a 16px gap, and each button centers its
+label. Resize the screen and every number above recomputes on its own.
 
 ## Reading the code, piece by piece
 
 Open `main.lua` alongside this section.
 
-1. **The love stub** — just enough of `love.graphics` (a fake font,
-   no-op draw calls) for `menu.lua` and `painter.lua` to run without an
-   actual window. This is what lets the example (and the real test suite)
-   run headless.
+1. **The love stub** — just enough of `love.graphics` (a fake font, no-op
+   draw calls) for `painter.lua` to run without an actual window. Same trick
+   the real test suite (`tests/test_all.lua`) uses to run headless.
 
-2. **`local hand_rolled = menu.main_menu_button_bounds()`** — this calls
-   the production function as-is. We don't reimplement or copy its math;
-   we read its output (`btn_w`, `btn_h`, `gap`, `btn_x`, `top_y`) so the
-   `lib/ui` version is anchored to the exact same screen, not invented
-   numbers.
+2. **`builder.Node(classes, painter, children)` / `builder.Leaf(classes, painter)`**
+   — `lib/ui/layout/builder.lua` is a space-separated class-string DSL,
+   mirroring [zui's `builder.zig`](https://github.com/Canadadry/zui/blob/master/src/builder.zig),
+   that builds `frame.Frame` trees without writing nested `frame.Frame{}` /
+   `ui.Node` / `ui.Leaf` calls by hand. See the doc comment at the top of
+   `builder.lua` for the full class vocabulary (`row`/`col`/`stack`,
+   `grow`/`w-N`/`h-N`/`w-fit`/`w-grow`, `p-N`/`px-`/`py-`/`gap-N`,
+   `center`/`ax-*`/`ay-*`, `x-N`/`y-N`).
 
-3. **The root `ui.Node`**:
-   ```lua
-   ui.Node(tree, frame.Frame {
-       pos    = frame.Pos(btn_x, top_y),
-       size   = frame.Size(btn_w, total_h),
-       layout = frame.Layout.Vertical(),
-       margin = gap,
-   }, nil, function(tree) ... end)
-   ```
-   This is the whole "stack" concept from the PRD's open questions: a
-   `Vertical` layout with a `margin` *is* the stack-with-gap primitive.
-   There's no `top_y + (btn_h + gap) * i` anywhere — the engine spaces the
-   children for you.
+3. **The root node** — `w-600 h-600 center` sizes the root to the whole
+   screen and centers its one child (the column) both horizontally and
+   vertically. `align` on a node governs how *that node* positions its own
+   children, not how it's positioned by its parent — that's why `center`
+   lives on the root, not on the column.
 
-4. **Each button is a `Node` wrapping a `Leaf`**, not a single Frame:
-   ```lua
-   ui.Node(tree, frame.Frame {
-       size = frame.Size(btn_w, btn_h),
-       align = frame.Align(frame.Align.Middle(), frame.Align.Middle()),
-       painter = painter.Rectangle{ ... },
-   }, nil, function(tree)
-       ui.Leaf(tree, frame.Frame {
-           size = frame.Size(frame.Size.Grow(), frame.Size.Fit()),
-           painter = painter.Text{ text = b.label, align = "center" },
-       })
-   end)
-   ```
-   The outer `Node` draws the button background and centers its child; the
-   inner `Leaf` draws the label and grows to fill the button's width. This
-   two-frame "background + centered content" shape is how every button in
-   the upstream example is built — it's the pattern to reuse for every
-   button across `menu.lua`'s five screens, not just this one.
+4. **`col gap-16 center`** *is* the stack-with-gap primitive: a `Vertical`
+   layout with a margin between children, plus `center` so the title (which
+   is narrower than the 240px buttons) and the buttons all align on the same
+   x-axis. There's no `top_y + (btn_h + gap) * i` anywhere — the engine
+   spaces the children for you.
 
-5. **`ui.DrawTree(tree)`** runs the actual layout passes and fills
-   `tree.Commands` with `{x, y, w, h, painter}` — exactly the shape
-   `main.lua`'s `handle_tap()` would need for hit-testing, see below.
+5. **Each button is a `Node` wrapping a `Leaf`**, not a single Frame: the
+   outer `Node` draws the background and centers its child; the inner
+   `Leaf` draws the label and uses `grow-x` to fill the button's width (a
+   childless `Leaf` sized with `w-fit` collapses to zero width — only
+   `grow` consults the painter's natural size as a floor). This
+   "background + centered content" shape is the pattern to reuse for any
+   button.
 
-## Question bank for the grilling session
-
-Each open question in the PRD maps directly onto something this example
-makes concrete:
-
-- **"Generic reusable layout primitive, or a thin button-list helper?"**
-  This example uses the *generic* primitive (`Frame`/`Layout.Vertical`/
-  `margin`) directly, with no menu-specific helper layered on top. Look at
-  how much boilerplate is still here (the `Node`-wrapping-`Leaf` pattern
-  repeated per button) and decide: is a thin `Button(label, painter)`
-  helper worth adding on top of `lib/ui`, or does every screen just write
-  this shape inline?
-
-- **"Do `menu.lua`'s five `draw_*`/`*_button_bounds` pairs get rebuilt on
-  top of it?"** This example only rebuilt `main_menu_button_bounds()`'s
-  *button list*; `draw_main_menu()`'s title text and background are still
-  hand-drawn. Walk through `menu.lua`'s other four screens (options, pause,
-  win, game-over) and check whether they all fit this same
-  Vertical-stack-of-buttons shape, or whether some (e.g. the options screen
-  with its row-cycling values) need something this example doesn't cover.
-
-- **"How does `main.lua`'s `handle_tap()` consume the same layout output?"**
-  `tree.Commands` already has `{x, y, w, h}` per drawn box — same shape
-  `*_button_bounds()` returns today. The open question is *order and
-  identity*: `handle_tap()` needs to know which command is "Options" vs
-  "Quit", and `Commands` is a flat draw-order list with no labels attached.
-  Decide whether buttons need a tag/id field threaded through, or whether
-  hit-testing should walk the same `frame.Frame` tree separately from
-  `Commands`.
-
-- **"Does this touch `renderer/board.lua`'s `board_metrics()`?"** This
-  example deliberately did *not* touch `board_metrics()` — it borrowed
-  `menu.lua`'s already-computed numbers as the root `Frame`'s `pos`/`size`.
-  Decide whether that's the right boundary going forward (board metrics
-  stay hand-computed; only the per-screen widget layout adopts `lib/ui`),
-  or whether the board area itself should become a `Frame` too.
+6. **`builder.Build(tree, spec)`** walks the declarative spec tree above and
+   calls `ui.Node`/`ui.Leaf` for you; **`ui.DrawTree(tree)`** then runs the
+   actual layout passes and fills `tree.Commands` with `{x, y, w, h,
+   painter}` — the same shape a real game would use both to draw (loop over
+   `Commands`, call `painter.Draw`) and to hit-test taps.

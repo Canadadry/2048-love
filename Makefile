@@ -16,7 +16,7 @@ test-game:
 	cd game && lua ../tests/test_all.lua
 
 test-ui-layout:
-	cd game && lua lib/ui/layout/compute_internals_test.lua && lua lib/ui/layout/ui_test.lua
+	cd game && lua lib/ui/layout/compute_internals_test.lua && lua lib/ui/layout/ui_test.lua && lua lib/ui/layout/builder_test.lua
 
 ui-example:
 	cd game && lua lib/ui/example/main.lua
