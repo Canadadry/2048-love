@@ -9,6 +9,12 @@ class SizeMismatchError(Exception):
     pass
 
 
+class RowScaleError(Exception):
+    def __init__(self, row_idx: int, message: str) -> None:
+        super().__init__(message)
+        self.row_idx = row_idx
+
+
 def extract_frames(gif: Image.Image) -> list:
     frames = []
     try:
@@ -51,7 +57,11 @@ def build_sheet(rows: list, tile_w: int, tile_h: int, mode: str = "strict") -> I
     sheet = Image.new("RGBA", (max_frames * tile_w, len(rows) * tile_h), (0, 0, 0, 0))
     for row_idx, frames in enumerate(rows):
         for col_idx, frame in enumerate(frames):
-            sheet.paste(scale_frame(frame, tile_w, tile_h, mode), (col_idx * tile_w, row_idx * tile_h))
+            try:
+                scaled = scale_frame(frame, tile_w, tile_h, mode)
+            except ValueError as e:
+                raise RowScaleError(row_idx, str(e)) from e
+            sheet.paste(scaled, (col_idx * tile_w, row_idx * tile_h))
     return sheet
 
 
@@ -90,7 +100,7 @@ def _sidecar_path(png_path: str) -> str:
     return os.path.splitext(png_path)[0] + ".lua"
 
 
-def cmd_create(output_png: str, tile_w: int | None, gif_paths: list, mode: str = "strict") -> None:
+def cmd_create(output_png: str, tile_w: int | None, gif_paths: list, mode: str = "strict", tile_h: int | None = None) -> None:
     rows = []
     for path in gif_paths:
         frames = extract_frames(Image.open(path))
@@ -100,11 +110,12 @@ def cmd_create(output_png: str, tile_w: int | None, gif_paths: list, mode: str =
     native_w, native_h = rows[0][0].size
     if tile_w is None:
         tile_w = native_w
-    tile_h = round(native_h * tile_w / native_w)
+    if tile_h is None:
+        tile_h = round(native_h * tile_w / native_w)
     try:
         build_sheet(rows, tile_w, tile_h, mode).save(output_png)
-    except ValueError as e:
-        sys.exit(f"error: {e}")
+    except RowScaleError as e:
+        sys.exit(f"error: {gif_paths[e.row_idx]}: {e}")
     write_sidecar(_sidecar_path(output_png), tile_w, tile_h, [len(r) for r in rows])
 
 
@@ -162,6 +173,7 @@ def main():
     p_create = sub.add_parser("create")
     p_create.add_argument("--output", default="output.png")
     p_create.add_argument("--tile-width", type=int)
+    p_create.add_argument("--tile-height", type=int)
     p_create.add_argument("gifs", nargs="+")
     _add_mode_flags(p_create)
 
@@ -175,7 +187,7 @@ def main():
 
     args = parser.parse_args()
     if args.cmd == "create":
-        cmd_create(args.output, args.tile_width, args.gifs, _mode(args))
+        cmd_create(args.output, args.tile_width, args.gifs, _mode(args), args.tile_height)
     elif args.cmd == "append":
         try:
             cmd_append(args.output, args.gif, _mode(args))

@@ -1,7 +1,7 @@
 ---
 title: "Tileset Builder: Independent Tile Height"
 description: "tilesheet.py create always derives tile height from the first GIF's native aspect ratio, so there's no way to force a square (or otherwise custom) tile shape when the source GIFs aren't already that shape."
-status: needs-triage
+status: done
 ---
 
 # Tileset Builder: Independent Tile Height

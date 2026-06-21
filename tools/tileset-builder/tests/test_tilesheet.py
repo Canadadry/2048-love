@@ -134,6 +134,116 @@ def test_create_derives_tile_height_from_aspect_ratio():
                 os.unlink(p)
 
 
+# --- cmd_create: explicit tile_height ---
+
+
+def test_create_explicit_tile_height_overrides_derivation_width_defaults_to_native():
+    with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
+        gif_path = f.name
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        png_path = f.name
+    try:
+        save_gif(gif_path, w=40, h=20)  # native aspect would derive tile_h=20 if tile_w=40
+        cmd_create(png_path, tile_w=None, gif_paths=[gif_path], mode="shrink", tile_h=64)
+        tile_w, tile_h, _ = read_sidecar(os.path.splitext(png_path)[0] + ".lua")
+        assert tile_w == 40
+        assert tile_h == 64
+    finally:
+        for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
+            if os.path.exists(p):
+                os.unlink(p)
+
+
+def test_create_explicit_width_and_height_force_square_tile():
+    with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
+        gif_path = f.name
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        png_path = f.name
+    try:
+        save_gif(gif_path, w=40, h=20)  # non-square row 0
+        cmd_create(png_path, tile_w=64, gif_paths=[gif_path], mode="shrink", tile_h=64)
+        tile_w, tile_h, _ = read_sidecar(os.path.splitext(png_path)[0] + ".lua")
+        assert tile_w == 64
+        assert tile_h == 64
+    finally:
+        for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
+            if os.path.exists(p):
+                os.unlink(p)
+
+
+def test_create_row0_mismatch_strict_mode_exits():
+    with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
+        gif_path = f.name
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        png_path = f.name
+    try:
+        save_gif(gif_path, w=40, h=20)  # 2:1, forced tile is 1:1 → mismatch
+        with pytest.raises(SystemExit):
+            cmd_create(png_path, tile_w=64, gif_paths=[gif_path], tile_h=64)
+    finally:
+        for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
+            if os.path.exists(p):
+                os.unlink(p)
+
+
+def test_create_row0_mismatch_error_names_gif_file(monkeypatch, tmp_path):
+    gif_path = str(tmp_path / "tile_2.gif")
+    png_path = str(tmp_path / "out.png")
+    save_gif(gif_path, w=40, h=20)  # 2:1, forced tile is 1:1 → mismatch
+    monkeypatch.setattr("sys.argv", ["tilesheet", "create", "--output", png_path, "--tile-width", "64", "--tile-height", "64", gif_path])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert "tile_2.gif" in str(exc.value)
+
+
+def test_create_row0_mismatch_with_shrink_letterboxes():
+    with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
+        gif_path = f.name
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        png_path = f.name
+    try:
+        gif = Image.new("RGBA", (16, 8), (255, 0, 0, 255))  # 2:1
+        gif.save(gif_path)
+        cmd_create(png_path, tile_w=8, gif_paths=[gif_path], mode="shrink", tile_h=8)
+        sheet = Image.open(png_path)
+        assert sheet.getpixel((4, 0))[3] == 0   # letterbox bar transparent
+        assert sheet.getpixel((4, 4))[3] == 255  # center opaque
+    finally:
+        for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
+            if os.path.exists(p):
+                os.unlink(p)
+
+
+def test_create_row0_mismatch_with_crop_fills_no_transparency():
+    with tempfile.NamedTemporaryFile(suffix=".gif", delete=False) as f:
+        gif_path = f.name
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:
+        png_path = f.name
+    try:
+        gif = Image.new("RGBA", (16, 8), (255, 0, 0, 255))  # 2:1
+        gif.save(gif_path)
+        cmd_create(png_path, tile_w=8, gif_paths=[gif_path], mode="crop", tile_h=8)
+        sheet = Image.open(png_path)
+        assert sheet.getpixel((0, 0))[3] == 255
+        assert sheet.getpixel((7, 7))[3] == 255
+    finally:
+        for p in (gif_path, png_path, os.path.splitext(png_path)[0] + ".lua"):
+            if os.path.exists(p):
+                os.unlink(p)
+
+
+def test_create_later_row_mismatch_error_names_gif_file(monkeypatch, tmp_path):
+    gif1 = str(tmp_path / "first.gif")
+    gif2 = str(tmp_path / "tile_4.gif")
+    png_path = str(tmp_path / "out.png")
+    save_gif(gif1, w=32, h=32)
+    save_gif(gif2, w=40, h=20)  # mismatched aspect, second row
+    monkeypatch.setattr("sys.argv", ["tilesheet", "create", "--output", png_path, gif1, gif2])
+    with pytest.raises(SystemExit) as exc:
+        main()
+    assert "tile_4.gif" in str(exc.value)
+
+
 # --- cmd_create: optional tile_width ---
 
 
@@ -179,6 +289,17 @@ def test_cli_create_no_tile_width_uses_native_width(monkeypatch, tmp_path):
     main()
     tile_w, _, _ = read_sidecar(str(tmp_path / "out.lua"))
     assert tile_w == 32
+
+
+def test_cli_create_tile_height_flag_overrides_derivation(monkeypatch, tmp_path):
+    gif_path = str(tmp_path / "test.gif")
+    png_path = str(tmp_path / "out.png")
+    save_gif(gif_path, w=32, h=16)  # native aspect would derive tile_h=16 if tile_w=32
+    monkeypatch.setattr("sys.argv", ["tilesheet", "create", "--output", png_path, "--tile-height", "48", "--shrink", gif_path])
+    main()
+    tile_w, tile_h, _ = read_sidecar(str(tmp_path / "out.lua"))
+    assert tile_w == 32
+    assert tile_h == 48
 
 
 def test_cli_create_default_output_is_output_png(monkeypatch, tmp_path):

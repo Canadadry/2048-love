@@ -18,11 +18,19 @@ pip install pillow
 python tilesheet.py create tile_2.gif tile_4.gif tile_8.gif
 ```
 
-`--output` defaults to `output.png`; `--tile-width` defaults to the GIF's native width. Both can be overridden:
+`--output` defaults to `output.png`; `--tile-width` defaults to the GIF's native width and `--tile-height` defaults to that width scaled to the first GIF's native aspect ratio. Both can be overridden:
 
 ```sh
 python tilesheet.py create --output sheet.png --tile-width 64 tile_2.gif tile_4.gif tile_8.gif
 ```
+
+Pass both `--tile-width` and `--tile-height` to force a square tile regardless of source GIF shapes:
+
+```sh
+python tilesheet.py create --tile-width 64 --tile-height 64 tile_2.gif tile_4.gif tile_8.gif
+```
+
+When `--tile-height` is given, it is no longer derived from the first GIF's aspect ratio — the first GIF (row 0) may then need `--shrink` or `--crop` itself if its native aspect doesn't match the forced tile shape, the same way later rows already do.
 
 **Append** a new row to an existing tilesheet:
 
