@@ -37,49 +37,6 @@ make test-tool-theme    # theme-builder Python tests
 make test-all           # all of the above
 ```
 
-## Structure
-
-```
-game/              Love2D game source
-  main.lua         entry point (Love2D callbacks)
-  config.lua       constants and tile color map
-  statemachine.lua state machine (switch, lifecycle dispatch)
-  gamestate.lua    game state tables (menu, playing, paused, win, game_over) wired onto the machine
-  renderer/        board, tile, and HUD drawing
-    init.lua       orchestrates the sub-modules below; public interface (load, update, draw, set_tileset)
-    board.lua      board geometry and background
-    tile_draw.lua  tileset/quad state and per-tile drawing (classic + tileset)
-    hud.lua        score display
-  menu.lua         overlay and button rendering (main menu, win, game-over, pause, options)
-  options.lua      options screen state (win-tile toggle, escape back to menu)
-  optionsmodel.lua row-focus/value-cycling model backing the Options screen (pure, no Love2D dependency)
-  settings.lua     persists option values to disk (load/save/get/set) via love.filesystem
-  grid.lua         game logic — slide, merge, spawn, win/lose detection
-  particle.lua     win-screen particle burst simulation (position/velocity/gravity/lifetime)
-tests/
-  test_all.lua     test runner (runs all suites below)
-  test_grid.lua    grid logic
-  test_gamestate.lua     game state and input
-  test_statemachine.lua  state machine mechanics
-  test_pause.lua         pause menu behaviour
-  test_menu.lua          menu button bounds
-  test_main_menu.lua     main menu state and navigation
-  test_options.lua       options screen state and navigation
-  test_optionsmodel.lua  row-focus/value-cycling model
-  test_settings.lua      settings persistence (save/load round-trip, missing/corrupt file)
-  test_renderer_board.lua      board geometry
-  test_renderer_tile_draw.lua  tile color fallback
-  test_renderer_hud.lua        score position
-  test_main.lua          startup wiring (settings seeded into config)
-  test_tile.lua    tile animation
-  test_particle.lua win-screen particle burst simulation
-  test_tileset.lua tileset loading helpers
-  test_swipe.lua   swipe gesture detection
-docs/prd/          product requirements
-themes/            theme manifests (one Giphy URL per line) consumed by theme-builder
-tools/             helper CLI tools (see below)
-```
-
 ## Tools
 
 ### curl-giphy

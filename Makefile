@@ -1,7 +1,7 @@
 LOVE = /Applications/love.app/Contents/MacOS/love
 LOVE_FILE = 2048.love
 
-.PHONY: run dev build test-game test-tool-tileset test-tool-dl test-tool-theme test-all dl theme themes
+.PHONY: run dev build test-game test-ui-layout test-tool-tileset test-tool-dl test-tool-theme test-all dl theme themes ui-example
 
 build:
 	cd game && zip -r ../$(LOVE_FILE) .
@@ -15,6 +15,12 @@ dev:
 test-game:
 	cd game && lua ../tests/test_all.lua
 
+test-ui-layout:
+	cd game && lua lib/ui/layout/compute_internals_test.lua && lua lib/ui/layout/ui_test.lua
+
+ui-example:
+	cd game && lua lib/ui/example/main.lua
+
 test-tool-tileset:
 	cd tools/tileset-builder && source .venv/bin/activate && pytest tests/
 
@@ -24,7 +30,7 @@ test-tool-dl:
 test-tool-theme:
 	cd tools/theme-builder && python3 -m unittest tests.test_build -v
 
-test-all: test-game test-tool-tileset test-tool-dl test-tool-theme
+test-all: test-game test-ui-layout test-tool-tileset test-tool-dl test-tool-theme
 
 dl:
 	cd tools/curl-giphy && source .venv/bin/activate && python3 giphy_dl.py $(URL)
