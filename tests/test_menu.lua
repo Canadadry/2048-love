@@ -1,4 +1,7 @@
-love = { graphics = { getDimensions = function() return 600, 600 end } }
+love = {
+    graphics   = { getDimensions = function() return 600, 600 end },
+    filesystem = { getDirectoryItems = function(_) return {} end },
+}
 local menu = require("menu")
 
 local pass, fail = 0, 0

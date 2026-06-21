@@ -70,5 +70,14 @@ test("frame_at single-frame tile always returns 0", function()
     eq(tileset.frame_at(1, 8, 999), 0, "single frame never changes")
 end)
 
+-- list_names: directory scan -> sorted theme name list with "None" prepended
+test("list_names sorts png-derived names alphabetically with None prepended", function()
+    local names = tileset.list_names({ "zebra.png", "apple.png", "readme.txt", "apple.lua" })
+    eq(#names, 3, "None + apple + zebra")
+    eq(names[1], "", "None sentinel first")
+    eq(names[2], "apple", "apple before zebra")
+    eq(names[3], "zebra", "zebra after apple")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

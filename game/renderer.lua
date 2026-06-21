@@ -14,9 +14,9 @@ local function get_font(size)
     return font_cache[size]
 end
 
-function M.load()
-    local ts = tileset.load()
-    if not ts then return end
+function M.set_tileset(name)
+    local ts = tileset.load(name)
+    if not ts then ts_data = nil; return end
     local quads        = {}
     local frame_counts = {}
     local values       = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 }
@@ -43,6 +43,10 @@ function M.load()
         tile_h       = ts.meta.tile_h,
         anim_time    = 0,
     }
+end
+
+function M.load()
+    M.set_tileset(config.TILESET)
 end
 
 function M.update(dt)

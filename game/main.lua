@@ -30,7 +30,7 @@ function love.draw()
     if state:in_menu() then
         menu.draw_main_menu(state:menu_cursor())
     elseif state:in_options() then
-        menu.draw_options(state:win_tile())
+        menu.draw_options(state:win_tile(), state:tileset_names(), state:tileset_cursor())
     else
         renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(), state:paused(), state:pause_cursor())
     end
@@ -38,6 +38,9 @@ end
 
 function love.keypressed(key)
     state:keypressed(key)
+    if state:in_options() and key == "return" then
+        renderer.set_tileset(config.TILESET)
+    end
     if state:quit_requested() then love.event.quit() end
 end
 

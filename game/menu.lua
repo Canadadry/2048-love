@@ -66,7 +66,11 @@ function M.draw_main_menu(cursor)
     end
 end
 
-function M.draw_options(win_tile)
+local function theme_label(name)
+    return name == "" and "None (classic)" or name
+end
+
+function M.draw_options(win_tile, tileset_names, tileset_cursor)
     local w, h = love.graphics.getDimensions()
     local board_px, tile_px, _, board_x, board_y = board_metrics()
     local font_sz     = math.max(12, math.floor(tile_px * 0.30))
@@ -95,6 +99,30 @@ function M.draw_options(win_tile)
     love.graphics.print(hint,
         board_x + math.floor((board_px - hint_font:getWidth(hint)) / 2),
         board_y + math.floor(board_px * 0.45) + body_font:getHeight() + 6)
+
+    love.graphics.setFont(body_font)
+    local theme_title = "Theme:"
+    local theme_y = board_y + math.floor(board_px * 0.62)
+    love.graphics.print(theme_title,
+        board_x + math.floor((board_px - body_font:getWidth(theme_title)) / 2),
+        theme_y)
+
+    local line_h = body_font:getHeight() + 4
+    for i, name in ipairs(tileset_names) do
+        local label = theme_label(name)
+        local selected = i == tileset_cursor
+        love.graphics.setColor(selected and { 0.96, 0.49, 0.37 } or { 0.47, 0.43, 0.40 })
+        love.graphics.print((selected and "> " or "  ") .. label,
+            board_x + math.floor((board_px - body_font:getWidth(label)) / 2),
+            theme_y + line_h * i)
+    end
+
+    love.graphics.setColor(0.47, 0.43, 0.40)
+    love.graphics.setFont(hint_font)
+    local theme_hint = "Up/Down to select, Enter to apply"
+    love.graphics.print(theme_hint,
+        board_x + math.floor((board_px - hint_font:getWidth(theme_hint)) / 2),
+        theme_y + line_h * (#tileset_names + 1))
 end
 
 function M.pause_icon_bounds()

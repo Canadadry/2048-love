@@ -1,5 +1,8 @@
 -- Run from: cd game && lua ../tests/test_all.lua
-love = { graphics = { getDimensions = function() return 600, 600 end } }
+love = {
+    graphics   = { getDimensions = function() return 600, 600 end },
+    filesystem = { getDirectoryItems = function(_) return {} end },
+}
 
 local suites = {
     "../tests/test_grid.lua",

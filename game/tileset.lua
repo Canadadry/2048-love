@@ -1,5 +1,4 @@
-local check  = require("check")
-local config = require("config")
+local check = require("check")
 
 local M = {}
 
@@ -23,8 +22,23 @@ function M.value_to_row(value)
     return row
 end
 
-function M.load()
-    local name = config.TILESET
+function M.list_names(filenames)
+    check.tbl(filenames, "filenames")
+    local names = {}
+    for _, f in ipairs(filenames) do
+        local name = f:match("^(.+)%.png$")
+        if name then names[#names + 1] = name end
+    end
+    table.sort(names)
+    table.insert(names, 1, "")
+    return names
+end
+
+function M.list_available()
+    return M.list_names(love.filesystem.getDirectoryItems("assets"))
+end
+
+function M.load(name)
     if not name or name == "" then return nil end
     local lua_path = "assets/" .. name .. ".lua"
     local png_path = "assets/" .. name .. ".png"

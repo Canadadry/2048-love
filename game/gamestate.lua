@@ -32,6 +32,8 @@ function Base:paused()         return false end
 function Base:in_menu()        return false end
 function Base:in_options()     return false end
 function Base:win_tile()       return config.WIN_TILE end
+function Base:tileset_names()  return {} end
+function Base:tileset_cursor() return 0 end
 function Base:cursor()         return 0 end
 function Base:pause_cursor()   return 0 end
 function Base:menu_cursor()    return 0 end

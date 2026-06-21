@@ -23,7 +23,7 @@ When you create a 2048 tile a **You Win** overlay appears with two options — *
 
 Press `Escape` (or tap the **⏸** button in the top-left corner) to open the **Pause** menu. The board stays visible behind a dimmed overlay. Up/Down to navigate, Enter to confirm. Options: **Resume**, **New Game**, **Main Menu**, **Quit**. Pressing `Escape` again or selecting Resume returns instantly to the game.
 
-Select **Options** from the main menu (between New Game and Quit) to open the **Options** screen. Left/Right toggles the **Win Tile** between `32` (dev) and `2048` (prod) — the same value `--win-tile` sets at launch, but changeable mid-session. Press `Escape` to return to the main menu.
+Select **Options** from the main menu (between New Game and Quit) to open the **Options** screen. Left/Right toggles the **Win Tile** between `32` (dev) and `2048` (prod) — the same value `--win-tile` sets at launch, but changeable mid-session. Up/Down selects a **Theme** from the list of built tilesheets in `game/assets/` (plus a "None (classic)" entry); Enter applies it immediately. Press `Escape` to return to the main menu.
 
 ## Test
 
@@ -70,8 +70,8 @@ Recommended implementation order for triage PRDs:
 
 | # | PRD | Notes |
 |---|-----|-------|
-| 011 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
-| 012+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first (now available — see PRD 010). |
+| 012 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
+| 013+ | animation-effect-toggles · settings-persistence | All need options screen first (now available — see PRD 010). |
 | — | sound-hooks · refactor-renderer-split | Independent; pick up when the time feels right. |
 
 **Flag:** `touch-swipe` is in triage but `swipe.lua` is already wired in `main.lua`. Verify before triaging — it may already be done.
