@@ -21,7 +21,9 @@ Arrow keys to slide tiles. The window is resizable.
 
 When you create a 2048 tile a **You Win** overlay appears with two options — **Continue** (keep playing) and **Restart** — navigated with Up/Down and confirmed with Enter, or tapped directly. A **Game Over** overlay appears when no moves remain; press Enter or any arrow key (or tap) to restart.
 
-Press `Escape` (or tap the **⏸** button in the top-left corner) to open the **Pause** menu. The board stays visible behind a dimmed overlay. Up/Down to navigate, Enter to confirm. Options: **Resume**, **New Game**, **Quit**. Pressing `Escape` again or selecting Resume returns instantly to the game.
+Press `Escape` (or tap the **⏸** button in the top-left corner) to open the **Pause** menu. The board stays visible behind a dimmed overlay. Up/Down to navigate, Enter to confirm. Options: **Resume**, **New Game**, **Main Menu**, **Quit**. Pressing `Escape` again or selecting Resume returns instantly to the game.
+
+Select **Options** from the main menu (between New Game and Quit) to open the **Options** screen. Left/Right toggles the **Win Tile** between `32` (dev) and `2048` (prod) — the same value `--win-tile` sets at launch, but changeable mid-session. Press `Escape` to return to the main menu.
 
 ## Test
 
@@ -41,7 +43,8 @@ game/              Love2D game source
   statemachine.lua state machine (switch, lifecycle dispatch)
   gamestate.lua    game state tables (menu, playing, paused, win, game_over) wired onto the machine
   renderer.lua     board drawing
-  menu.lua         overlay and button rendering (main menu, win, game-over, pause)
+  menu.lua         overlay and button rendering (main menu, win, game-over, pause, options)
+  options.lua      options screen state (win-tile toggle, escape back to menu)
   grid.lua         game logic — slide, merge, spawn, win/lose detection
 tests/
   test_all.lua     test runner (runs all suites below)
@@ -51,6 +54,7 @@ tests/
   test_pause.lua         pause menu behaviour
   test_menu.lua          menu button bounds
   test_main_menu.lua     main menu state and navigation
+  test_options.lua       options screen state and navigation
   test_tile.lua    tile animation
   test_tileset.lua tileset loading helpers
   test_swipe.lua   swipe gesture detection
@@ -64,9 +68,8 @@ Recommended implementation order for triage PRDs:
 
 | # | PRD | Notes |
 |---|-----|-------|
-| 010 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
-| 011 | options-screen-shell | Needs state machine as infrastructure. |
-| 012+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first. |
+| 011 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
+| 012+ | tileset-picker · animation-effect-toggles · settings-persistence | All need options screen first (now available — see PRD 010). |
 | — | sound-hooks · refactor-renderer-split | Independent; pick up when the time feels right. |
 
 **Flag:** `touch-swipe` is in triage but `swipe.lua` is already wired in `main.lua`. Verify before triaging — it may already be done.

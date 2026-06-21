@@ -21,9 +21,9 @@ local function positive_finite(v, label)
     end
 end
 
-test("pause_button_bounds returns 3 buttons with positive finite dimensions", function()
+test("pause_button_bounds returns 4 buttons with positive finite dimensions", function()
     local btns = menu.pause_button_bounds()
-    if #btns ~= 3 then error("expected 3 buttons, got " .. #btns) end
+    if #btns ~= 4 then error("expected 4 buttons, got " .. #btns) end
     for i, b in ipairs(btns) do
         local pfx = "button[" .. i .. "]."
         positive_finite(b.x, pfx .. "x")
@@ -33,11 +33,12 @@ test("pause_button_bounds returns 3 buttons with positive finite dimensions", fu
     end
 end)
 
-test("pause_button_bounds button labels are Resume, New Game, Quit", function()
+test("pause_button_bounds button labels are Resume, New Game, Main Menu, Quit", function()
     local btns = menu.pause_button_bounds()
-    if btns[1].label ~= "Resume"   then error("button 1 label: " .. tostring(btns[1].label)) end
-    if btns[2].label ~= "New Game" then error("button 2 label: " .. tostring(btns[2].label)) end
-    if btns[3].label ~= "Quit"     then error("button 3 label: " .. tostring(btns[3].label)) end
+    if btns[1].label ~= "Resume"    then error("button 1 label: " .. tostring(btns[1].label)) end
+    if btns[2].label ~= "New Game"  then error("button 2 label: " .. tostring(btns[2].label)) end
+    if btns[3].label ~= "Main Menu" then error("button 3 label: " .. tostring(btns[3].label)) end
+    if btns[4].label ~= "Quit"      then error("button 4 label: " .. tostring(btns[4].label)) end
 end)
 
 test("pause_icon_bounds returns a single rect with positive finite dimensions", function()

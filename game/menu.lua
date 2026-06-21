@@ -28,10 +28,11 @@ function M.main_menu_button_bounds()
     local btn_h   = math.floor(font_sz * 2.2)
     local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
     local gap     = math.floor(font_sz * 0.6)
-    local top_y   = board_y + math.floor(board_px * 0.45)
+    local top_y   = board_y + math.floor(board_px * 0.35)
     return {
-        { x = btn_x, y = top_y,               w = btn_w, h = btn_h, label = "New Game" },
-        { x = btn_x, y = top_y + btn_h + gap, w = btn_w, h = btn_h, label = "Quit"     },
+        { x = btn_x, y = top_y,                     w = btn_w, h = btn_h, label = "New Game" },
+        { x = btn_x, y = top_y + (btn_h + gap),     w = btn_w, h = btn_h, label = "Options"  },
+        { x = btn_x, y = top_y + (btn_h + gap) * 2, w = btn_w, h = btn_h, label = "Quit"      },
     }
 end
 
@@ -65,6 +66,37 @@ function M.draw_main_menu(cursor)
     end
 end
 
+function M.draw_options(win_tile)
+    local w, h = love.graphics.getDimensions()
+    local board_px, tile_px, _, board_x, board_y = board_metrics()
+    local font_sz     = math.max(12, math.floor(tile_px * 0.30))
+    local title_font  = get_font(font_sz + 16)
+    local body_font   = get_font(math.max(12, font_sz - 2))
+    local hint_font   = get_font(math.max(10, font_sz - 6))
+
+    love.graphics.setColor(0.98, 0.97, 0.94)
+    love.graphics.rectangle("fill", 0, 0, w, h)
+
+    love.graphics.setColor(0.47, 0.43, 0.40)
+    love.graphics.setFont(title_font)
+    local title = "Options"
+    love.graphics.print(title,
+        board_x + math.floor((board_px - title_font:getWidth(title)) / 2),
+        board_y + math.floor(board_px * 0.20))
+
+    love.graphics.setFont(body_font)
+    local msg = "Win Tile:  <  " .. win_tile .. "  >"
+    love.graphics.print(msg,
+        board_x + math.floor((board_px - body_font:getWidth(msg)) / 2),
+        board_y + math.floor(board_px * 0.45))
+
+    love.graphics.setFont(hint_font)
+    local hint = "Left/Right to change"
+    love.graphics.print(hint,
+        board_x + math.floor((board_px - hint_font:getWidth(hint)) / 2),
+        board_y + math.floor(board_px * 0.45) + body_font:getHeight() + 6)
+end
+
 function M.pause_icon_bounds()
     local _, tile_px = board_metrics()
     local font_sz = math.max(12, math.floor(tile_px * 0.30))
@@ -95,11 +127,12 @@ function M.pause_button_bounds()
     local btn_h   = math.floor(font_sz * 2.2)
     local btn_x   = board_x + math.floor((board_px - btn_w) / 2)
     local gap     = math.floor(font_sz * 0.6)
-    local top_y   = board_y + math.floor(board_px * 0.35)
+    local top_y   = board_y + math.floor(board_px * 0.27)
     return {
-        { x = btn_x, y = top_y,                       w = btn_w, h = btn_h, label = "Resume"   },
-        { x = btn_x, y = top_y + (btn_h + gap),       w = btn_w, h = btn_h, label = "New Game" },
-        { x = btn_x, y = top_y + (btn_h + gap) * 2,   w = btn_w, h = btn_h, label = "Quit"     },
+        { x = btn_x, y = top_y,                       w = btn_w, h = btn_h, label = "Resume"    },
+        { x = btn_x, y = top_y + (btn_h + gap),       w = btn_w, h = btn_h, label = "New Game"  },
+        { x = btn_x, y = top_y + (btn_h + gap) * 2,   w = btn_w, h = btn_h, label = "Main Menu" },
+        { x = btn_x, y = top_y + (btn_h + gap) * 3,   w = btn_w, h = btn_h, label = "Quit"      },
     }
 end
 

@@ -10,6 +10,7 @@ local suites = {
     "../tests/test_pause.lua",
     "../tests/test_menu.lua",
     "../tests/test_main_menu.lua",
+    "../tests/test_options.lua",
     "../tests/test_statemachine.lua",
 }
 

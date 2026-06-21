@@ -3,6 +3,7 @@ local check        = require("check")
 local grid         = require("grid")
 local tile         = require("tile")
 local statemachine = require("statemachine")
+local options      = require("options")
 
 local M    = {}
 local DIRS = { left=true, right=true, up=true, down=true }
@@ -29,6 +30,8 @@ function Base:win()            return false end
 function Base:game_over()      return false end
 function Base:paused()         return false end
 function Base:in_menu()        return false end
+function Base:in_options()     return false end
+function Base:win_tile()       return config.WIN_TILE end
 function Base:cursor()         return 0 end
 function Base:pause_cursor()   return 0 end
 function Base:menu_cursor()    return 0 end
@@ -36,6 +39,7 @@ function Base:quit_requested() return self._ctx.quit_requested end
 function Base:resume()        end
 function Base:continue_game() end
 function Base:restart()       end
+function Base:to_main_menu()  end
 function Base:queue_move()    end
 
 function Base:update(dt)
@@ -88,12 +92,17 @@ function MenuState:menu_cursor() return self._cursor end
 
 function MenuState:keypressed(key)
     if key == "down" then
-        self._cursor = math.min(1, self._cursor + 1)
+        self._cursor = math.min(2, self._cursor + 1)
     elseif key == "up" then
         self._cursor = math.max(0, self._cursor - 1)
     elseif key == "return" then
         if self._cursor == 0 then
-            self._ctx.switch("playing")
+            -- must reset via do_restart, not a bare switch: ctx may carry a
+            -- stale in-progress board if the player reached this menu via
+            -- the pause screen's "Main Menu" option rather than fresh launch.
+            do_restart(self._ctx)
+        elseif self._cursor == 1 then
+            self._ctx.switch("options")
         else
             self._ctx.quit_requested = true
         end
@@ -176,11 +185,15 @@ function PausedState:restart()
     do_restart(self._ctx)
 end
 
+function PausedState:to_main_menu()
+    self._ctx.switch("menu")
+end
+
 function PausedState:keypressed(key)
     if key == "up" then
         self._cursor = math.max(0, self._cursor - 1)
     elseif key == "down" then
-        self._cursor = math.min(2, self._cursor + 1)
+        self._cursor = math.min(3, self._cursor + 1)
     elseif key == "escape" then
         self:resume()
     elseif key == "return" then
@@ -189,6 +202,8 @@ function PausedState:keypressed(key)
         elseif self._cursor == 1 then
             self:restart()
         elseif self._cursor == 2 then
+            self:to_main_menu()
+        elseif self._cursor == 3 then
             self._ctx.quit_requested = true
         end
     end
@@ -272,6 +287,7 @@ local function build(ctx, initial_name)
         paused    = make_paused_state(ctx),
         win       = make_win_state(ctx),
         game_over = make_game_over_state(ctx),
+        options   = options.new(ctx, Base),
     }
 
     ctx.switch = function(name) sm:switch(states[name]) end

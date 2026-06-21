@@ -96,11 +96,11 @@ test("pause_cursor moves down with down key", function()
     eq(s:pause_cursor(), 2, "cursor at 2 after second down")
 end)
 
-test("pause_cursor clamps at 2", function()
+test("pause_cursor clamps at 3", function()
     local s = idle_board()
     s:keypressed("escape")
-    s:keypressed("down"); s:keypressed("down"); s:keypressed("down")
-    eq(s:pause_cursor(), 2, "cursor clamped at 2")
+    s:keypressed("down"); s:keypressed("down"); s:keypressed("down"); s:keypressed("down")
+    eq(s:pause_cursor(), 3, "cursor clamped at 3")
 end)
 
 test("pause_cursor moves up and clamps at 0", function()
@@ -139,6 +139,33 @@ test("enter with cursor=1 (New Game) resets score and clears paused", function()
     s:keypressed("return")
     eq(s:paused(), false, "no longer paused")
     eq(s:score(), 0, "score reset")
+end)
+
+test("enter with cursor=2 (Main Menu) returns to the main menu", function()
+    local s = idle_board()
+    s:keypressed("escape")
+    s:keypressed("down"); s:keypressed("down")   -- cursor → 2 (Main Menu)
+    s:keypressed("return")
+    eq(s:in_menu(), true, "should be back in the main menu")
+    eq(s:paused(), false, "no longer paused")
+end)
+
+test("starting New Game from main menu after a mid-game return resets the score", function()
+    local s = gamestate.new_from({
+        {2, 2, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    })
+    s:keypressed("left")
+    s:update(1.0)
+    eq(s:score() > 0, true, "has nonzero score after merge")
+    s:keypressed("escape")
+    s:keypressed("down"); s:keypressed("down")   -- cursor → 2 (Main Menu)
+    s:keypressed("return")
+    eq(s:in_menu(), true, "back in main menu")
+    s:keypressed("return")                       -- cursor 0 (New Game) from main menu
+    eq(s:score(), 0, "score reset on New Game from main menu")
 end)
 
 -- ── Escape ignored during win / game-over ─────────────────────────────────────

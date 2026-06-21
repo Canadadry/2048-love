@@ -29,6 +29,8 @@ end
 function love.draw()
     if state:in_menu() then
         menu.draw_main_menu(state:menu_cursor())
+    elseif state:in_options() then
+        menu.draw_options(state:win_tile())
     else
         renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(), state:paused(), state:pause_cursor())
     end
@@ -56,10 +58,14 @@ local function handle_tap(x, y)
         elseif hit(btns[2], x, y) then
             state:keypressed("down")
             state:keypressed("return")
+        elseif hit(btns[3], x, y) then
+            state:keypressed("down")
+            state:keypressed("down")
+            state:keypressed("return")
         end
         return
     end
-    if not state:paused() and not state:win() and not state:game_over() then
+    if not state:paused() and not state:win() and not state:game_over() and not state:in_options() then
         if hit(menu.pause_icon_bounds(), x, y) then
             state:keypressed("escape")
             return
@@ -72,6 +78,8 @@ local function handle_tap(x, y)
         elseif hit(btns[2], x, y) then
             state:restart()
         elseif hit(btns[3], x, y) then
+            state:to_main_menu()
+        elseif hit(btns[4], x, y) then
             love.event.quit()
         end
     elseif state:win() then
