@@ -46,8 +46,18 @@ function M.tile_color(value)
     return config.TILE_COLORS[value] or config.DEFAULT_TILE_COLOR
 end
 
-function M.draw(value, px, py, tile_px, pad, font)
+function M.draw(value, px, py, tile_px, pad, font, pop_scale)
+    pop_scale = pop_scale or 1
     local sz = tile_px - pad * 2
+
+    if pop_scale ~= 1 then
+        love.graphics.push()
+        local cx, cy = px + sz / 2, py + sz / 2
+        love.graphics.translate(cx, cy)
+        love.graphics.scale(pop_scale, pop_scale)
+        love.graphics.translate(-cx, -cy)
+    end
+
     if ts_data and value ~= 0 and ts_data.quads[value] then
         local n     = ts_data.frame_counts[value]
         local frame = tileset.frame_at(n, config.TILESET_ANIM_FPS, ts_data.anim_time)
@@ -67,6 +77,10 @@ function M.draw(value, px, py, tile_px, pad, font)
                 math.floor(px + (sz - fw) / 2),
                 math.floor(py + (sz - fh) / 2))
         end
+    end
+
+    if pop_scale ~= 1 then
+        love.graphics.pop()
     end
 end
 

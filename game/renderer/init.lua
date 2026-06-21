@@ -71,7 +71,7 @@ function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_
             local tx, ty   = board.cell_to_px(t.to_row,   t.to_col,   tile_px, pad, board_x, board_y)
             local px = math.floor(fx + (tx - fx) * progress)
             local py = math.floor(fy + (ty - fy) * progress)
-            tile_draw.draw(t.value, px, py, tile_px, pad, font)
+            tile_draw.draw(t.value, px, py, tile_px, pad, font, t.scale)
         end
     else
         for r = 1, n do

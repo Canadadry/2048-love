@@ -62,7 +62,7 @@ local function apply_move(ctx, dir)
         ctx.grid:spawn_tile()
         for _, m in ipairs(result.moves) do
             ctx.tiles[#ctx.tiles + 1] = tile.new(
-                m.value, m.from_row, m.from_col, m.to_row, m.to_col, config.ANIM_DURATION
+                m.value, m.from_row, m.from_col, m.to_row, m.to_col, config.ANIM_DURATION, m.merged
             )
         end
     end

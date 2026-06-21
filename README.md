@@ -84,8 +84,7 @@ Recommended implementation order for triage PRDs:
 
 | # | PRD | Notes |
 |---|-----|-------|
-| 012 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
-| 013+ | animation-effect-toggles | Needs options screen first (now available — see PRD 010). |
+| 017 | animation-effect-toggles | Needs options screen first (now available — see PRD 010). |
 
 ## Tools
 

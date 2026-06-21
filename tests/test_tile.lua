@@ -1,4 +1,5 @@
-local tile = require("tile")
+local tile   = require("tile")
+local config = require("config")
 
 local pass, fail = 0, 0
 
@@ -48,6 +49,50 @@ test("tile.finish() makes is_done() return true immediately", function()
     local t = tile.new(2, 1, 1, 1, 2, 0.1)
     t:finish()
     eq(t:is_done(), true, "finish() should mark tile as done")
+end)
+
+test("merged tile is not done() when slide timer reaches duration", function()
+    local t = tile.new(4, 1, 1, 1, 2, 0.1, true)
+    t:update(0.1)
+    eq(t:is_done(), false, "merged tile should still be popping")
+end)
+
+test("merged tile becomes done() once the pop duration elapses", function()
+    local t = tile.new(4, 1, 1, 1, 2, 0.1, true)
+    t:update(0.1)
+    t:update(config.MERGE_EFFECT_DURATION)
+    eq(t:is_done(), true, "merged tile should be done after pop finishes")
+end)
+
+test("merged tile scale peaks above 1.0 at the pop's midpoint", function()
+    local t = tile.new(4, 1, 1, 1, 2, 0.1, true)
+    t:update(0.1)
+    t:update(config.MERGE_EFFECT_DURATION / 2)
+    if t.scale <= 1.0 then
+        error("expected scale above 1.0 at midpoint, got " .. tostring(t.scale))
+    end
+end)
+
+test("merged tile scale returns to 1.0 once the pop finishes", function()
+    local t = tile.new(4, 1, 1, 1, 2, 0.1, true)
+    t:update(0.1)
+    t:update(config.MERGE_EFFECT_DURATION)
+    eq(t.scale, 1.0, "scale should settle back to 1.0")
+end)
+
+test("finish() on a merged, mid-pop tile marks it done and resets scale", function()
+    local t = tile.new(4, 1, 1, 1, 2, 0.1, true)
+    t:update(0.1)
+    t:update(config.MERGE_EFFECT_DURATION / 2)
+    t:finish()
+    eq(t:is_done(), true, "finish() should mark merged tile done")
+    eq(t.scale, 1.0, "finish() should reset scale to 1.0")
+end)
+
+test("a single large dt finishes both slide and pop phase for a merged tile", function()
+    local t = tile.new(4, 1, 1, 1, 2, 0.1, true)
+    t:update(1.0)
+    eq(t:is_done(), true, "one big update should flush slide and pop together")
 end)
 
 test("tile.new() stores row/col fields correctly", function()
