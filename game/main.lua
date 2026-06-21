@@ -66,16 +66,9 @@ end
 local function handle_tap(x, y)
     if state:in_menu() then
         menu.main_menu_hit_test(state:menu_cursor(), {
-            on_new_game = function() state:keypressed("return") end,
-            on_options  = function()
-                state:keypressed("down")
-                state:keypressed("return")
-            end,
-            on_quit = function()
-                state:keypressed("down")
-                state:keypressed("down")
-                state:keypressed("return")
-            end,
+            on_new_game = function() state:select_menu_item(0) end,
+            on_options  = function() state:select_menu_item(1) end,
+            on_quit     = function() state:select_menu_item(2) end,
         }, x, y)
         if state:quit_requested() then love.event.quit() end
         return

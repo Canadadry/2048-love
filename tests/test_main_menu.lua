@@ -75,6 +75,30 @@ test("enter with cursor=2 (Quit) sets quit_requested", function()
     eq(s:quit_requested(), true, "quit_requested should be true")
 end)
 
+-- ── Tap selection (select_menu_item) ──────────────────────────────────────────
+
+test("select_menu_item(0) starts new game even if cursor was elsewhere", function()
+    local s = gamestate.new()
+    s:keypressed("down")
+    s:keypressed("down")
+    s:select_menu_item(0)
+    eq(s:in_menu(), false, "should leave menu after selecting New Game")
+end)
+
+test("select_menu_item(1) enters options even if cursor was elsewhere", function()
+    local s = gamestate.new()
+    s:keypressed("down")
+    s:keypressed("down")
+    s:select_menu_item(1)
+    eq(s:in_options(), true, "should enter options screen")
+end)
+
+test("select_menu_item(2) requests quit even if cursor was elsewhere", function()
+    local s = gamestate.new()
+    s:select_menu_item(2)
+    eq(s:quit_requested(), true, "quit_requested should be true")
+end)
+
 -- ── Keys ignored while in menu ────────────────────────────────────────────────
 
 test("game direction keys are ignored while in menu", function()

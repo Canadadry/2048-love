@@ -47,6 +47,7 @@ function Base:resume()        end
 function Base:continue_game() end
 function Base:restart()       end
 function Base:to_main_menu()  end
+function Base:select_menu_item() end
 function Base:queue_move()    end
 
 local function update_particles(ctx, dt)
@@ -112,23 +113,32 @@ end
 function MenuState:in_menu()     return true end
 function MenuState:menu_cursor() return self._cursor end
 
+local function perform_menu_item(ctx, index)
+    if index == 0 then
+        -- must reset via do_restart, not a bare switch: ctx may carry a
+        -- stale in-progress board if the player reached this menu via
+        -- the pause screen's "Main Menu" option rather than fresh launch.
+        do_restart(ctx)
+    elseif index == 1 then
+        ctx.switch("options")
+    else
+        ctx.quit_requested = true
+    end
+end
+
 function MenuState:keypressed(key)
     if key == "down" then
         self._cursor = math.min(2, self._cursor + 1)
     elseif key == "up" then
         self._cursor = math.max(0, self._cursor - 1)
     elseif key == "return" then
-        if self._cursor == 0 then
-            -- must reset via do_restart, not a bare switch: ctx may carry a
-            -- stale in-progress board if the player reached this menu via
-            -- the pause screen's "Main Menu" option rather than fresh launch.
-            do_restart(self._ctx)
-        elseif self._cursor == 1 then
-            self._ctx.switch("options")
-        else
-            self._ctx.quit_requested = true
-        end
+        perform_menu_item(self._ctx, self._cursor)
     end
+end
+
+function MenuState:select_menu_item(index)
+    self._cursor = index
+    perform_menu_item(self._ctx, index)
 end
 
 local WinState = setmetatable({}, Base)
