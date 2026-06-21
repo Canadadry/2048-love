@@ -1,7 +1,7 @@
 ---
 title: "Options Row-Focus Model Extraction"
 description: "Landing the row-focus redesign of the Options screen as one big-bang change is risky; this extracts the row/focus/value-cycling logic into a standalone, unwired, fully-tested pure module first."
-status: needs-triage
+status: done
 ---
 
 # Options Row-Focus Model Extraction

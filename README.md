@@ -46,6 +46,7 @@ game/              Love2D game source
   renderer.lua     board drawing
   menu.lua         overlay and button rendering (main menu, win, game-over, pause, options)
   options.lua      options screen state (win-tile toggle, escape back to menu)
+  optionsmodel.lua row-focus/value-cycling model (pure, unwired — prep for a future options redesign)
   grid.lua         game logic — slide, merge, spawn, win/lose detection
 tests/
   test_all.lua     test runner (runs all suites below)
@@ -56,6 +57,7 @@ tests/
   test_menu.lua          menu button bounds
   test_main_menu.lua     main menu state and navigation
   test_options.lua       options screen state and navigation
+  test_optionsmodel.lua  row-focus/value-cycling model
   test_tile.lua    tile animation
   test_tileset.lua tileset loading helpers
   test_swipe.lua   swipe gesture detection
