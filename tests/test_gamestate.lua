@@ -242,5 +242,81 @@ test("a merge still slides but skips the pop when effects are disabled", functio
     config.EFFECTS_ENABLED = true
 end)
 
+-- ── PRD: Win Explosion Particle Effect ───────────────────────────────────────
+
+test("entering win state with effects enabled populates win_particles in range", function()
+    local s = gamestate.new_from({
+        {1024, 1024, 0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+    })
+    s:keypressed("left")
+    local n = #s:win_particles()
+    if n < config.PARTICLE_COUNT_MIN or n > config.PARTICLE_COUNT_MAX then
+        error("win_particles count out of range: " .. n)
+    end
+end)
+
+test("entering win state with effects disabled leaves win_particles empty", function()
+    config.EFFECTS_ENABLED = false
+    local s = gamestate.new_from({
+        {1024, 1024, 0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+    })
+    s:keypressed("left")
+    eq(#s:win_particles(), 0, "no particles spawned when effects are disabled")
+    config.EFFECTS_ENABLED = true
+end)
+
+test("continue_game() clears win_particles", function()
+    local s = gamestate.new_from({
+        {1024, 1024, 0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+    })
+    s:keypressed("left")
+    s:update(1.0)
+    s:continue_game()
+    eq(#s:win_particles(), 0, "win_particles cleared after continue_game()")
+end)
+
+test("restart from win state clears win_particles", function()
+    local s = gamestate.new_from({
+        {1024, 1024, 0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+    })
+    s:keypressed("left")
+    s:update(1.0)
+    s:keypressed("down")          -- cursor -> 1 (Restart)
+    s:keypressed("return")        -- confirm Restart
+    eq(#s:win_particles(), 0, "win_particles cleared after restart")
+end)
+
+test("particles individually disappear as their lifetimes expire, not all at once", function()
+    local s = gamestate.new_from({
+        {1024, 1024, 0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+        {0,    0,    0, 0},
+    })
+    s:keypressed("left")
+    local initial = #s:win_particles()
+    if initial == 0 then error("expected particles to spawn on win") end
+    local saw_partial_drop = false
+    for _ = 1, 30 do
+        s:update(0.1)
+        local n = #s:win_particles()
+        if n > 0 and n < initial then saw_partial_drop = true end
+        if n == 0 then break end
+    end
+    eq(saw_partial_drop, true, "particle count should drop gradually, not all at once")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

@@ -42,7 +42,7 @@ function love.draw()
         menu.draw_options(state:win_tile(), state:theme(), state:animations_enabled(), state:effects_enabled(), state:focused_row())
     else
         renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(),
-            state:paused(), state:pause_cursor())
+            state:paused(), state:pause_cursor(), state:win_particles())
     end
 end
 

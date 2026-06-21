@@ -1,7 +1,7 @@
 ---
 title: "Win Explosion Particle Effect"
 description: "Reaching the win tile feels visually flat — the win screen just appears with no celebratory payoff."
-status: needs-triage
+status: done
 ---
 
 # Win Explosion Particle Effect

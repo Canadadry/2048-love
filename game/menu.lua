@@ -221,7 +221,17 @@ function M.draw_pause(pause_cursor)
     end
 end
 
-function M.draw_win(cursor)
+local function draw_win_particles(particles)
+    if not particles or #particles == 0 then return end
+    local size  = config.PARTICLE_SIZE
+    local w, h  = love.graphics.getDimensions()
+    for _, p in ipairs(particles) do
+        love.graphics.setColor(p.color)
+        love.graphics.rectangle("fill", p.x * w, p.y * h, size, size)
+    end
+end
+
+function M.draw_win(cursor, particles)
     local board_px, tile_px, _, board_x, board_y = board_metrics()
     local font_sz    = math.max(12, math.floor(tile_px * 0.30))
     local title_font = get_font(font_sz + 8)
@@ -247,6 +257,7 @@ function M.draw_win(cursor)
             b.x + math.floor((b.w - btn_font:getWidth(lbl)) / 2),
             b.y + math.floor((b.h - btn_font:getHeight()) / 2))
     end
+    draw_win_particles(particles)
 end
 
 function M.draw_game_over()

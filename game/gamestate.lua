@@ -2,6 +2,7 @@ local config       = require("config")
 local check        = require("check")
 local grid         = require("grid")
 local tile         = require("tile")
+local particle     = require("particle")
 local statemachine = require("statemachine")
 local options      = require("options")
 
@@ -14,6 +15,7 @@ local function make_ctx(g)
         score          = 0,
         win_seen       = false,
         tiles          = {},
+        win_particles  = {},
         queue          = {},
         quit_requested = false,
     }
@@ -25,6 +27,7 @@ Base.__index = Base
 function Base:score()          return self._ctx.score end
 function Base:cells()          return self._ctx.grid:get_cells() end
 function Base:anim_tiles()     return self._ctx.tiles end
+function Base:win_particles()  return self._ctx.win_particles end
 function Base:is_animating()   return #self._ctx.tiles > 0 end
 function Base:win()            return false end
 function Base:game_over()      return false end
@@ -46,8 +49,19 @@ function Base:restart()       end
 function Base:to_main_menu()  end
 function Base:queue_move()    end
 
+local function update_particles(ctx, dt)
+    if #ctx.win_particles == 0 then return end
+    local alive = {}
+    for _, p in ipairs(ctx.win_particles) do
+        p:update(dt)
+        if not p:is_dead() then alive[#alive + 1] = p end
+    end
+    ctx.win_particles = alive
+end
+
 function Base:update(dt)
     local ctx = self._ctx
+    update_particles(ctx, dt)
     if #ctx.tiles == 0 then return end
     for _, t in ipairs(ctx.tiles) do t:update(dt) end
     local any_alive = false
@@ -79,11 +93,12 @@ local function apply_move(ctx, dir)
 end
 
 local function do_restart(ctx)
-    ctx.grid     = grid.new()
-    ctx.score    = 0
-    ctx.win_seen = false
-    ctx.tiles    = {}
-    ctx.queue    = {}
+    ctx.grid          = grid.new()
+    ctx.score         = 0
+    ctx.win_seen      = false
+    ctx.tiles         = {}
+    ctx.win_particles = {}
+    ctx.queue         = {}
     ctx.switch("playing")
 end
 
@@ -128,10 +143,12 @@ function WinState:cursor() return self._cursor end
 
 function WinState:enter()
     self._cursor = 0
+    self._ctx.win_particles = config.EFFECTS_ENABLED and particle.spawn() or {}
 end
 
 function WinState:continue_game()
-    self._ctx.win_seen = true
+    self._ctx.win_seen      = true
+    self._ctx.win_particles = {}
     self._ctx.switch("playing")
 end
 

@@ -31,7 +31,7 @@ local function cell_key(r, c, n)
     return (r - 1) * n + c
 end
 
-function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_cursor)
+function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_cursor, win_particles)
     check.tbl(cells,      "cells")
     check.num(score,      "score")
     check.bool(game_over, "game_over")
@@ -88,7 +88,7 @@ function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_
     if paused then
         menu.draw_pause(pause_cursor)
     elseif win then
-        menu.draw_win(cursor)
+        menu.draw_win(cursor, win_particles)
     elseif game_over then
         menu.draw_game_over()
     else

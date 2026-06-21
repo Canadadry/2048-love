@@ -19,7 +19,7 @@ The game opens with a **Main Menu** — Up/Down to navigate, Enter (or tap) to c
 
 Arrow keys to slide tiles. The window is resizable.
 
-When you create a 2048 tile a **You Win** overlay appears with two options — **Continue** (keep playing) and **Restart** — navigated with Up/Down and confirmed with Enter, or tapped directly. A **Game Over** overlay appears when no moves remain; press Enter or any arrow key (or tap) to restart.
+When you create a 2048 tile a **You Win** overlay appears with two options — **Continue** (keep playing) and **Restart** — navigated with Up/Down and confirmed with Enter, or tapped directly. A burst of 50-100 colored squares explodes across the screen and falls under gravity as the overlay appears (suppressed when the **Effects** option is off). A **Game Over** overlay appears when no moves remain; press Enter or any arrow key (or tap) to restart.
 
 Press `Escape` (or tap the **⏸** button in the top-left corner) to open the **Pause** menu. The board stays visible behind a dimmed overlay. Up/Down to navigate, Enter to confirm. Options: **Resume**, **New Game**, **Main Menu**, **Quit**. Pressing `Escape` again or selecting Resume returns instantly to the game.
 
@@ -55,6 +55,7 @@ game/              Love2D game source
   optionsmodel.lua row-focus/value-cycling model backing the Options screen (pure, no Love2D dependency)
   settings.lua     persists option values to disk (load/save/get/set) via love.filesystem
   grid.lua         game logic — slide, merge, spawn, win/lose detection
+  particle.lua     win-screen particle burst simulation (position/velocity/gravity/lifetime)
 tests/
   test_all.lua     test runner (runs all suites below)
   test_grid.lua    grid logic
@@ -71,6 +72,7 @@ tests/
   test_renderer_hud.lua        score position
   test_main.lua          startup wiring (settings seeded into config)
   test_tile.lua    tile animation
+  test_particle.lua win-screen particle burst simulation
   test_tileset.lua tileset loading helpers
   test_swipe.lua   swipe gesture detection
 docs/prd/          product requirements

@@ -11,6 +11,7 @@ love = {
 local suites = {
     "../tests/test_grid.lua",
     "../tests/test_tile.lua",
+    "../tests/test_particle.lua",
     "../tests/test_gamestate.lua",
     "../tests/test_tileset.lua",
     "../tests/test_swipe.lua",
