@@ -7,12 +7,7 @@ description: Clean git commit workflow — run tests, select relevant files from
 
 ## Workflow
 
-### 1. Run tests
-Run the project test suite. If tests fail, stop and report — do not proceed to commit.
-
-For this project: `make test`
-
-### 2. PRD graduation (if applicable)
+### 1 PRD graduation (if applicable)
 If a PRD was just implemented, mark it done and move it out of triage:
 
 1. Set `status: done` in the PRD frontmatter.
@@ -21,18 +16,25 @@ If a PRD was just implemented, mark it done and move it out of triage:
 
 Example: `docs/prd/triage/some-feature.md` → `docs/prd/003-some-feature.md`
 
-### 3. README update (if a PRD was just implemented)
+### 2. README update (if a PRD was just implemented)
 Read `README.md` and update it to reflect any user-visible changes introduced by the implementation: new features, changed controls, new or renamed source files, new tools. Only touch what actually changed — do not rewrite sections unaffected by the work.
 
 In the **PRD Roadmap** table, remove the row for the implemented PRD entirely — do not strike it through or mark it "Done".
 
-### 4. Inspect status
+### 3. Inspect status
 Run these three scripts (separate calls, each small enough to review on its own) instead of ad hoc `git diff`/`diff` invocations:
 - `.claude/skills/git-commit/scripts/status.sh` — overview of changed files.
 - `.claude/skills/git-commit/scripts/staged-diff.sh [path...]` — staged diff, rename-aware.
 - `.claude/skills/git-commit/scripts/unstaged-diff.sh [path...]` — unstaged diff, rename-aware.
 
 Pass paths to scope a diff, e.g. `unstaged-diff.sh docs/prd/`. Do NOT run `git add .` or `git add -A`.
+
+### 4. Run tests
+If code has been written you must be sure that test are passing. So run the project test suite. If tests fail, stop and report — do not proceed to commit.
+
+Look for makefile first. 
+
+If only md files were touch dont borther running test.
 
 ### 5. Select files
 Based on the current conversation context (what was just built or fixed), select only the files that belong to this unit of work. Leave unrelated changes unstaged.
