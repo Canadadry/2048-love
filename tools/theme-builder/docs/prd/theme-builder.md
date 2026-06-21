@@ -1,7 +1,7 @@
 ---
 title: "Theme Builder"
 description: "Building a custom tileset from a set of Giphy GIFs requires manually running curl-giphy once per URL, then manually invoking tileset-builder on the downloaded files in the right order."
-status: needs-triage
+status: done
 ---
 
 # Theme Builder

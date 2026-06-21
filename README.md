@@ -31,6 +31,7 @@ Select **Options** from the main menu (between New Game and Quit) to open the **
 make test-game          # pure-Lua game logic tests (no Love2D runtime needed)
 make test-tool-tileset  # tileset-builder Python tests
 make test-tool-dl       # curl-giphy Python tests
+make test-tool-theme    # theme-builder Python tests
 make test-all           # all of the above
 ```
 
@@ -59,6 +60,7 @@ tests/
   test_tileset.lua tileset loading helpers
   test_swipe.lua   swipe gesture detection
 docs/prd/          product requirements
+themes/            theme manifests (one Giphy URL per line) consumed by theme-builder
 tools/             helper CLI tools (see below)
 ```
 
@@ -95,3 +97,13 @@ python tilesheet.py create tile_2.gif tile_4.gif tile_8.gif ...
 ```
 
 See `tools/tileset-builder/README.md` for the full usage and output format.
+
+### theme-builder
+
+Turns a theme manifest (`themes/<name>.txt`, one Giphy URL per line, line order = tile value order) into a ready-to-use tilesheet in one command — orchestrates `curl-giphy` and `tileset-builder` without modifying either.
+
+```
+make theme NAME=jurassic-park
+```
+
+Downloaded GIFs are cached under `themes/<name>/raw/` so reruns only re-download lines that changed. Output lands in `game/assets/<name>.png` plus its `.lua` sidecar. See `tools/theme-builder/docs/prd/theme-builder.md` for design details.

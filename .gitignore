@@ -1,7 +1,10 @@
 output.png
 output.lua
-game/assets/
+game/assets/*
+!game/assets/.gitkeep
 2048.love
 tools/curl-giphy/.venv/
 tools/curl-giphy/__pycache__/
+themes/*/raw/*
+!themes/*/raw/.gitkeep
 .claude/settings.local.json
