@@ -8,3 +8,5 @@ Interview me relentlessly about every aspect of this plan until we reach a share
 If a question can be answered by exploring the codebase, explore the codebase instead
 
 When the session arguments mention "prd" or "write prd" (or similar), invoke the `to-prd` skill automatically once all decisions are resolved — do not ask the user to run it separately.
+
+After a grilling never start implementing or writing without user consent
