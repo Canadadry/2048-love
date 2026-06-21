@@ -86,9 +86,6 @@ Recommended implementation order for triage PRDs:
 |---|-----|-------|
 | 012 | merge-effect | Pure visual add; `merged` flag already in tile data from slide animation. |
 | 013+ | animation-effect-toggles | Needs options screen first (now available — see PRD 010). |
-| — | sound-hooks | Independent; pick up when the time feels right. |
-
-**Flag:** `touch-swipe` is in triage but `swipe.lua` is already wired in `main.lua`. Verify before triaging — it may already be done.
 
 ## Tools
 
