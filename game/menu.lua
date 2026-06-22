@@ -122,14 +122,10 @@ local function bool_label(enabled)
     return enabled and "ON" or "OFF"
 end
 
-local function options_row(i, label, value, focused, body_font, callbacks)
-    local text = label .. ":  <  " .. value .. "  >"
+local function options_row(label, value, focused, body_font, on_tap)
+    local text = value == nil and label or (label .. ":  <  " .. value .. "  >")
     return builder.Node("grow-x h-fit py-4", painter.Interactive {
-        onTap = function()
-            if callbacks.on_row_tap then
-                callbacks.on_row_tap(i)
-            end
-        end,
+        onTap = on_tap,
     }, {
         builder.Leaf("grow-x h-fit", painter.Text {
             text  = text,
@@ -143,11 +139,25 @@ end
 local function build_options_tree(win_tile, theme, animations_enabled, effects_enabled, focused_row, callbacks)
     callbacks = callbacks or {}
     local w, h = love.graphics.getDimensions()
-    local font_sz, btn_w, btn_h = menu_sizes()
+    local font_sz    = menu_sizes()
     local title_font = get_font(font_sz + 16)
     local body_font  = get_font(math.max(12, font_sz - 2))
     local hint_font  = get_font(math.max(10, font_sz - 6))
     local row_gap    = math.floor(font_sz * 0.3)
+
+    local function on_row_tap(i)
+        return function()
+            if callbacks.on_row_tap then
+                callbacks.on_row_tap(i)
+            end
+        end
+    end
+
+    local function on_back()
+        if callbacks.on_back then
+            callbacks.on_back()
+        end
+    end
 
     local tree = painter.Tree()
     builder.Build(tree, builder.Node(
@@ -161,17 +171,17 @@ local function build_options_tree(win_tile, theme, animations_enabled, effects_e
                     font  = title_font,
                     color = MENU_NORMAL_TEXT_COLOR,
                 }),
-                options_row(1, "Win Tile",   win_tile,                       focused_row == 1, body_font, callbacks),
-                options_row(2, "Theme",      theme_label(theme),             focused_row == 2, body_font, callbacks),
-                options_row(3, "Animations", bool_label(animations_enabled), focused_row == 3, body_font, callbacks),
-                options_row(4, "Effects",    bool_label(effects_enabled),    focused_row == 4, body_font, callbacks),
+                options_row("Win Tile",   win_tile,                       focused_row == 1, body_font, on_row_tap(1)),
+                options_row("Theme",      theme_label(theme),             focused_row == 2, body_font, on_row_tap(2)),
+                options_row("Animations", bool_label(animations_enabled), focused_row == 3, body_font, on_row_tap(3)),
+                options_row("Effects",    bool_label(effects_enabled),    focused_row == 4, body_font, on_row_tap(4)),
                 builder.Leaf("grow-x h-fit", painter.Text {
                     text  = "Up/Down to focus a row, Left/Right to change its value, or tap a row",
                     align = "center",
                     font  = hint_font,
                     color = MENU_NORMAL_TEXT_COLOR,
                 }),
-                menu_button("Back", btn_w, btn_h, body_font, false, callbacks.on_back),
+                options_row("Back", nil, focused_row == 5, body_font, on_back),
             }),
         }
     ))

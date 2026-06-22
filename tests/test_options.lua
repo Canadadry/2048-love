@@ -58,9 +58,11 @@ test("down/up move focus between rows, wrapping at both ends", function()
     s:keypressed("down")
     eq(s:focused_row(), 4, "down moves focus to Effects")
     s:keypressed("down")
-    eq(s:focused_row(), 1, "down wraps from Effects back to Win Tile")
+    eq(s:focused_row(), 5, "down moves focus to Back")
+    s:keypressed("down")
+    eq(s:focused_row(), 1, "down wraps from Back back to Win Tile")
     s:keypressed("up")
-    eq(s:focused_row(), 4, "up wraps from Win Tile to Effects")
+    eq(s:focused_row(), 5, "up wraps from Win Tile to Back")
 end)
 
 -- ── Win tile toggle ───────────────────────────────────────────────────────────
@@ -116,6 +118,26 @@ test("left/right on the Effects row toggles config.EFFECTS_ENABLED, applied imme
     eq(s:effects_enabled(), false, "effects toggled off")
     s:keypressed("left")
     eq(s:effects_enabled(), true, "effects toggled back on")
+end)
+
+-- ── Back row ──────────────────────────────────────────────────────────────────
+
+test("left/right on the Back row change nothing observable", function()
+    config.TILESET = ""
+    local s = in_options()
+    s:keypressed("down")
+    s:keypressed("down")
+    s:keypressed("down")
+    s:keypressed("down")
+    eq(s:focused_row(), 5, "focus on Back")
+    local settings_before = settings.get("effects_enabled", nil)
+    s:keypressed("right")
+    eq(s:focused_row(), 5, "focus unchanged by right")
+    eq(s:effects_enabled(), true, "no row's config mutated by right on Back")
+    eq(settings.get("effects_enabled", nil), settings_before, "no settings write from right on Back")
+    s:keypressed("left")
+    eq(s:focused_row(), 5, "focus unchanged by left")
+    eq(s:effects_enabled(), true, "no row's config mutated by left on Back")
 end)
 
 -- ── Theme switcher ────────────────────────────────────────────────────────────
@@ -201,9 +223,18 @@ test("tapping the already-focused Win Tile row persists the new value via settin
     s:tap_row(1)                  -- revert
 end)
 
+test("tapping the Back row twice (focus, then activate) returns to the Main Menu", function()
+    local s = in_options()
+    s:tap_row(5)
+    eq(s:focused_row(), 5, "first tap focuses Back")
+    eq(s:in_options(), true, "still in options after focus-only tap")
+    s:tap_row(5)
+    eq(s:in_menu(), true, "second tap on focused Back returns to menu")
+end)
+
 -- ── Enter is a no-op ──────────────────────────────────────────────────────────
 
-test("return has no observable effect on the Options screen", function()
+test("return has no observable effect on the Options screen, except when Back is focused", function()
     config.TILESET = ""
     local s = in_options()
     s:keypressed("return")
@@ -211,6 +242,17 @@ test("return has no observable effect on the Options screen", function()
     eq(s:focused_row(), 1, "focus unchanged by return")
     eq(s:win_tile(), 2048, "win tile unchanged by return")
     eq(config.TILESET, "", "theme unchanged by return")
+end)
+
+test("return while Back is focused returns to the Main Menu", function()
+    local s = in_options()
+    s:keypressed("down")
+    s:keypressed("down")
+    s:keypressed("down")
+    s:keypressed("down")
+    eq(s:focused_row(), 5, "focus on Back")
+    s:keypressed("return")
+    eq(s:in_menu(), true, "return on Back returns to menu")
 end)
 
 -- ── Escape always returns to menu ─────────────────────────────────────────────

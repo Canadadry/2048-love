@@ -1,7 +1,7 @@
 ---
 title: "Unify the Options Screen's Back Row"
 description: "The Options screen's Back control is a separately-styled button bolted on below the row list, and isn't part of the same Up/Down focus-navigation list as the other rows — it's unreachable by keyboard and looks visually inconsistent."
-status: needs-triage
+status: done
 ---
 
 # Unify the Options Screen's Back Row

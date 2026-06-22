@@ -7,6 +7,7 @@ local WIN_TILE_ROW   = 1
 local THEME_ROW      = 2
 local ANIMATIONS_ROW = 3
 local EFFECTS_ROW    = 4
+local BACK_ROW       = 5
 
 local BOOLEAN_VALUES = { true, false }
 
@@ -34,12 +35,15 @@ function M.new(ctx, Base)
             { label = "Theme",      values = theme_values,    value_index = index_of(theme_values, config.TILESET) },
             { label = "Animations", values = BOOLEAN_VALUES,  value_index = index_of(BOOLEAN_VALUES, config.ANIMATIONS_ENABLED) },
             { label = "Effects",    values = BOOLEAN_VALUES,  value_index = index_of(BOOLEAN_VALUES, config.EFFECTS_ENABLED) },
+            { label = "Back",       values = { true } },
         })
     end
 
     local function persist_focused_row(self)
         local row = self._model:focused_row()
-        if row == WIN_TILE_ROW then
+        if row == BACK_ROW then
+            return
+        elseif row == WIN_TILE_ROW then
             config.WIN_TILE = self._model:row_value(WIN_TILE_ROW)
             settings.set("win_tile", config.WIN_TILE)
         elseif row == THEME_ROW then
@@ -64,12 +68,20 @@ function M.new(ctx, Base)
         elseif key == "left" or key == "right" then
             if key == "left" then self._model:left() else self._model:right() end
             persist_focused_row(self)
+        elseif key == "return" then
+            if self._model:focused_row() == BACK_ROW then
+                ctx.switch("menu")
+            end
         end
     end
 
     function OptionsState:tap_row(i)
         if self._model:focused_row() ~= i then
             self._model:focus_row(i)
+            return
+        end
+        if i == BACK_ROW then
+            ctx.switch("menu")
             return
         end
         self._model:right()
