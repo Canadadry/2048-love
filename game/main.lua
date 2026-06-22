@@ -2,6 +2,7 @@ local config    = require("config")
 local gamestate = require("gamestate")
 local menu      = require("menu")
 local renderer  = require("renderer")
+local hud       = require("renderer.hud")
 local swipe     = require("swipe")
 local settings  = require("settings")
 
@@ -81,10 +82,8 @@ local function handle_tap(x, y)
         return
     end
     if not state:paused() and not state:win() and not state:game_over() then
-        if hit(menu.pause_icon_bounds(), x, y) then
-            state:keypressed("escape")
-            return
-        end
+        hud.hit_test(state:score(), true, { on_pause_tap = function() state:keypressed("escape") end }, x, y)
+        return
     end
     if state:paused() then
         local btns = menu.pause_button_bounds()

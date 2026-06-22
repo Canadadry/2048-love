@@ -211,29 +211,6 @@ function M.options_hit_test(win_tile, theme, animations_enabled, effects_enabled
     end
 end
 
-function M.pause_icon_bounds()
-    local _, tile_px = board_metrics()
-    local font_sz = math.max(12, math.floor(tile_px * 0.30))
-    local sz      = math.max(44, font_sz + 8)
-    return { x = 8, y = 8, w = sz, h = sz }
-end
-
-function M.draw_pause_icon()
-    local b       = M.pause_icon_bounds()
-    local bar_w   = math.max(3, math.floor(b.w * 0.15))
-    local bar_h   = math.floor(b.h * 0.50)
-    local gap     = math.floor(b.w * 0.18)
-    local total_w = bar_w * 2 + gap
-    local bar_x   = b.x + math.floor((b.w - total_w) / 2)
-    local bar_y   = b.y + math.floor((b.h - bar_h) / 2)
-
-    love.graphics.setColor(0.47, 0.43, 0.40, 0.85)
-    love.graphics.rectangle("fill", b.x, b.y, b.w, b.h, 8, 8)
-    love.graphics.setColor(1, 1, 1, 0.90)
-    love.graphics.rectangle("fill", bar_x,               bar_y, bar_w, bar_h)
-    love.graphics.rectangle("fill", bar_x + bar_w + gap, bar_y, bar_w, bar_h)
-end
-
 function M.pause_button_bounds()
     local board_px, tile_px, _, board_x, board_y = board_metrics()
     local font_sz = math.max(12, math.floor(tile_px * 0.30))

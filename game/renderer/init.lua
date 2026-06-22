@@ -79,7 +79,7 @@ function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_
         end
     end
 
-    hud.draw(score, board_x, board_y, font_sz, get_font(math.max(12, font_sz - 4)))
+    hud.draw(score, not paused and not win and not game_over)
 
     if paused then
         menu.draw_pause(pause_cursor)
@@ -87,8 +87,6 @@ function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_
         menu.draw_win(cursor, win_particles)
     elseif game_over then
         menu.draw_game_over()
-    else
-        menu.draw_pause_icon()
     end
 end
 

@@ -57,20 +57,6 @@ test("pause_button_bounds button labels are Resume, New Game, Main Menu, Quit", 
     if btns[4].label ~= "Quit"      then error("button 4 label: " .. tostring(btns[4].label)) end
 end)
 
-test("pause_icon_bounds returns a single rect with positive finite dimensions", function()
-    local b = menu.pause_icon_bounds()
-    positive_finite(b.x, "x")
-    positive_finite(b.y, "y")
-    positive_finite(b.w, "w")
-    positive_finite(b.h, "h")
-end)
-
-test("pause_icon_bounds is at least 44x44 for touch targets", function()
-    local b = menu.pause_icon_bounds()
-    if b.w < 44 then error("width " .. b.w .. " < 44") end
-    if b.h < 44 then error("height " .. b.h .. " < 44") end
-end)
-
 local function button_centers(tree)
     local centers = {}
     for _, cmd in ipairs(tree.Commands) do
