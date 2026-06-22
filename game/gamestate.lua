@@ -61,16 +61,23 @@ local function update_particles(ctx, dt)
     ctx.win_particles = alive
 end
 
-function Base:update(dt)
-    local ctx = self._ctx
-    update_particles(ctx, dt)
-    if #ctx.tiles == 0 then return end
+-- Ticks every in-flight tile, clears ctx.tiles once none remain, and
+-- reports whether any tile was still animating (before the clear).
+local function advance_tiles(ctx, dt)
     for _, t in ipairs(ctx.tiles) do t:update(dt) end
     local any_alive = false
     for _, t in ipairs(ctx.tiles) do
         if not t:is_done() then any_alive = true; break end
     end
     if not any_alive then ctx.tiles = {} end
+    return any_alive
+end
+
+function Base:update(dt)
+    local ctx = self._ctx
+    update_particles(ctx, dt)
+    if #ctx.tiles == 0 then return end
+    advance_tiles(ctx, dt)
 end
 
 local function apply_move(ctx, dir)
@@ -279,18 +286,11 @@ function PlayingState:update(dt)
         end
         return
     end
-    for _, t in ipairs(ctx.tiles) do t:update(dt) end
-    local any_alive = false
-    for _, t in ipairs(ctx.tiles) do
-        if not t:is_done() then any_alive = true; break end
-    end
-    if not any_alive then
-        ctx.tiles = {}
-        if self._pause_pending then
-            self._pause_pending = false
-            ctx.queue = {}
-            ctx.switch("paused")
-        end
+    local any_alive = advance_tiles(ctx, dt)
+    if not any_alive and self._pause_pending then
+        self._pause_pending = false
+        ctx.queue = {}
+        ctx.switch("paused")
     end
 end
 

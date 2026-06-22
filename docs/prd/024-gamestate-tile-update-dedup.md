@@ -1,7 +1,7 @@
 ---
 title: "Dedupe Tile-Animation Update Loop in gamestate.lua"
 description: "Base:update and PlayingState:update independently reimplement the same 'tick tiles, check any_alive, clear when done' loop; collapse them into one shared helper."
-status: needs-triage
+status: done
 ---
 
 ## Problem Statement
