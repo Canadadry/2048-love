@@ -7,8 +7,8 @@ local function hit(btn, x, y)
     return x >= btn.x and x <= btn.x + btn.w and y >= btn.y and y <= btn.y + btn.h
 end
 
-function M.new(host, game, make_main_menu)
-    return setmetatable({ host = host, game = game, make_main_menu = make_main_menu }, { __index = Screen })
+function M.new(host, game, deps)
+    return setmetatable({ host = host, game = game, make_main_menu = deps.make_main_menu }, { __index = Screen })
 end
 
 function Screen:enter()

@@ -60,7 +60,7 @@ local function new_screen()
     local game = stub_game()
     local main_menu_screen = { sentinel = true }
     local make_main_menu = function() return main_menu_screen end
-    local screen = pause_screen.new(host, game, make_main_menu)
+    local screen = pause_screen.new(host, game, { make_main_menu = make_main_menu })
     screen:enter()
     return screen, host, game, main_menu_screen
 end
