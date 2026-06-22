@@ -19,6 +19,8 @@ end
 function Swipe:touchpressed(id, x, y)
     check.num(x, "x")
     check.num(y, "y")
+    if self._active_id ~= nil and self._active_id ~= id then return end
+    self._active_id = id
     self._starts[id] = { x = x, y = y, fired = false }
 end
 
@@ -43,16 +45,17 @@ function Swipe:touchreleased(id, x, y)
     check.num(x, "x")
     check.num(y, "y")
     local s = self._starts[id]
-    if not s then return nil end
+    if not s then return nil, false end
     self._starts[id] = nil
-    if s.fired then return nil end
+    if self._active_id == id then self._active_id = nil end
+    if s.fired then return nil, false end
     local dx = x - s.x
     local dy = y - s.y
-    if math.max(math.abs(dx), math.abs(dy)) < self._threshold then return nil end
+    if math.max(math.abs(dx), math.abs(dy)) < self._threshold then return nil, true end
     if math.abs(dx) >= math.abs(dy) then
-        return dx > 0 and "right" or "left"
+        return (dx > 0 and "right" or "left"), false
     else
-        return dy > 0 and "down" or "up"
+        return (dy > 0 and "down" or "up"), false
     end
 end
 
