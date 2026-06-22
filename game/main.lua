@@ -24,7 +24,6 @@ function love.load()
     love.window.setTitle("2048")
     love.window.setMode(config.WINDOW_W, config.WINDOW_H, { resizable = true, minwidth = 300, minheight = 300 })
     love.graphics.setBackgroundColor(0.98, 0.97, 0.94)
-    renderer.load()
     state      = gamestate.new()
     local w, h = love.graphics.getDimensions()
     swiper     = swipe.new(math.min(w, h) * 0.10)
@@ -41,6 +40,7 @@ function love.draw()
     elseif state:in_options() then
         menu.draw_options(state:win_tile(), state:theme(), state:animations_enabled(), state:effects_enabled(), state:focused_row())
     else
+        renderer.set_tileset(config.TILESET)
         renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(),
             state:paused(), state:pause_cursor(), state:win_particles())
     end
@@ -48,9 +48,6 @@ end
 
 function love.keypressed(key)
     state:keypressed(key)
-    if state:in_options() and (key == "left" or key == "right") then
-        renderer.set_tileset(config.TILESET)
-    end
     if state:quit_requested() then love.event.quit() end
 end
 
@@ -81,7 +78,6 @@ local function handle_tap(x, y)
                 on_back    = function() state:keypressed("escape") end,
             },
             x, y)
-        renderer.set_tileset(config.TILESET)
         return
     end
     if not state:paused() and not state:win() and not state:game_over() then

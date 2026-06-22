@@ -5,7 +5,16 @@ local M = {}
 
 local ts_data = nil  -- { image, quads, frame_counts, tile_w, tile_h, anim_time } set by M.set_tileset()
 
+M.NOT_LOADED = {}  -- sentinel: distinct from any legal tileset name, including ""
+local loaded_name = M.NOT_LOADED
+
+function M.needs_reload(requested_name, loaded)
+    return requested_name ~= loaded
+end
+
 function M.set_tileset(name)
+    if not M.needs_reload(name, loaded_name) then return end
+    loaded_name = name
     local ts = tileset.load(name)
     if not ts then ts_data = nil; return end
     local quads        = {}

@@ -1,7 +1,7 @@
 ---
 title: "Defer Tileset Reload to New Game"
 description: "The tileset PNG (decode + quad rebuild) reloads on app open and on every Options-screen interaction, even when the theme didn't change, causing visible lag; it should only reload when a game actually starts, and only if the requested tileset isn't already loaded."
-status: needs-triage
+status: done
 ---
 
 # Defer Tileset Reload to New Game

@@ -19,10 +19,6 @@ function M.set_tileset(name)
     tile_draw.set_tileset(name)
 end
 
-function M.load()
-    M.set_tileset(config.TILESET)
-end
-
 function M.update(dt)
     tile_draw.update(dt)
 end

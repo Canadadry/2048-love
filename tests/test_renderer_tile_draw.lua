@@ -33,5 +33,17 @@ test("tile_color falls back to default color for an unknown value", function()
     eq(colors, config.DEFAULT_TILE_COLOR, "colors for unknown value")
 end)
 
+test("needs_reload is false when requested name matches loaded name", function()
+    eq(tile_draw.needs_reload("classic", "classic"), false, "same name")
+end)
+
+test("needs_reload is true when requested name differs from loaded name", function()
+    eq(tile_draw.needs_reload("jurassic-park", "classic"), true, "different name")
+end)
+
+test("needs_reload is true on the first-ever call, even when requesting the empty/classic theme", function()
+    eq(tile_draw.needs_reload("", tile_draw.NOT_LOADED), true, "first call with empty name")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end
