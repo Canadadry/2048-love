@@ -1,7 +1,7 @@
 ---
 title: "Game Over Screen"
 description: "Migrate gamestate.lua's GameOverState onto the screen_manager stack as a standalone game_over_screen.lua module."
-status: needs-triage
+status: done
 ---
 
 # Game Over Screen
