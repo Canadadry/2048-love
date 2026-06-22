@@ -1,7 +1,7 @@
 ---
 title: "Win Screen"
 description: "Migrate gamestate.lua's WinState onto the screen_manager stack as a standalone win_screen.lua module, owning its own win-particle effect."
-status: needs-triage
+status: done
 ---
 
 # Win Screen
