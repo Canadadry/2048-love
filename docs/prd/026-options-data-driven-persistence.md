@@ -1,7 +1,7 @@
 ---
 title: "Data-Driven Options Row Persistence"
 description: "options.lua's persist_focused_row is a hardcoded if/elseif per row number; attach the config/settings key to each row definition instead so persistence is a generic loop."
-status: needs-triage
+status: done
 ---
 
 ## Problem Statement

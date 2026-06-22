@@ -140,6 +140,22 @@ test("left/right on the Back row change nothing observable", function()
     eq(s:effects_enabled(), true, "no row's config mutated by left on Back")
 end)
 
+test("left/right on the Back row never calls settings.set", function()
+    local s = in_options()
+    s:keypressed("down")
+    s:keypressed("down")
+    s:keypressed("down")
+    s:keypressed("down")
+    eq(s:focused_row(), 5, "focus on Back")
+    local calls = 0
+    local real_set = settings.set
+    settings.set = function(...) calls = calls + 1; return real_set(...) end
+    s:keypressed("right")
+    s:keypressed("left")
+    settings.set = real_set
+    eq(calls, 0, "settings.set must not be called for the Back row")
+end)
+
 -- ── Theme switcher ────────────────────────────────────────────────────────────
 
 test("left/right on the Theme row cycle config.TILESET through available themes, wrapping, applied immediately", function()
