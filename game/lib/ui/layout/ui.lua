@@ -94,10 +94,18 @@ local function HitTest(tree, x, y)
     return nil
 end
 
+local function Tap(tree, x, y)
+    local cb = HitTest(tree, x, y)
+    if cb then
+        cb()
+    end
+end
+
 return {
     Tree = Tree,
     Node = Node,
     Leaf = Leaf,
     DrawTree = DrawTree,
     HitTest = HitTest,
+    Tap = Tap,
 }

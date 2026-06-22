@@ -211,5 +211,47 @@ test("ui.HitTest resolves through a nested Group{ Group{ Interactive } }", funct
     eq(cb(), "nested", "nested Group should resolve correctly")
 end)
 
+test("ui.Tap invokes the hit node's callback", function()
+    local tapped = false
+    local tree = painter.Tree()
+    ui.Leaf(tree, frame.Frame {
+        pos = frame.Pos(0, 0),
+        size = frame.Size(50, 50),
+        painter = painter.Interactive { onTap = function() tapped = true end },
+    })
+    ui.DrawTree(tree)
+    ui.Tap(tree, 25, 25)
+    eq(tapped, true, "tapped")
+end)
+
+test("ui.Tap on a clean miss does not error and calls nothing", function()
+    local tapped = false
+    local tree = painter.Tree()
+    ui.Leaf(tree, frame.Frame {
+        pos = frame.Pos(0, 0),
+        size = frame.Size(50, 50),
+        painter = painter.Interactive { onTap = function() tapped = true end },
+    })
+    ui.DrawTree(tree)
+    ui.Tap(tree, 200, 200) -- must not error
+    eq(tapped, false, "tapped")
+end)
+
+test("painter.DrawTree draws every command that has a painter", function()
+    local rect_draws = 0
+    local real_rectangle = love.graphics.rectangle
+    love.graphics.rectangle = function(...) rect_draws = rect_draws + 1 end
+    local tree = painter.Tree()
+    ui.Node(tree, frame.Frame { size = frame.Size(50, 150) }, nil, function(tree)
+        ui.Leaf(tree, frame.Frame { pos = frame.Pos(0, 0),   size = frame.Size(50, 50), painter = painter.Rectangle {} })
+        ui.Leaf(tree, frame.Frame { pos = frame.Pos(0, 50),  size = frame.Size(50, 50), painter = painter.Rectangle {} })
+        ui.Leaf(tree, frame.Frame { pos = frame.Pos(0, 100), size = frame.Size(50, 50) }) -- no painter
+    end)
+    ui.DrawTree(tree)
+    painter.DrawTree(tree)
+    love.graphics.rectangle = real_rectangle
+    eq(rect_draws, 2, "rectangle draw count")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

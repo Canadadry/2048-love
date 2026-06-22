@@ -99,19 +99,12 @@ end
 
 function M.draw_main_menu(cursor)
     local tree = M.main_menu_tree(cursor, nil)
-    for _, cmd in ipairs(tree.Commands) do
-        if cmd.painter then
-            painter.Draw(cmd, cmd.painter)
-        end
-    end
+    painter.DrawTree(tree)
 end
 
 function M.main_menu_hit_test(cursor, callbacks, x, y)
     local tree = M.main_menu_tree(cursor, callbacks)
-    local cb = ui.HitTest(tree, x, y)
-    if cb then
-        cb()
-    end
+    ui.Tap(tree, x, y)
 end
 
 local function theme_label(name)
@@ -196,19 +189,12 @@ end
 
 function M.draw_options(win_tile, theme, animations_enabled, effects_enabled, focused_row)
     local tree = M.options_tree(win_tile, theme, animations_enabled, effects_enabled, focused_row, nil)
-    for _, cmd in ipairs(tree.Commands) do
-        if cmd.painter then
-            painter.Draw(cmd, cmd.painter)
-        end
-    end
+    painter.DrawTree(tree)
 end
 
 function M.options_hit_test(win_tile, theme, animations_enabled, effects_enabled, focused_row, callbacks, x, y)
     local tree = M.options_tree(win_tile, theme, animations_enabled, effects_enabled, focused_row, callbacks)
-    local cb = ui.HitTest(tree, x, y)
-    if cb then
-        cb()
-    end
+    ui.Tap(tree, x, y)
 end
 
 function M.pause_button_bounds()
@@ -264,10 +250,7 @@ end
 
 function M.win_hit_test(cursor, callbacks, x, y)
     local tree = M.win_tree(cursor, callbacks)
-    local cb = ui.HitTest(tree, x, y)
-    if cb then
-        cb()
-    end
+    ui.Tap(tree, x, y)
 end
 
 local GAME_OVER_DIM_COLOR = { 61, 59, 51, 140 }
@@ -308,10 +291,7 @@ end
 
 function M.game_over_hit_test(callbacks, x, y)
     local tree = M.game_over_tree(callbacks)
-    local cb = ui.HitTest(tree, x, y)
-    if cb then
-        cb()
-    end
+    ui.Tap(tree, x, y)
 end
 
 function M.draw_pause(pause_cursor)
@@ -353,21 +333,13 @@ end
 
 function M.draw_win(cursor, particles)
     local tree = M.win_tree(cursor, nil)
-    for _, cmd in ipairs(tree.Commands) do
-        if cmd.painter then
-            painter.Draw(cmd, cmd.painter)
-        end
-    end
+    painter.DrawTree(tree)
     draw_win_particles(particles)
 end
 
 function M.draw_game_over()
     local tree = M.game_over_tree(nil)
-    for _, cmd in ipairs(tree.Commands) do
-        if cmd.painter then
-            painter.Draw(cmd, cmd.painter)
-        end
-    end
+    painter.DrawTree(tree)
 end
 
 return M

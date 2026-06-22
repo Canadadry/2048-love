@@ -113,6 +113,14 @@ local function Draw(box, painter)
     end
 end
 
+local function DrawTree(tree)
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter then
+            Draw(cmd, cmd.painter)
+        end
+    end
+end
+
 local function count_lines(text)
     local count = 0
     for _ in string.gmatch(text, "[^\n]*") do
@@ -198,6 +206,7 @@ return {
     Interactive = Interactive,
     Group = Group,
     Draw = Draw,
+    DrawTree = DrawTree,
     Measure = Measure,
     Wrap = Wrap,
     Tree = Tree,

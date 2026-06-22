@@ -1,7 +1,7 @@
 ---
 title: "Dedupe menu.lua's Tree Draw / Hit-Test Boilerplate"
 description: "menu.lua repeats the same 'draw every tree.Command' and 'hit-test then invoke callback' pattern four times (main menu, options, win, game over); extract shared helpers."
-status: needs-triage
+status: done
 ---
 
 ## Problem Statement
