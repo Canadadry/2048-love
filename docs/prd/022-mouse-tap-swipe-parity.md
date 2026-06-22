@@ -1,7 +1,7 @@
 ---
 title: "Mouse Tap/Swipe Disambiguation Parity"
 description: "A mouse click that turns into a drag can still fire the button under the cursor, because main.lua fires handle_tap unconditionally on mouse-down instead of deferring to release like touch does."
-status: needs-triage
+status: done
 ---
 
 # Mouse Tap/Swipe Disambiguation Parity

@@ -109,6 +109,16 @@ local function handle_tap(x, y)
     end
 end
 
+local function resolve_release(dir, is_tap, x, y)
+    if dir then
+        if not state:game_over() and not state:win() then
+            state:queue_move(dir)
+        end
+    elseif is_tap then
+        handle_tap(x, y)
+    end
+end
+
 function love.mousepressed(x, y, button, istouch)
     if istouch then return end
     if button ~= 1 then return end
@@ -127,13 +137,7 @@ function love.mousereleased(x, y, button, istouch)
     if istouch then return end
     if button ~= 1 then return end
     local dir, is_tap = swiper:touchreleased("mouse", x, y)
-    if dir then
-        if not state:game_over() and not state:win() then
-            state:queue_move(dir)
-        end
-    elseif is_tap then
-        handle_tap(x, y)
-    end
+    resolve_release(dir, is_tap, x, y)
 end
 
 function love.touchpressed(id, x, y)
@@ -149,11 +153,5 @@ end
 
 function love.touchreleased(id, x, y)
     local dir, is_tap = swiper:touchreleased(id, x, y)
-    if dir then
-        if not state:game_over() and not state:win() then
-            state:queue_move(dir)
-        end
-    elseif is_tap then
-        handle_tap(x, y)
-    end
+    resolve_release(dir, is_tap, x, y)
 end

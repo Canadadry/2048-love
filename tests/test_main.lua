@@ -1,5 +1,6 @@
 local config   = require("config")
 local settings = require("settings")
+local menu     = require("menu")
 
 local pass, fail = 0, 0
 
@@ -84,6 +85,49 @@ test("--win-tile launch flag overrides a saved setting", function()
         eq(config.WIN_TILE, 32, "explicit launch flag takes priority over saved settings")
         arg = {}
     end)
+end)
+
+-- ── Mouse tap/swipe parity ───────────────────────────────────────────────────
+
+local function button_centers(tree)
+    local centers = {}
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter and cmd.painter.kind == "Group" then
+            table.insert(centers, { x = cmd.x + cmd.w / 2, y = cmd.y + cmd.h / 2 })
+        end
+    end
+    return centers
+end
+
+local function setup_main_with_quit_stub()
+    reset_fs()
+    arg = {}
+    dofile("main.lua")
+    love.load()
+    local quit_calls = 0
+    love.event = { quit = function() quit_calls = quit_calls + 1 end }
+    local quit_btn = button_centers(menu.main_menu_tree(0, {}))[3]
+    return quit_btn, function() return quit_calls end
+end
+
+test("mouse-down alone over the Quit button does not fire it", function()
+    local quit, quit_calls = setup_main_with_quit_stub()
+    love.mousepressed(quit.x, quit.y, 1, false)
+    eq(quit_calls(), 0, "mouse-down alone must not fire the button")
+end)
+
+test("mouse-down then release in place fires the Quit button once", function()
+    local quit, quit_calls = setup_main_with_quit_stub()
+    love.mousepressed(quit.x, quit.y, 1, false)
+    love.mousereleased(quit.x, quit.y, 1, false)
+    eq(quit_calls(), 1, "an ordinary click must still fire the button")
+end)
+
+test("mouse-down then drag-away release does not fire the Quit button", function()
+    local quit, quit_calls = setup_main_with_quit_stub()
+    love.mousepressed(quit.x, quit.y, 1, false)
+    love.mousereleased(quit.x + 200, quit.y, 1, false)
+    eq(quit_calls(), 0, "dragging away before release must cancel the tap")
 end)
 
 print(string.format("\n%d passed, %d failed", pass, fail))
