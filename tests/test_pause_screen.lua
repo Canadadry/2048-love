@@ -1,0 +1,205 @@
+love = {
+    graphics = {
+        getDimensions = function() return 600, 600 end,
+        newFont       = function(size)
+            return {
+                getWidth  = function(self, s) return #s * 7 end,
+                getHeight = function(self) return 18 end,
+                getWrap   = function(self, text, width) return 0, { text } end,
+            }
+        end,
+        setColor  = function(...) end,
+        rectangle = function(...) end,
+        draw      = function(...) end,
+        printf    = function(...) end,
+        print     = function(...) end,
+        setFont   = function(...) end,
+    },
+}
+
+local pause_screen = require("screens.pause_screen")
+local menu         = require("menu")
+
+local pass, fail = 0, 0
+
+local function test(name, fn)
+    local ok, err = pcall(fn)
+    if ok then
+        print("PASS " .. name)
+        pass = pass + 1
+    else
+        print("FAIL " .. name)
+        print("     " .. tostring(err))
+        fail = fail + 1
+    end
+end
+
+local function eq(a, b, msg)
+    if a ~= b then
+        error((msg or "eq") .. ": expected " .. tostring(b) .. ", got " .. tostring(a), 2)
+    end
+end
+
+local function stub_host()
+    return {
+        dismiss_count = 0,
+        dismiss       = function(self) self.dismiss_count = self.dismiss_count + 1 end,
+        replace_calls = {},
+        replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
+        quit_count    = 0,
+        quit          = function(self) self.quit_count = self.quit_count + 1 end,
+    }
+end
+
+local function stub_game()
+    return { restart_count = 0, restart = function(self) self.restart_count = self.restart_count + 1 end }
+end
+
+local function new_screen()
+    local host = stub_host()
+    local game = stub_game()
+    local main_menu_screen = { sentinel = true }
+    local make_main_menu = function() return main_menu_screen end
+    local screen = pause_screen.new(host, game, make_main_menu)
+    screen:enter()
+    return screen, host, game, main_menu_screen
+end
+
+-- ── Cycle 1: Tracer bullet ────────────────────────────────────────────────────
+
+test("escape calls host:dismiss()", function()
+    local screen, host = new_screen()
+    screen:keypressed("escape")
+    eq(host.dismiss_count, 1, "escape must dismiss the pause screen")
+end)
+
+-- ── Cycle 2: enter() resets cursor to 0 ───────────────────────────────────────
+
+test("pause_cursor starts at 0 when entered", function()
+    local screen = new_screen()
+    eq(screen:pause_cursor(), 0, "cursor starts at 0 (Resume)")
+end)
+
+-- ── Cycle 3: up/down move cursor, clamped [0,3] ──────────────────────────────
+
+test("pause_cursor moves down with down key", function()
+    local screen = new_screen()
+    screen:keypressed("down")
+    eq(screen:pause_cursor(), 1, "cursor at 1 after down")
+    screen:keypressed("down")
+    eq(screen:pause_cursor(), 2, "cursor at 2 after second down")
+end)
+
+test("pause_cursor clamps at 3", function()
+    local screen = new_screen()
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:pause_cursor(), 3, "cursor clamped at 3")
+end)
+
+test("pause_cursor moves up and clamps at 0", function()
+    local screen = new_screen()
+    screen:keypressed("down")
+    screen:keypressed("up")
+    eq(screen:pause_cursor(), 0, "cursor back to 0")
+    screen:keypressed("up")
+    eq(screen:pause_cursor(), 0, "cursor clamped at 0")
+end)
+
+-- ── Cycle 4: return at cursor=0 (Resume) dismisses ───────────────────────────
+
+test("return with cursor=0 (Resume) calls host:dismiss()", function()
+    local screen, host = new_screen()
+    screen:keypressed("return")
+    eq(host.dismiss_count, 1, "resumed via Enter")
+end)
+
+-- ── Cycle 5: return at cursor=1 (New Game) restarts+dismisses ───────────────
+
+test("return with cursor=1 (New Game) restarts the game and dismisses", function()
+    local screen, host, game = new_screen()
+    screen:keypressed("down")
+    screen:keypressed("return")
+    eq(game.restart_count, 1, "game:restart() called")
+    eq(host.dismiss_count, 1, "pause screen dismissed after restart")
+end)
+
+-- ── Cycle 6: return at cursor=2 (Main Menu) replaces stack ───────────────────
+
+test("return with cursor=2 (Main Menu) calls host:replace() with the main menu screen", function()
+    local screen, host, _, main_menu_screen = new_screen()
+    screen:keypressed("down"); screen:keypressed("down")
+    screen:keypressed("return")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], main_menu_screen, "replaced with the screen from make_main_menu()")
+end)
+
+-- ── Cycle 7: return at cursor=3 (Quit) calls host:quit() ────────────────────
+
+test("return with cursor=3 (Quit) calls host:quit()", function()
+    local screen, host = new_screen()
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    screen:keypressed("return")
+    eq(host.quit_count, 1, "host:quit() called")
+end)
+
+-- ── Cycle 8: tap(x,y) routes to the same button actions ──────────────────────
+
+local function button_center(i)
+    local b = menu.pause_button_bounds()[i]
+    return b.x + b.w / 2, b.y + b.h / 2
+end
+
+test("tapping the Resume button calls host:dismiss()", function()
+    local screen, host = new_screen()
+    local x, y = button_center(1)
+    screen:tap(x, y)
+    eq(host.dismiss_count, 1, "Resume button dismisses")
+end)
+
+test("tapping the New Game button restarts and dismisses", function()
+    local screen, host, game = new_screen()
+    local x, y = button_center(2)
+    screen:tap(x, y)
+    eq(game.restart_count, 1, "New Game button restarts")
+    eq(host.dismiss_count, 1, "New Game button dismisses")
+end)
+
+test("tapping the Main Menu button calls host:replace()", function()
+    local screen, host, _, main_menu_screen = new_screen()
+    local x, y = button_center(3)
+    screen:tap(x, y)
+    eq(host.replace_calls[1], main_menu_screen, "Main Menu button replaces with the main menu screen")
+end)
+
+test("tapping the Quit button calls host:quit()", function()
+    local screen, host = new_screen()
+    local x, y = button_center(4)
+    screen:tap(x, y)
+    eq(host.quit_count, 1, "Quit button calls host:quit()")
+end)
+
+test("tapping outside any button does nothing", function()
+    local screen, host, game = new_screen()
+    screen:tap(-100, -100)
+    eq(host.dismiss_count, 0, "no dismiss on a miss")
+    eq(game.restart_count, 0, "no restart on a miss")
+    eq(host.quit_count, 0, "no quit on a miss")
+end)
+
+-- ── Cycle 9: draw() delegates to menu.draw_pause ─────────────────────────────
+
+test("draw() runs without erroring", function()
+    local screen = new_screen()
+    screen:draw()
+    eq(true, true, "no crash")
+end)
+
+-- ── Cycle 10: opaque() returns false ──────────────────────────────────────────
+
+test("opaque() is false so the board beneath stays visible", function()
+    local screen = new_screen()
+    eq(screen:opaque(), false, "pause screen must be a translucent overlay")
+end)
+
+print(string.format("\n%d passed, %d failed", pass, fail))
+if fail > 0 then os.exit(1) end

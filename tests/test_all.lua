@@ -25,6 +25,7 @@ local suites = {
     "../tests/test_statemachine.lua",
     "../tests/test_screen_manager.lua",
     "../tests/test_options_screen.lua",
+    "../tests/test_pause_screen.lua",
     "../tests/test_renderer_board.lua",
     "../tests/test_renderer_tile_draw.lua",
     "../tests/test_renderer_hud.lua",
