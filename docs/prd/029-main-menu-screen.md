@@ -1,7 +1,7 @@
 ---
 title: "Main Menu Screen"
 description: "Migrate gamestate.lua's MenuState onto the new screen_manager stack as a standalone main_menu_screen.lua module."
-status: needs-triage
+status: done
 ---
 
 # Main Menu Screen
