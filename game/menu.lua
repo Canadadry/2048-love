@@ -2,6 +2,7 @@ local config  = require("config")
 local builder = require("lib.ui.layout.builder")
 local ui      = require("lib.ui.layout.ui")
 local painter = require("lib.ui.painter.painter")
+local board   = require("renderer.board")
 
 local M = {}
 
@@ -13,16 +14,7 @@ local function get_font(size)
     return font_cache[size]
 end
 
-local function board_metrics()
-    local w, h     = love.graphics.getDimensions()
-    local n        = config.GRID_SIZE
-    local board_px = math.floor(math.min(w, h) * 0.8)
-    local tile_px  = math.floor(board_px / n)
-    local pad      = math.max(4, math.floor(tile_px * 0.05))
-    local board_x  = math.floor((w - board_px) / 2)
-    local board_y  = math.floor((h - board_px) / 2) + 16
-    return board_px, tile_px, pad, board_x, board_y
-end
+local board_metrics = board.metrics
 
 local MENU_BG_COLOR          = { 250, 247, 240, 255 }
 local MENU_ACCENT_COLOR      = { 245, 125, 94, 255 }

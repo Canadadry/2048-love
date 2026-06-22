@@ -47,20 +47,20 @@ function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_
 
     local animating = #anim_tiles > 0
 
+    local dest = {}
+    for _, t in ipairs(anim_tiles) do
+        dest[cell_key(t.to_row, t.to_col, n)] = true
+    end
+
+    for r = 1, n do
+        for c = 1, n do
+            local px, py = board.cell_to_px(r, c, tile_px, pad, board_x, board_y)
+            local val = dest[cell_key(r, c, n)] and 0 or cells[r][c]
+            tile_draw.draw(val, px, py, tile_px, pad, font)
+        end
+    end
+
     if animating then
-        local dest = {}
-        for _, t in ipairs(anim_tiles) do
-            dest[cell_key(t.to_row, t.to_col, n)] = true
-        end
-
-        for r = 1, n do
-            for c = 1, n do
-                local px, py = board.cell_to_px(r, c, tile_px, pad, board_x, board_y)
-                local val = dest[cell_key(r, c, n)] and 0 or cells[r][c]
-                tile_draw.draw(val, px, py, tile_px, pad, font)
-            end
-        end
-
         for _, t in ipairs(anim_tiles) do
             local progress = t:progress()
             local fx, fy   = board.cell_to_px(t.from_row, t.from_col, tile_px, pad, board_x, board_y)
@@ -68,14 +68,6 @@ function M.draw(cells, score, game_over, win, anim_tiles, cursor, paused, pause_
             local px = math.floor(fx + (tx - fx) * progress)
             local py = math.floor(fy + (ty - fy) * progress)
             tile_draw.draw(t.value, px, py, tile_px, pad, font, t.scale)
-        end
-    else
-        for r = 1, n do
-            for c = 1, n do
-                local val    = cells[r][c]
-                local px, py = board.cell_to_px(r, c, tile_px, pad, board_x, board_y)
-                tile_draw.draw(val, px, py, tile_px, pad, font)
-            end
         end
     end
 
