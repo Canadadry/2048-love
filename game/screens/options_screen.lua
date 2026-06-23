@@ -37,7 +37,7 @@ end
 
 function Screen:enter()
     local host = self.host
-    local win_tile_values = { 32, 2048 }
+    local win_tile_values = { 16, 2048 }
     local theme_values    = tileset.list_available()
 
     local items = {
