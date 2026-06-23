@@ -31,25 +31,28 @@ local function empty_cells(board)
     return cells
 end
 
-local function spawn_one(board)
+local function spawn_one(board, rand)
     local empty = empty_cells(board)
     if #empty == 0 then return end
-    local pos = empty[math.random(#empty)]
-    board[pos[1]][pos[2]] = math.random() < 0.9 and 2 or 4
+    local pos = empty[rand(#empty)]
+    board[pos[1]][pos[2]] = rand() < 0.9 and 2 or 4
 end
 
-function M.new()
+function M.new(rand)
+    rand = rand or math.random
     local self = setmetatable({}, Grid)
     self._board = empty_board()
-    spawn_one(self._board)
-    spawn_one(self._board)
+    self._rand  = rand
+    spawn_one(self._board, rand)
+    spawn_one(self._board, rand)
     return self
 end
 
-function M.new_from(cells)
+function M.new_from(cells, rand)
     check.grid_cells(cells, SIZE, "cells")
     local self = setmetatable({}, Grid)
     self._board = empty_board()
+    self._rand  = rand or math.random
     for r = 1, SIZE do
         for c = 1, SIZE do
             self._board[r][c] = cells[r][c]
@@ -214,7 +217,7 @@ end
 
 function Grid:spawn_tile()
     assert(#empty_cells(self._board) > 0, "spawn_tile called on a full board")
-    spawn_one(self._board)
+    spawn_one(self._board, self._rand)
 end
 
 function Grid:get_cells()

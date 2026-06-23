@@ -167,6 +167,23 @@ test("spawn_tile adds exactly one tile (value 2 or 4) to an empty cell", functio
     eq(count, 2)  -- was 1, now 2 after spawn
 end)
 
+-- new_from() accepts an injectable rand function, used deterministically by spawn_tile
+test("spawn_tile uses the injected rand function for deterministic spawns", function()
+    local function rand(n)
+        if n then return 1 end  -- always pick the first empty cell
+        return 0                -- always spawn a 2 (rand() < 0.9)
+    end
+    local g = grid.new_from({
+        {2, 2, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    }, rand)
+    g:spawn_tile()
+    local cells = g:get_cells()
+    eq(cells[1][3], 2, "spawn lands on the first empty cell with value 2")
+end)
+
 -- game_over=true when the board is full with no possible merges in any direction
 test("move returns game_over=true when no legal move exists in any direction", function()
     -- Fully locked checkerboard: no empty cells, no adjacent equal tiles.

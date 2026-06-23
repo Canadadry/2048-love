@@ -1,7 +1,7 @@
 ---
 title: "Game Screen"
 description: "Migrate gamestate.lua's PlayingState (grid, score, tile animation, swipe-to-move, win/game-over/pause promotion) onto the screen_manager stack as a standalone game_screen.lua module."
-status: needs-triage
+status: done
 ---
 
 # Game Screen
