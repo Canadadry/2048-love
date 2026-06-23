@@ -1,64 +1,60 @@
-local menu = require("menu")
+local menu        = require("menu")
+local menu_screen = require("menu_screen")
 
 local M = {}
 local Screen = {}
 
-local function hit(btn, x, y)
-    return x >= btn.x and x <= btn.x + btn.w and y >= btn.y and y <= btn.y + btn.h
-end
-
 function M.new(host, game, deps)
-    return setmetatable({ host = host, game = game, make_main_menu = deps.make_main_menu }, { __index = Screen })
+    local make_main_menu = deps.make_main_menu
+    local self = setmetatable({ host = host, game = game }, { __index = Screen })
+    self._mixin = menu_screen.new({
+        items = {
+            { label = "Resume",    on_activate = function() host:dismiss() end },
+            { label = "New Game",  on_activate = function() game:restart(); host:dismiss() end },
+            { label = "Main Menu", on_activate = function() host:replace(make_main_menu()) end },
+            { label = "Quit",      on_activate = function() host:quit() end },
+        },
+    })
+    return self
 end
 
 function Screen:enter()
-    self._cursor = 0
+    self._mixin:enter()
 end
 
-function Screen:pause_cursor()
-    return self._cursor
-end
-
-function Screen:draw()
-    menu.draw_pause(self._cursor)
+function Screen:cursor()
+    return self._mixin:cursor()
 end
 
 function Screen:opaque()
     return false
 end
 
-local function activate(self, cursor)
-    if cursor == 0 then
+function Screen:keypressed(key)
+    if key == "escape" then
         self.host:dismiss()
-    elseif cursor == 1 then
-        self.game:restart()
-        self.host:dismiss()
-    elseif cursor == 2 then
-        self.host:replace(self.make_main_menu())
-    elseif cursor == 3 then
-        self.host:quit()
+        return
     end
+    self._mixin:keypressed(key)
 end
 
-function Screen:keypressed(key)
-    if key == "up" then
-        self._cursor = math.max(0, self._cursor - 1)
-    elseif key == "down" then
-        self._cursor = math.min(3, self._cursor + 1)
-    elseif key == "escape" then
-        self.host:dismiss()
-    elseif key == "return" then
-        activate(self, self._cursor)
-    end
+function Screen:spec()
+    return {
+        title             = "Paused",
+        title_font_offset = 8,
+        bg_color          = menu.GAME_OVER_BG_COLOR,
+        text_color        = menu.WHITE_COLOR,
+        item_style        = "button",
+        items             = self._mixin:items(),
+    }
 end
 
 function Screen:tap(x, y)
-    for i, btn in ipairs(menu.pause_button_bounds()) do
-        if hit(btn, x, y) then
-            activate(self, i - 1)
-            return
-        end
-    end
+    menu.menu_hit_test(self:spec(), self:cursor(), function(i) self._mixin:tap(i) end, x, y)
+end
+
+function Screen:draw()
+    menu.draw_menu(self:spec(), self:cursor())
 end
 
 return M

@@ -75,34 +75,34 @@ end)
 
 -- ── Cycle 2: enter() resets cursor to 0 ───────────────────────────────────────
 
-test("pause_cursor starts at 0 when entered", function()
+test("cursor starts at 0 when entered", function()
     local screen = new_screen()
-    eq(screen:pause_cursor(), 0, "cursor starts at 0 (Resume)")
+    eq(screen:cursor(), 0, "cursor starts at 0 (Resume)")
 end)
 
 -- ── Cycle 3: up/down move cursor, clamped [0,3] ──────────────────────────────
 
-test("pause_cursor moves down with down key", function()
+test("cursor moves down with down key", function()
     local screen = new_screen()
     screen:keypressed("down")
-    eq(screen:pause_cursor(), 1, "cursor at 1 after down")
+    eq(screen:cursor(), 1, "cursor at 1 after down")
     screen:keypressed("down")
-    eq(screen:pause_cursor(), 2, "cursor at 2 after second down")
+    eq(screen:cursor(), 2, "cursor at 2 after second down")
 end)
 
-test("pause_cursor clamps at 3", function()
+test("cursor clamps at 3", function()
     local screen = new_screen()
     screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:pause_cursor(), 3, "cursor clamped at 3")
+    eq(screen:cursor(), 3, "cursor clamped at 3")
 end)
 
-test("pause_cursor moves up and clamps at 0", function()
+test("cursor moves up and clamps at 0", function()
     local screen = new_screen()
     screen:keypressed("down")
     screen:keypressed("up")
-    eq(screen:pause_cursor(), 0, "cursor back to 0")
+    eq(screen:cursor(), 0, "cursor back to 0")
     screen:keypressed("up")
-    eq(screen:pause_cursor(), 0, "cursor clamped at 0")
+    eq(screen:cursor(), 0, "cursor clamped at 0")
 end)
 
 -- ── Cycle 4: return at cursor=0 (Resume) dismisses ───────────────────────────
@@ -144,21 +144,31 @@ end)
 
 -- ── Cycle 8: tap(x,y) routes to the same button actions ──────────────────────
 
-local function button_center(i)
-    local b = menu.pause_button_bounds()[i]
-    return b.x + b.w / 2, b.y + b.h / 2
+local function button_centers(tree)
+    local centers = {}
+    for _, cmd in ipairs(tree.Commands) do
+        if cmd.painter and cmd.painter.kind == "Group" then
+            table.insert(centers, { x = cmd.x + cmd.w / 2, y = cmd.y + cmd.h / 2 })
+        end
+    end
+    return centers
+end
+
+local function button_center(screen, i)
+    local centers = button_centers(menu.menu_tree(screen:spec(), screen:cursor(), nil))
+    return centers[i].x, centers[i].y
 end
 
 test("tapping the Resume button calls host:dismiss()", function()
     local screen, host = new_screen()
-    local x, y = button_center(1)
+    local x, y = button_center(screen, 1)
     screen:tap(x, y)
     eq(host.dismiss_count, 1, "Resume button dismisses")
 end)
 
 test("tapping the New Game button restarts and dismisses", function()
     local screen, host, game = new_screen()
-    local x, y = button_center(2)
+    local x, y = button_center(screen, 2)
     screen:tap(x, y)
     eq(game.restart_count, 1, "New Game button restarts")
     eq(host.dismiss_count, 1, "New Game button dismisses")
@@ -166,14 +176,14 @@ end)
 
 test("tapping the Main Menu button calls host:replace()", function()
     local screen, host, _, main_menu_screen = new_screen()
-    local x, y = button_center(3)
+    local x, y = button_center(screen, 3)
     screen:tap(x, y)
     eq(host.replace_calls[1], main_menu_screen, "Main Menu button replaces with the main menu screen")
 end)
 
 test("tapping the Quit button calls host:quit()", function()
     local screen, host = new_screen()
-    local x, y = button_center(4)
+    local x, y = button_center(screen, 4)
     screen:tap(x, y)
     eq(host.quit_count, 1, "Quit button calls host:quit()")
 end)

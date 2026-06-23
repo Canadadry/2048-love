@@ -112,7 +112,9 @@ local function setup_main_with_quit_stub()
     love.load()
     local quit_calls = 0
     love.event = { quit = function() quit_calls = quit_calls + 1 end }
-    local quit_btn = button_centers(menu.main_menu_tree(0, {}))[3]
+    local spec = { bg_color = menu.BG_COLOR, item_style = "button",
+        items = { { label = "New Game" }, { label = "Options" }, { label = "Quit" } } }
+    local quit_btn = button_centers(menu.menu_tree(spec, 0, nil))[3]
     return quit_btn, function() return quit_calls end
 end
 

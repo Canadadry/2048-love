@@ -1,16 +1,24 @@
-local menu     = require("menu")
-local config   = require("config")
-local particle = require("particle")
+local menu        = require("menu")
+local config      = require("config")
+local particle    = require("particle")
+local menu_screen = require("menu_screen")
 
 local M = {}
 local Screen = {}
 
 function M.new(host, game)
-    return setmetatable({ host = host, game = game }, { __index = Screen })
+    local self = setmetatable({ host = host, game = game }, { __index = Screen })
+    self._mixin = menu_screen.new({
+        items = {
+            { label = "Continue", on_activate = function() game:mark_win_seen(); host:dismiss() end },
+            { label = "Restart",  on_activate = function() game:restart(); host:dismiss() end },
+        },
+    })
+    return self
 end
 
 function Screen:enter()
-    self._cursor    = 0
+    self._mixin:enter()
     self._particles = config.EFFECTS_ENABLED and particle.spawn() or {}
 end
 
@@ -29,38 +37,30 @@ function Screen:update(dt)
 end
 
 function Screen:cursor()
-    return self._cursor
-end
-
-local function activate(self, cursor)
-    if cursor == 0 then
-        self.game:mark_win_seen()
-        self.host:dismiss()
-    else
-        self.game:restart()
-        self.host:dismiss()
-    end
+    return self._mixin:cursor()
 end
 
 function Screen:keypressed(key)
-    if key == "up" then
-        self._cursor = math.max(0, self._cursor - 1)
-    elseif key == "down" then
-        self._cursor = math.min(1, self._cursor + 1)
-    elseif key == "return" then
-        activate(self, self._cursor)
-    end
+    self._mixin:keypressed(key)
+end
+
+function Screen:spec()
+    return {
+        title             = "You Win!",
+        title_font_offset = 8,
+        bg_color          = menu.WIN_BG_COLOR,
+        item_style        = "button",
+        items             = self._mixin:items(),
+    }
 end
 
 function Screen:tap(x, y)
-    menu.win_hit_test(self._cursor, {
-        on_continue = function() activate(self, 0) end,
-        on_restart  = function() activate(self, 1) end,
-    }, x, y)
+    menu.menu_hit_test(self:spec(), self:cursor(), function(i) self._mixin:tap(i) end, x, y)
 end
 
 function Screen:draw()
-    menu.draw_win(self._cursor, self._particles)
+    menu.draw_menu(self:spec(), self:cursor())
+    menu.draw_win_particles(self._particles)
 end
 
 function Screen:opaque()

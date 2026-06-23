@@ -15,6 +15,7 @@ local suites = {
     "../tests/test_tileset.lua",
     "../tests/test_swipe.lua",
     "../tests/test_menu.lua",
+    "../tests/test_menu_screen.lua",
     "../tests/test_optionsmodel.lua",
     "../tests/test_settings.lua",
     "../tests/test_main.lua",

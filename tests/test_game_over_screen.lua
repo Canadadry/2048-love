@@ -92,7 +92,7 @@ end
 
 test("tapping the Restart button restarts the game and dismisses", function()
     local screen, host, game = new_screen()
-    local centers = button_centers(menu.game_over_tree({}))
+    local centers = button_centers(menu.menu_tree(screen:spec(), -1, nil))
     eq(#centers, 1, "expected exactly one button")
     screen:tap(centers[1].x, centers[1].y)
     eq(game.restart_count, 1, "game:restart() called")

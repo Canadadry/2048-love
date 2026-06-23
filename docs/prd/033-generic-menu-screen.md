@@ -1,7 +1,7 @@
 ---
 title: "Generic Menu Screen"
 description: "Replace the duplicated cursor/keypress/tap/activate logic across main_menu/pause/win/game_over/options, and menu.lua's five bespoke tree builders, with one generic item-list mechanism."
-status: needs-triage
+status: done
 ---
 
 ## Problem Statement

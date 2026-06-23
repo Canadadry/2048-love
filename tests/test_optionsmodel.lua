@@ -20,116 +20,37 @@ local function eq(a, b, msg)
     end
 end
 
-local function two_rows()
-    return optionsmodel.new({
-        { label = "Win Tile", values = { 32, 2048 } },
-        { label = "Theme",    values = { "none", "jurassic-park", "ocean" } },
-    })
-end
+-- ── Cycle 1: Tracer bullet ────────────────────────────────────────────────────
 
-test("down() moves focus to the next row", function()
-    local m = two_rows()
-    m:down()
-    eq(m:focused_row(), 2, "focused_row after down()")
+test("next() returns the value following the current one", function()
+    eq(optionsmodel.next({ 32, 2048 }, 32), 2048, "next value after 32")
 end)
 
-test("down() wraps from the last row back to the first", function()
-    local m = two_rows()
-    m:down()
-    m:down()
-    eq(m:focused_row(), 1, "focused_row after wrapping down()")
+-- ── Cycle 2: next() wraps from the last value to the first ──────────────────
+
+test("next() wraps from the last value back to the first", function()
+    eq(optionsmodel.next({ 32, 2048 }, 2048), 32, "next value wraps to 32")
 end)
 
-test("up() moves focus to the previous row", function()
-    local m = two_rows()
-    m:down()
-    m:up()
-    eq(m:focused_row(), 1, "focused_row after down() then up()")
+-- ── Cycle 3: prev() returns the value preceding the current one ─────────────
+
+test("prev() returns the value preceding the current one", function()
+    eq(optionsmodel.prev({ 32, 2048 }, 2048), 32, "prev value before 2048")
 end)
 
-test("up() wraps from the first row to the last", function()
-    local m = two_rows()
-    m:up()
-    eq(m:focused_row(), 2, "focused_row after wrapping up()")
+-- ── Cycle 4: prev() wraps from the first value to the last ──────────────────
+
+test("prev() wraps from the first value back to the last", function()
+    eq(optionsmodel.prev({ 32, 2048 }, 32), 2048, "prev value wraps to 2048")
 end)
 
-test("row_value() returns each row's starting value", function()
-    local m = two_rows()
-    eq(m:row_value(1), 32, "row 1 starting value")
-    eq(m:row_value(2), "none", "row 2 starting value")
-end)
+-- ── Cycle 5: next()/prev() work over a 3-value list, e.g. themes ────────────
 
-test("right() cycles the focused row's value forward", function()
-    local m = two_rows()
-    m:right()
-    eq(m:row_value(1), 2048, "row 1 value after right()")
-end)
-
-test("right() wraps from the last value back to the first", function()
-    local m = two_rows()
-    m:right()
-    m:right()
-    eq(m:row_value(1), 32, "row 1 value after wrapping right()")
-end)
-
-test("left() cycles the focused row's value backward", function()
-    local m = two_rows()
-    m:down()
-    m:right()
-    m:left()
-    eq(m:row_value(2), "none", "row 2 value after right() then left()")
-end)
-
-test("left() wraps from the first value to the last", function()
-    local m = two_rows()
-    m:left()
-    eq(m:row_value(1), 2048, "row 1 value after wrapping left()")
-end)
-
-test("right() on the focused row leaves other rows' values unchanged", function()
-    local m = two_rows()
-    m:down()
-    m:right()
-    eq(m:row_value(1), 32, "row 1 value should be untouched while row 2 is focused")
-end)
-
-test("up()/down() never change any row's value", function()
-    local m = two_rows()
-    m:down()
-    m:up()
-    eq(m:row_value(1), 32, "row 1 value unchanged by focus movement")
-    eq(m:row_value(2), "none", "row 2 value unchanged by focus movement")
-end)
-
-test("left()/right() never change which row has focus", function()
-    local m = two_rows()
-    m:right()
-    m:left()
-    eq(m:focused_row(), 1, "focused_row unchanged by value cycling")
-end)
-
-test("focus_row() sets focus directly", function()
-    local m = two_rows()
-    m:focus_row(2)
-    eq(m:focused_row(), 2, "focused_row after focus_row(2)")
-end)
-
-test("focus_row() never changes any row's value", function()
-    local m = two_rows()
-    m:right()
-    m:focus_row(2)
-    eq(m:row_value(1), 2048, "row 1 value unchanged by focus_row()")
-    eq(m:row_value(2), "none", "row 2 value unchanged by focus_row()")
-end)
-
-test("new() rejects an empty row list", function()
-    local ok = pcall(optionsmodel.new, {})
-    eq(ok, false, "new() should reject an empty row list")
-end)
-
-test("new() rejects a row with an empty values list", function()
-    local ok = pcall(optionsmodel.new, { { label = "Empty", values = {} } })
-    eq(ok, false, "new() should reject a row with no values")
+test("next() steps through a 3-value list in order", function()
+    local values = { "", "jurassic-park", "ocean" }
+    eq(optionsmodel.next(values, ""), "jurassic-park", "first to second")
+    eq(optionsmodel.next(values, "jurassic-park"), "ocean", "second to third")
+    eq(optionsmodel.next(values, "ocean"), "", "third wraps to first")
 end)
 
 print(string.format("\n%d passed, %d failed", pass, fail))

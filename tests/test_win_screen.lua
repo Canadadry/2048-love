@@ -130,7 +130,7 @@ end
 
 test("tapping Continue marks win seen and dismisses", function()
     local screen, host, game = new_screen()
-    local centers = button_centers(menu.win_tree(screen:cursor(), {}))
+    local centers = button_centers(menu.menu_tree(screen:spec(), screen:cursor(), nil))
     eq(#centers, 2, "expected exactly two buttons")
     screen:tap(centers[1].x, centers[1].y)
     eq(game.mark_win_seen_count, 1, "game:mark_win_seen() called")
@@ -139,7 +139,7 @@ end)
 
 test("tapping Restart restarts the game and dismisses", function()
     local screen, host, game = new_screen()
-    local centers = button_centers(menu.win_tree(screen:cursor(), {}))
+    local centers = button_centers(menu.menu_tree(screen:spec(), screen:cursor(), nil))
     screen:tap(centers[2].x, centers[2].y)
     eq(game.restart_count, 1, "game:restart() called")
     eq(host.dismiss_count, 1, "host:dismiss() called")

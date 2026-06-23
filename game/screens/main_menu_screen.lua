@@ -1,51 +1,44 @@
 local options_screen = require("screens.options_screen")
+local menu_screen    = require("menu_screen")
 local menu           = require("menu")
 
 local M = {}
 local Screen = {}
 
 function M.new(host, make_game_screen)
-    return setmetatable({ host = host, make_game_screen = make_game_screen }, { __index = Screen })
+    local self = setmetatable({ host = host }, { __index = Screen })
+    self._mixin = menu_screen.new({
+        items = {
+            { label = "New Game", on_activate = function() host:replace(make_game_screen()) end },
+            { label = "Options",  on_activate = function() host:promote(options_screen.new(host)) end },
+            { label = "Quit",     on_activate = function() host:quit() end },
+        },
+    })
+    return self
 end
 
 function Screen:enter()
-    self._cursor = 0
+    self._mixin:enter()
 end
 
 function Screen:cursor()
-    return self._cursor
-end
-
-local function activate(self, cursor)
-    if cursor == 0 then
-        self.host:replace(self.make_game_screen())
-    elseif cursor == 1 then
-        self.host:promote(options_screen.new(self.host))
-    elseif cursor == 2 then
-        self.host:quit()
-    end
+    return self._mixin:cursor()
 end
 
 function Screen:keypressed(key)
-    if key == "up" then
-        self._cursor = math.max(0, self._cursor - 1)
-    elseif key == "down" then
-        self._cursor = math.min(2, self._cursor + 1)
-    elseif key == "return" then
-        activate(self, self._cursor)
-    end
+    self._mixin:keypressed(key)
+end
+
+function Screen:spec()
+    return { title = "2048", bg_color = menu.BG_COLOR, item_style = "button", items = self._mixin:items() }
 end
 
 function Screen:draw()
-    menu.draw_main_menu(self._cursor)
+    menu.draw_menu(self:spec(), self:cursor())
 end
 
 function Screen:tap(x, y)
-    menu.main_menu_hit_test(self._cursor, {
-        on_new_game = function() activate(self, 0) end,
-        on_options  = function() activate(self, 1) end,
-        on_quit     = function() activate(self, 2) end,
-    }, x, y)
+    menu.menu_hit_test(self:spec(), self:cursor(), function(i) self._mixin:tap(i) end, x, y)
 end
 
 return M
