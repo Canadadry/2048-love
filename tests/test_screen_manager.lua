@@ -223,5 +223,15 @@ test("the manager recovers after a guarded transition errors", function()
     eq(ok, true, "a later, non-nested transition must still succeed")
 end)
 
+-- ── quit() ────────────────────────────────────────────────────────────────────
+
+test("quit() calls love.event.quit()", function()
+    local quit_calls = 0
+    love.event = { quit = function() quit_calls = quit_calls + 1 end }
+    local sm = screen_manager.new({})
+    sm:quit()
+    eq(quit_calls, 1, "quit() must call love.event.quit()")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

@@ -71,6 +71,8 @@ local function dispatch(self, method, ...)
     if top and top[method] then return top[method](top, ...) end
 end
 
+function SM:quit() love.event.quit() end
+
 function SM:update(dt)    dispatch(self, "update", dt) end
 function SM:keypressed(k) dispatch(self, "keypressed", k) end
 function SM:resize(w, h)  dispatch(self, "resize", w, h) end

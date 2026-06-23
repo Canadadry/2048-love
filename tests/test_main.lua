@@ -130,5 +130,67 @@ test("mouse-down then drag-away release does not fire the Quit button", function
     eq(quit_calls(), 0, "dragging away before release must cancel the tap")
 end)
 
+-- ── Full-graph wiring smoke test ─────────────────────────────────────────────
+
+test("Main Menu -> New Game -> Pause -> Main Menu walk lands back on a fresh Main Menu", function()
+    reset_fs()
+    arg = {}
+    dofile("main.lua")
+    love.load()
+    local quit_calls = 0
+    love.event = { quit = function() quit_calls = quit_calls + 1 end }
+
+    love.keypressed("return") -- Main Menu cursor 0 (New Game) -> replace with Game screen
+    love.keypressed("escape") -- Game -> promote Pause
+    love.keypressed("down")   -- Pause cursor 0 -> 1 (New Game)
+    love.keypressed("down")   -- Pause cursor 1 -> 2 (Main Menu)
+    love.keypressed("return") -- Pause cursor 2 -> replace with a fresh Main Menu
+
+    love.keypressed("down")   -- fresh Main Menu cursor 0 -> 1 (Options), proves cursor was reset
+    love.keypressed("down")   -- Main Menu cursor 1 -> 2 (Quit)
+    love.keypressed("return") -- Main Menu cursor 2 -> host:quit()
+
+    eq(quit_calls, 1, "walking the whole graph and back must land on a freshly entered Main Menu")
+end)
+
+-- ── Raw mouse passthrough to the Game screen ─────────────────────────────────
+
+test("swiping the board while the Game screen is focused reaches its own swipe handling, not the fallback tap-only swiper", function()
+    reset_fs()
+    arg = {}
+    local original_random = math.random
+    math.random = function(n) if n then return 1 else return 0 end end -- always first empty cell, always a 2
+
+    dofile("main.lua")
+    love.load()
+    love.keypressed("return") -- Main Menu cursor 0 (New Game) -> replace with Game screen
+
+    local renderer = require("renderer")
+    local original_draw = renderer.draw
+    local before, after
+    renderer.draw = function(cells) before = cells end
+    love.draw()
+
+    love.mousepressed(400, 300, 1, false)
+    love.mousemoved(140, 300, -260, 0, false) -- drag left, past the swipe threshold
+    love.mousereleased(140, 300, 1, false)
+    love.update(0)
+
+    renderer.draw = function(cells) after = cells end
+    love.draw()
+    renderer.draw = original_draw
+    math.random = original_random
+
+    local changed = false
+    for r = 1, #before do
+        for c = 1, #before[r] do
+            if before[r][c] ~= after[r][c] then changed = true end
+        end
+    end
+    eq(changed, true,
+        "a swipe gesture must reach the Game screen's own mousepressed/moved, " ..
+        "since main.lua's fallback swiper only ever resolves taps, never directions")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

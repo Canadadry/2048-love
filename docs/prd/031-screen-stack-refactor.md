@@ -1,7 +1,7 @@
 ---
 title: "Screen Stack Refactor"
 description: "Replace gamestate.lua's flat, ctx-sharing state machine with an explicit screen stack, where any screen can promote another screen on top of it (overlay, dismissible) or replace the whole stack (navigate away, no history)."
-status: needs-triage
+status: done
 ---
 
 # Screen Stack Refactor

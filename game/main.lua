@@ -1,13 +1,23 @@
-local config    = require("config")
-local gamestate = require("gamestate")
-local menu      = require("menu")
-local renderer  = require("renderer")
-local hud       = require("renderer.hud")
-local swipe     = require("swipe")
-local settings  = require("settings")
+local config            = require("config")
+local screen_manager    = require("screen_manager")
+local main_menu_screen   = require("screens.main_menu_screen")
+local game_screen       = require("screens.game_screen")
+local win_screen        = require("screens.win_screen")
+local game_over_screen  = require("screens.game_over_screen")
+local renderer          = require("renderer")
+local swipe             = require("swipe")
+local settings          = require("settings")
 
-local state
+local host
 local swiper
+
+local function make_main_menu()
+    return main_menu_screen.new(host, function() return game_screen.new(host, {
+        make_main_menu = make_main_menu,
+        make_win       = function(game) return win_screen.new(host, game) end,
+        make_game_over = function(game) return game_over_screen.new(host, game) end,
+    }) end)
+end
 
 function love.load()
     love.filesystem.setIdentity("2048")
@@ -25,132 +35,63 @@ function love.load()
     love.window.setTitle("2048")
     love.window.setMode(config.WINDOW_W, config.WINDOW_H, { resizable = true, minwidth = 300, minheight = 300 })
     love.graphics.setBackgroundColor(0.98, 0.97, 0.94)
-    state      = gamestate.new()
+    host = screen_manager.new(nil)
+    host:replace(make_main_menu())
     local w, h = love.graphics.getDimensions()
     swiper     = swipe.new(math.min(w, h) * 0.10)
 end
 
 function love.update(dt)
-    state:update(dt)
+    host:update(dt)
     renderer.update(dt)
 end
 
 function love.draw()
-    if state:in_menu() then
-        menu.draw_main_menu(state:menu_cursor())
-    elseif state:in_options() then
-        menu.draw_options(state:win_tile(), state:theme(), state:animations_enabled(), state:effects_enabled(), state:focused_row())
-    else
-        renderer.set_tileset(config.TILESET)
-        renderer.draw(state:cells(), state:score(), state:game_over(), state:win(), state:anim_tiles(), state:cursor(),
-            state:paused(), state:pause_cursor(), state:win_particles())
-    end
+    host:draw()
 end
 
 function love.keypressed(key)
-    state:keypressed(key)
-    if state:quit_requested() then love.event.quit() end
+    host:keypressed(key)
 end
 
 function love.resize(w, h)
-    state:resize(w, h)
+    host:resize(w, h)
     swiper:set_threshold(math.min(w, h) * 0.10)
 end
 
-local function hit(btn, x, y)
-    return x >= btn.x and x <= btn.x + btn.w and y >= btn.y and y <= btn.y + btn.h
-end
-
-local function handle_tap(x, y)
-    if state:in_menu() then
-        menu.main_menu_hit_test(state:menu_cursor(), {
-            on_new_game = function() state:select_menu_item(0) end,
-            on_options  = function() state:select_menu_item(1) end,
-            on_quit     = function() state:select_menu_item(2) end,
-        }, x, y)
-        if state:quit_requested() then love.event.quit() end
-        return
-    end
-    if state:in_options() then
-        menu.options_hit_test(
-            state:win_tile(), state:theme(), state:animations_enabled(), state:effects_enabled(), state:focused_row(),
-            {
-                on_row_tap = function(i) state:tap_row(i) end,
-                on_back    = function() state:keypressed("escape") end,
-            },
-            x, y)
-        return
-    end
-    if not state:paused() and not state:win() and not state:game_over() then
-        hud.hit_test(state:score(), true, { on_pause_tap = function() state:keypressed("escape") end }, x, y)
-        return
-    end
-    if state:paused() then
-        local btns = menu.pause_button_bounds()
-        if hit(btns[1], x, y) then
-            state:resume()
-        elseif hit(btns[2], x, y) then
-            state:restart()
-        elseif hit(btns[3], x, y) then
-            state:to_main_menu()
-        elseif hit(btns[4], x, y) then
-            love.event.quit()
-        end
-    elseif state:win() then
-        menu.win_hit_test(state:cursor(), {
-            on_continue = function() state:continue_game() end,
-            on_restart  = function() state:restart() end,
-        }, x, y)
-    elseif state:game_over() then
-        menu.game_over_hit_test({
-            on_restart = function() state:restart() end,
-        }, x, y)
-    end
-end
-
-local function resolve_release(dir, is_tap, x, y)
-    if dir then
-        if not state:game_over() and not state:win() then
-            state:queue_move(dir)
-        end
-    elseif is_tap then
-        handle_tap(x, y)
-    end
-end
-
 function love.mousepressed(x, y, button, istouch)
+    if host.mousepressed then host:mousepressed(x, y, button, istouch); return end
     if istouch then return end
     if button ~= 1 then return end
     swiper:touchpressed("mouse", x, y)
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
+    if host.mousemoved then host:mousemoved(x, y, dx, dy, istouch); return end
     if istouch then return end
-    local dir = swiper:touchmoved("mouse", x, y)
-    if dir and not state:game_over() and not state:win() then
-        state:queue_move(dir)
-    end
+    swiper:touchmoved("mouse", x, y)
 end
 
 function love.mousereleased(x, y, button, istouch)
+    if host.mousereleased then host:mousereleased(x, y, button, istouch); return end
     if istouch then return end
     if button ~= 1 then return end
-    local dir, is_tap = swiper:touchreleased("mouse", x, y)
-    resolve_release(dir, is_tap, x, y)
+    local _, is_tap = swiper:touchreleased("mouse", x, y)
+    if is_tap then host:tap(x, y) end
 end
 
 function love.touchpressed(id, x, y)
+    if host.touchpressed then host:touchpressed(id, x, y); return end
     swiper:touchpressed(id, x, y)
 end
 
 function love.touchmoved(id, x, y)
-    local dir = swiper:touchmoved(id, x, y)
-    if dir and not state:game_over() and not state:win() then
-        state:queue_move(dir)
-    end
+    if host.touchmoved then host:touchmoved(id, x, y); return end
+    swiper:touchmoved(id, x, y)
 end
 
 function love.touchreleased(id, x, y)
-    local dir, is_tap = swiper:touchreleased(id, x, y)
-    resolve_release(dir, is_tap, x, y)
+    if host.touchreleased then host:touchreleased(id, x, y); return end
+    local _, is_tap = swiper:touchreleased(id, x, y)
+    if is_tap then host:tap(x, y) end
 end
