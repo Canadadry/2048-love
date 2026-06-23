@@ -1,22 +1,19 @@
-local config            = require("config")
-local screen_manager    = require("screen_manager")
-local main_menu_screen   = require("screens.main_menu_screen")
-local game_screen       = require("screens.game_screen")
-local win_screen        = require("screens.win_screen")
-local game_over_screen  = require("screens.game_over_screen")
-local swipe             = require("swipe")
-local settings          = require("settings")
+local config         = require("config")
+local screen_manager = require("screen_manager")
+local swipe          = require("swipe")
+local settings       = require("settings")
+
+local SCREENS = {
+    main_menu = require("screens.main_menu_screen"),
+    game      = require("screens.game_screen"),
+    pause     = require("screens.pause_screen"),
+    win       = require("screens.win_screen"),
+    game_over = require("screens.game_over_screen"),
+    options   = require("screens.options_screen"),
+}
 
 local host
 local swiper
-
-local function make_main_menu()
-    return main_menu_screen.new(host, function() return game_screen.new(host, {
-        make_main_menu = make_main_menu,
-        make_win       = function(game) return win_screen.new(host, game, { make_main_menu = make_main_menu }) end,
-        make_game_over = function(game) return game_over_screen.new(host, game) end,
-    }) end)
-end
 
 function love.load()
     love.filesystem.setIdentity("2048")
@@ -34,8 +31,8 @@ function love.load()
     love.window.setTitle("2048")
     love.window.setMode(config.WINDOW_W, config.WINDOW_H, { resizable = true, minwidth = 300, minheight = 300 })
     love.graphics.setBackgroundColor(0.98, 0.97, 0.94)
-    host = screen_manager.new(nil)
-    host:replace(make_main_menu())
+    host = screen_manager.new(nil, SCREENS)
+    host:replace(host:spawn("main_menu"))
     local w, h = love.graphics.getDimensions()
     swiper     = swipe.new(math.min(w, h) * 0.10)
 end

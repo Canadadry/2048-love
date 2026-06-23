@@ -7,7 +7,6 @@ local tile_draw    = require("tile_draw")
 local hud          = require("hud")
 local font_cache   = require("font_cache")
 local swipe        = require("swipe")
-local pause_screen = require("screens.pause_screen")
 
 local M = {}
 local Screen = {}
@@ -19,12 +18,11 @@ local function cell_key(r, c, n)
     return (r - 1) * n + c
 end
 
-function M.new(host, deps, cells, rand)
+function M.new(host, cells, rand)
     local g = cells and grid.new_from(cells, rand) or grid.new(rand)
     local w, h = love.graphics.getDimensions()
     return setmetatable({
         host    = host,
-        deps    = deps,
         _rand   = rand,
         _grid   = g,
         _score  = 0,
@@ -65,9 +63,9 @@ local function apply_move(self, dir)
         end
     end
     if result.win and not self._win_seen then
-        self.host:promote(self.deps.make_win(self))
+        self.host:promote(self.host:spawn("win", self))
     elseif result.game_over then
-        self.host:promote(self.deps.make_game_over(self))
+        self.host:promote(self.host:spawn("game_over", self))
     end
 end
 
@@ -91,7 +89,7 @@ end
 
 local function open_pause(self)
     self._queue = {}
-    self.host:promote(pause_screen.new(self.host, self, { make_main_menu = self.deps.make_main_menu }))
+    self.host:promote(self.host:spawn("pause", self))
 end
 
 function Screen:update(dt)

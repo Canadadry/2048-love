@@ -4,14 +4,13 @@ local menu_screen = require("menu_screen")
 local M = {}
 local Screen = {}
 
-function M.new(host, game, deps)
-    local make_main_menu = deps.make_main_menu
+function M.new(host, game)
     local self = setmetatable({ host = host, game = game }, { __index = Screen })
     self._mixin = menu_screen.new({
         items = {
             { label = "Resume",    on_activate = function() host:dismiss() end },
             { label = "New Game",  on_activate = function() game:restart(); host:dismiss() end },
-            { label = "Main Menu", on_activate = function() host:replace(make_main_menu()) end },
+            { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu")) end },
             { label = "Quit",      on_activate = function() host:quit() end },
         },
     })

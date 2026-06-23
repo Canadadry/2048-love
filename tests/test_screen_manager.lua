@@ -245,5 +245,42 @@ test("quit() calls love.event.quit()", function()
     eq(quit_calls, 1, "quit() must call love.event.quit()")
 end)
 
+-- ── spawn() ───────────────────────────────────────────────────────────────────
+
+test("spawn(name) with no previous screen calls the registered screen's new() with nil", function()
+    local received_host, received_previous
+    local registry = {
+        foo = { new = function(host, previous) received_host, received_previous = host, previous end },
+    }
+    local sm = screen_manager.new({}, registry)
+    sm:spawn("foo")
+    eq(received_host, sm, "the manager itself is passed as host")
+    eq(received_previous, nil, "no previous screen means nil is forwarded")
+end)
+
+test("spawn(name, previous) forwards the given previous screen", function()
+    local received_previous
+    local registry = {
+        foo = { new = function(host, previous) received_previous = previous end },
+    }
+    local sm = screen_manager.new({}, registry)
+    local previous_screen = {}
+    sm:spawn("foo", previous_screen)
+    eq(received_previous, previous_screen, "the previous screen is forwarded as-is")
+end)
+
+test("spawn(name, <non-screen>) raises an error", function()
+    local registry = { foo = { new = function() end } }
+    local sm = screen_manager.new({}, registry)
+    local ok = pcall(function() sm:spawn("foo", "not a screen") end)
+    eq(ok, false, "a non-nil, non-table second argument must be rejected")
+end)
+
+test("spawn() raises an error for an unregistered screen name", function()
+    local sm = screen_manager.new({}, {})
+    local ok = pcall(function() sm:spawn("unknown") end)
+    eq(ok, false, "an unregistered screen name must be rejected")
+end)
+
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

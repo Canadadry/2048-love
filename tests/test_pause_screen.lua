@@ -40,7 +40,7 @@ local function eq(a, b, msg)
     end
 end
 
-local function stub_host()
+local function stub_host(main_menu_screen)
     return {
         dismiss_count = 0,
         dismiss       = function(self) self.dismiss_count = self.dismiss_count + 1 end,
@@ -48,6 +48,7 @@ local function stub_host()
         replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
         quit_count    = 0,
         quit          = function(self) self.quit_count = self.quit_count + 1 end,
+        spawn         = function(self, name) if name == "main_menu" then return main_menu_screen end end,
     }
 end
 
@@ -56,11 +57,10 @@ local function stub_game()
 end
 
 local function new_screen()
-    local host = stub_host()
-    local game = stub_game()
     local main_menu_screen = { sentinel = true }
-    local make_main_menu = function() return main_menu_screen end
-    local screen = pause_screen.new(host, game, { make_main_menu = make_main_menu })
+    local host = stub_host(main_menu_screen)
+    local game = stub_game()
+    local screen = pause_screen.new(host, game)
     screen:enter()
     return screen, host, game, main_menu_screen
 end

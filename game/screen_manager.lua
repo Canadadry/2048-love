@@ -1,3 +1,5 @@
+local check = require("check")
+
 local M  = {}
 local SM = {}
 
@@ -17,10 +19,17 @@ local mt = {
     end
 }
 
-function M.new(initial)
-    local self = setmetatable({ _stack = { initial } }, mt)
+function M.new(initial, registry)
+    local self = setmetatable({ _stack = { initial }, _registry = registry or {} }, mt)
     if initial and initial.enter then initial:enter() end
     return self
+end
+
+function SM:spawn(name, previous)
+    local screen = self._registry[name]
+    assert(screen, "screen_manager: no screen registered as '" .. tostring(name) .. "'")
+    if previous ~= nil then check.tbl(previous, "previous") end
+    return screen.new(self, previous)
 end
 
 local function guard_transition(self, fn)

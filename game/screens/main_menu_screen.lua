@@ -1,16 +1,15 @@
-local options_screen = require("screens.options_screen")
-local menu_screen    = require("menu_screen")
-local menu           = require("menu")
+local menu_screen = require("menu_screen")
+local menu        = require("menu")
 
 local M = {}
 local Screen = {}
 
-function M.new(host, make_game_screen)
+function M.new(host)
     local self = setmetatable({ host = host }, { __index = Screen })
     self._mixin = menu_screen.new({
         items = {
-            { label = "New Game", on_activate = function() host:replace(make_game_screen()) end },
-            { label = "Options",  on_activate = function() host:promote(options_screen.new(host)) end },
+            { label = "New Game", on_activate = function() host:replace(host:spawn("game")) end },
+            { label = "Options",  on_activate = function() host:promote(host:spawn("options")) end },
             { label = "Quit",     on_activate = function() host:quit() end },
         },
     })

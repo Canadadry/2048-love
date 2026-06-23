@@ -40,7 +40,7 @@ local function eq(a, b, msg)
     end
 end
 
-local function stub_host()
+local function stub_host(spawned)
     return {
         replace_calls = {},
         replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
@@ -48,14 +48,15 @@ local function stub_host()
         promote       = function(self, screen) table.insert(self.promote_calls, screen) end,
         quit_count    = 0,
         quit          = function(self) self.quit_count = self.quit_count + 1 end,
+        spawn         = function(self, name) return spawned[name] end,
     }
 end
 
 local function new_screen()
-    local host = stub_host()
     local game_screen_sentinel = { sentinel = true }
-    local make_game_screen = function() return game_screen_sentinel end
-    local screen = main_menu_screen.new(host, make_game_screen)
+    local options_screen_sentinel = { sentinel = "options" }
+    local host = stub_host({ game = game_screen_sentinel, options = options_screen_sentinel })
+    local screen = main_menu_screen.new(host)
     screen:enter()
     return screen, host, game_screen_sentinel
 end

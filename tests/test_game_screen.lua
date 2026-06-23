@@ -42,6 +42,7 @@ local function eq(a, b, msg)
 end
 
 local function stub_host()
+    local spawn_calls = { win = {}, game_over = {}, pause = {} }
     return {
         promote_calls = {},
         promote       = function(self, screen) table.insert(self.promote_calls, screen) end,
@@ -51,21 +52,12 @@ local function stub_host()
         dismiss       = function(self) self.dismiss_count = self.dismiss_count + 1 end,
         quit_count    = 0,
         quit          = function(self) self.quit_count = self.quit_count + 1 end,
+        spawn_calls   = spawn_calls,
+        spawn         = function(self, name, game)
+            table.insert(spawn_calls[name], game)
+            return { spawned = name, host = self, game = game }
+        end,
     }
-end
-
-local function stub_deps()
-    local win_sentinel       = { sentinel = "win" }
-    local game_over_sentinel = { sentinel = "game_over" }
-    local main_menu_sentinel = { sentinel = "main_menu" }
-    local deps = {
-        make_win_calls       = {},
-        make_game_over_calls = {},
-        make_main_menu       = function() return main_menu_sentinel end,
-    }
-    deps.make_win       = function(game) table.insert(deps.make_win_calls, game); return win_sentinel end
-    deps.make_game_over = function(game) table.insert(deps.make_game_over_calls, game); return game_over_sentinel end
-    return deps, win_sentinel, game_over_sentinel, main_menu_sentinel
 end
 
 -- always picks the first empty cell, spawning a 2
@@ -76,9 +68,8 @@ end
 
 local function new_screen(cells)
     local host = stub_host()
-    local deps = stub_deps()
-    local screen = game_screen.new(host, deps, cells, deterministic_rand)
-    return screen, host, deps
+    local screen = game_screen.new(host, cells, deterministic_rand)
+    return screen, host
 end
 
 -- ── Cycle 1: Tracer bullet ────────────────────────────────────────────────────
@@ -213,7 +204,7 @@ end)
 -- ── Cycle 6: a winning move promotes deps.make_win(self) ────────────────────
 
 test("a move that completes the win tile promotes deps.make_win(self)", function()
-    local screen, host, deps = new_screen({
+    local screen, host = new_screen({
         {1024, 1024, 0, 0},
         {0,    0,    0, 0},
         {0,    0,    0, 0},
@@ -221,14 +212,14 @@ test("a move that completes the win tile promotes deps.make_win(self)", function
     })
     screen:keypressed("left")
     eq(#host.promote_calls, 1, "host:promote() called once")
-    eq(#deps.make_win_calls, 1, "deps.make_win() called once")
-    eq(deps.make_win_calls[1], screen, "deps.make_win() received this game screen")
+    eq(#host.spawn_calls.win, 1, "host:spawn('win') called once")
+    eq(host.spawn_calls.win[1], screen, "host:spawn('win') received this game screen")
 end)
 
 -- ── Cycle 7: a game-ending move promotes deps.make_game_over(self) ──────────
 
 test("a move that leaves no legal moves promotes deps.make_game_over(self)", function()
-    local screen, host, deps = new_screen({
+    local screen, host = new_screen({
         {2, 4, 2, 4},
         {4, 2, 4, 2},
         {2, 4, 2, 4},
@@ -236,8 +227,8 @@ test("a move that leaves no legal moves promotes deps.make_game_over(self)", fun
     })
     screen:keypressed("left")
     eq(#host.promote_calls, 1, "host:promote() called once")
-    eq(#deps.make_game_over_calls, 1, "deps.make_game_over() called once")
-    eq(deps.make_game_over_calls[1], screen, "deps.make_game_over() received this game screen")
+    eq(#host.spawn_calls.game_over, 1, "host:spawn('game_over') called once")
+    eq(host.spawn_calls.game_over[1], screen, "host:spawn('game_over') received this game screen")
 end)
 
 -- ── Cycle 8: win+game_over on the same move promotes only Win ───────────────
@@ -245,21 +236,21 @@ end)
 test("a move that both wins and ends the game promotes only Win, never Game Over", function()
     -- fully locked board (no zeros, no adjacent equal pairs in any direction)
     -- that already contains the win tile -- moved=false, win=true, game_over=true
-    local screen, host, deps = new_screen({
+    local screen, host = new_screen({
         {2048, 4, 2, 4},
         {4,    2, 4, 2},
         {2,    4, 2, 4},
         {4,    2, 4, 2},
     })
     screen:keypressed("left")
-    eq(#deps.make_win_calls, 1, "Win promoted")
-    eq(#deps.make_game_over_calls, 0, "Game Over must not be promoted on the same move")
+    eq(#host.spawn_calls.win, 1, "Win promoted")
+    eq(#host.spawn_calls.game_over, 0, "Game Over must not be promoted on the same move")
 end)
 
 -- ── Cycle 9: mark_win_seen() suppresses a later win promotion this game ─────
 
 test("mark_win_seen() suppresses the win overlay on a later winning move", function()
-    local screen, host, deps = new_screen({
+    local screen, host = new_screen({
         {1024, 1024, 0, 0},
         {0,    2,    0, 0},
         {0,    0,    0, 0},
@@ -267,10 +258,10 @@ test("mark_win_seen() suppresses the win overlay on a later winning move", funct
     })
     screen:keypressed("left")
     screen:update(1.0) -- drain the slide animation so the next keypress isn't blocked
-    eq(#deps.make_win_calls, 1, "Win promoted on the winning move")
+    eq(#host.spawn_calls.win, 1, "Win promoted on the winning move")
     screen:mark_win_seen()
     screen:keypressed("down") -- 2048 tile still on board; would re-trigger win if not for win_seen
-    eq(#deps.make_win_calls, 1, "Win must not be promoted again after mark_win_seen()")
+    eq(#host.spawn_calls.win, 1, "Win must not be promoted again after mark_win_seen()")
 end)
 
 -- ── Cycle 10: restart() resets grid/score/tiles/queue/win_seen/pause_pending ──
@@ -299,7 +290,7 @@ test("restart() resets the score and gives a fresh two-tile board", function()
 end)
 
 test("restart() clears win_seen so a later win is promoted again", function()
-    local screen, host, deps = new_screen({
+    local screen, host = new_screen({
         {1024, 1024, 0, 0},
         {0,    2,    0, 0},
         {0,    0,    0, 0},
@@ -307,7 +298,7 @@ test("restart() clears win_seen so a later win is promoted again", function()
     })
     screen:keypressed("left")
     screen:update(1.0)
-    eq(#deps.make_win_calls, 1, "Win promoted on the winning move")
+    eq(#host.spawn_calls.win, 1, "Win promoted on the winning move")
     screen:mark_win_seen()
     screen:restart()
     -- restart() rebuilds the grid with the same injected deterministic rand,
@@ -316,7 +307,7 @@ test("restart() clears win_seen so a later win is promoted again", function()
     config.WIN_TILE = 2
     screen:keypressed("right")
     config.WIN_TILE = 2048
-    eq(#deps.make_win_calls, 2, "Win promoted again after restart clears win_seen")
+    eq(#host.spawn_calls.win, 2, "Win promoted again after restart clears win_seen")
 end)
 
 test("restart() clears pause_pending and the move queue", function()
