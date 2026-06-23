@@ -13,7 +13,7 @@ local swiper
 local function make_main_menu()
     return main_menu_screen.new(host, function() return game_screen.new(host, {
         make_main_menu = make_main_menu,
-        make_win       = function(game) return win_screen.new(host, game) end,
+        make_win       = function(game) return win_screen.new(host, game, { make_main_menu = make_main_menu }) end,
         make_game_over = function(game) return game_over_screen.new(host, game) end,
     }) end)
 end

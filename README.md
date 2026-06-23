@@ -19,7 +19,7 @@ The game opens with a **Main Menu** — Up/Down to navigate, Enter (or tap) to c
 
 Arrow keys to slide tiles. The window is resizable.
 
-When you create a 2048 tile a **You Win** overlay appears with two options — **Continue** (keep playing) and **Restart** — navigated with Up/Down and confirmed with Enter, or tapped directly. A burst of 50-100 colored squares explodes across the screen and falls under gravity as the overlay appears (suppressed when the **Effects** option is off). A **Game Over** overlay appears when no moves remain; press Enter or any arrow key (or tap) to restart.
+When you create a 2048 tile a **You Win** overlay appears with three options — **Continue** (keep playing), **Restart**, and **Main Menu** — navigated with Up/Down and confirmed with Enter, or tapped directly. A burst of 50-100 colored squares explodes across the screen and falls under gravity as the overlay appears (suppressed when the **Effects** option is off). A **Game Over** overlay appears when no moves remain; press Enter or any arrow key (or tap) to restart.
 
 Press `Escape` (or tap the **⏸** button above the board's top-right corner) to open the **Pause** menu. The board stays visible behind a full-window dimmed overlay. Up/Down to navigate, Enter to confirm. Options: **Resume**, **New Game**, **Main Menu**, **Quit**. Pressing `Escape` again or selecting Resume returns instantly to the game.
 
