@@ -1,4 +1,4 @@
-local check = require("check")
+local check = require("lib.check")
 
 local M = {}
 

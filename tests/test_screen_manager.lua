@@ -1,4 +1,4 @@
-local screen_manager = require("screen_manager")
+local screen_manager = require("lib.screen_manager")
 
 local pass, fail = 0, 0
 

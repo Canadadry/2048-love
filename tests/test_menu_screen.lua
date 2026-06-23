@@ -1,4 +1,4 @@
-local menu_screen = require("menu_screen")
+local menu_screen = require("lib.menu_screen")
 
 local pass, fail = 0, 0
 

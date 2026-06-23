@@ -1,4 +1,4 @@
-local optionsmodel = require("optionsmodel")
+local optionsmodel = require("lib.optionsmodel")
 
 local pass, fail = 0, 0
 

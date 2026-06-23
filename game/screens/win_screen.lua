@@ -1,7 +1,7 @@
 local menu        = require("menu")
 local config      = require("config")
 local particle    = require("particle")
-local menu_screen = require("menu_screen")
+local menu_screen = require("lib.menu_screen")
 
 local M = {}
 local Screen = {}

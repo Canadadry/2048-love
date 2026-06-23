@@ -1,9 +1,9 @@
 local config       = require("config")
 local tileset      = require("tileset")
-local optionsmodel = require("optionsmodel")
-local settings     = require("settings")
+local optionsmodel = require("lib.optionsmodel")
+local settings     = require("lib.settings")
 local menu         = require("menu")
-local menu_screen  = require("menu_screen")
+local menu_screen  = require("lib.menu_screen")
 
 local BOOLEAN_VALUES = { true, false }
 

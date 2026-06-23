@@ -1,12 +1,41 @@
 local unpack = table.unpack or unpack  -- Lua 5.1 (LuaJIT) vs 5.2+
 local config = require("config")
-local check  = require("check")
+local check  = require("lib.check")
 
 local M = {}
 local Grid = {}
 Grid.__index = Grid
 
 local SIZE = config.GRID_SIZE
+
+local function is_valid_cell(v)
+    if v == 0 then return true end
+    if type(v) ~= "number" or v < 2 then return false end
+    local n = v
+    while n > 1 do
+        if n % 2 ~= 0 then return false end
+        n = n / 2
+    end
+    return true
+end
+
+local function grid_cells(cells, size, name)
+    local label = name or "cells"
+    assert(type(cells) == "table", label .. " must be a table")
+    assert(#cells == size,
+        string.format("%s must have %d rows, got %d", label, size, #cells))
+    for r = 1, size do
+        assert(type(cells[r]) == "table",
+            string.format("%s[%d] must be a table", label, r))
+        assert(#cells[r] == size,
+            string.format("%s[%d] must have %d cols, got %d", label, r, size, #cells[r]))
+        for c = 1, size do
+            assert(is_valid_cell(cells[r][c]),
+                string.format("%s[%d][%d] must be 0 or power of 2, got %s",
+                    label, r, c, tostring(cells[r][c])))
+        end
+    end
+end
 
 local function empty_board()
     local board = {}
@@ -49,7 +78,7 @@ function M.new(rand)
 end
 
 function M.new_from(cells, rand)
-    check.grid_cells(cells, SIZE, "cells")
+    grid_cells(cells, SIZE, "cells")
     local self = setmetatable({}, Grid)
     self._board = empty_board()
     self._rand  = rand or math.random

@@ -1,5 +1,5 @@
 local menu        = require("menu")
-local menu_screen = require("menu_screen")
+local menu_screen = require("lib.menu_screen")
 
 local M = {}
 local Screen = {}

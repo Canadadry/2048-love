@@ -1,12 +1,12 @@
-local check        = require("check")
+local check        = require("lib.check")
 local config       = require("config")
 local grid         = require("grid")
 local tile         = require("tile")
 local board        = require("board")
 local tile_draw    = require("tile_draw")
 local hud          = require("hud")
-local font_cache   = require("font_cache")
-local swipe        = require("swipe")
+local font_cache   = require("lib.font_cache")
+local swipe        = require("lib.swipe")
 
 local M = {}
 local Screen = {}

@@ -1,7 +1,7 @@
 local config         = require("config")
-local screen_manager = require("screen_manager")
-local swipe          = require("swipe")
-local settings       = require("settings")
+local screen_manager = require("lib.screen_manager")
+local swipe          = require("lib.swipe")
+local settings       = require("lib.settings")
 
 local SCREENS = {
     main_menu = require("screens.main_menu_screen"),

@@ -2,7 +2,7 @@ local builder    = require("lib.ui.layout.builder")
 local ui         = require("lib.ui.layout.ui")
 local painter    = require("lib.ui.painter.painter")
 local board      = require("board")
-local font_cache = require("font_cache")
+local font_cache = require("lib.font_cache")
 
 local M = {}
 

@@ -1,4 +1,4 @@
-local settings = require("settings")
+local settings = require("lib.settings")
 
 local pass, fail = 0, 0
 

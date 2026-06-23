@@ -23,7 +23,7 @@ love = {
 
 local options_screen = require("screens.options_screen")
 local config         = require("config")
-local settings       = require("settings")
+local settings       = require("lib.settings")
 local menu           = require("menu")
 
 local pass, fail = 0, 0

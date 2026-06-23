@@ -1,4 +1,4 @@
-local check = require("check")
+local check = require("lib.check")
 
 -- Must not end in .lua: LÖVE's save directory shadows the source directory
 -- on read, so a same-named save file would hide this very module on require().

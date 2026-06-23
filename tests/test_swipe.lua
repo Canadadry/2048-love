@@ -1,4 +1,4 @@
-local swipe = require("swipe")
+local swipe = require("lib.swipe")
 
 local pass, fail = 0, 0
 
