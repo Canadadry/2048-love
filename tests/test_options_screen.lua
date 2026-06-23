@@ -116,7 +116,7 @@ test("left/right on the Win Tile item toggle config.WIN_TILE immediately, withou
     config.TILESET = ""
     local screen = new_screen()
     screen:keypressed("right")
-    eq(config.WIN_TILE, 32, "win tile toggled to 32 (dev mode)")
+    eq(config.WIN_TILE, 16, "win tile toggled to 16 (dev mode)")
     eq(screen:cursor(), 0, "cursor stays on Win Tile")
     eq(config.TILESET, "", "Theme untouched by Win Tile toggling")
     screen:keypressed("left")
@@ -127,7 +127,7 @@ test("toggling Win Tile persists the new value via settings.set", function()
     config.TILESET = ""
     local screen = new_screen()
     screen:keypressed("right")
-    eq(settings.get("win_tile", nil), 32, "win_tile persisted on toggle")
+    eq(settings.get("win_tile", nil), 16, "win_tile persisted on toggle")
     screen:keypressed("left")
 end)
 
@@ -246,7 +246,7 @@ test("tapping the already-focused item cycles its value forward, like right()", 
     eq(screen:cursor(), 0, "now focused on Win Tile")
     eq(config.WIN_TILE, 2048, "focus-only tap left the value untouched")
     tap_item(screen, 0)                -- second tap: item already focused, cycles
-    eq(config.WIN_TILE, 32, "second tap on the focused item cycles the value forward")
+    eq(config.WIN_TILE, 16, "second tap on the focused item cycles the value forward")
     tap_item(screen, 0)                -- revert
 end)
 
@@ -255,7 +255,7 @@ test("tapping the already-focused Win Tile item persists the new value via setti
     tap_item(screen, 1)
     tap_item(screen, 0)
     tap_item(screen, 0)
-    eq(settings.get("win_tile", nil), 32, "win_tile persisted on tap-cycle")
+    eq(settings.get("win_tile", nil), 16, "win_tile persisted on tap-cycle")
     tap_item(screen, 0)                -- revert
 end)
 
