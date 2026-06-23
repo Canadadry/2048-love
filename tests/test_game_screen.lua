@@ -19,7 +19,7 @@ love = {
 
 local game_screen = require("screens.game_screen")
 local config      = require("config")
-local hud         = require("renderer.hud")
+local hud         = require("hud")
 
 local pass, fail = 0, 0
 
@@ -356,7 +356,7 @@ end)
 -- ── Cycle 12: tap(x,y) only hit-tests the HUD pause icon ─────────────────────
 
 local function pause_icon_center()
-    local tree = hud.hud_tree(0, true, {})
+    local tree = hud.hud_tree(0, {})
     for _, cmd in ipairs(tree.Commands) do
         if cmd.painter and cmd.painter.kind == "Group" then
             return cmd.x + cmd.w / 2, cmd.y + cmd.h / 2
@@ -458,7 +458,7 @@ test("resume() recomputes the swipe threshold from the current window size", fun
     eq(cells[1][4], 4, "tile unmoved: 150px swipe is below the resumed 200px threshold")
 end)
 
--- ── Cycle 15: draw() delegates to the board/HUD renderer ────────────────────
+-- ── Cycle 15: draw() composes the board/tile/HUD rendering directly ─────────
 
 test("draw() runs without erroring", function()
     local screen = new_screen({

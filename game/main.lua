@@ -4,7 +4,6 @@ local main_menu_screen   = require("screens.main_menu_screen")
 local game_screen       = require("screens.game_screen")
 local win_screen        = require("screens.win_screen")
 local game_over_screen  = require("screens.game_over_screen")
-local renderer          = require("renderer")
 local swipe             = require("swipe")
 local settings          = require("settings")
 
@@ -43,7 +42,6 @@ end
 
 function love.update(dt)
     host:update(dt)
-    renderer.update(dt)
 end
 
 function love.draw()

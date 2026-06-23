@@ -156,6 +156,18 @@ test("update does not crash when the top screen has no update()", function()
     eq(true, true, "no crash")
 end)
 
+test("update(dt) reaches every screen on the stack, top-to-bottom, regardless of focus", function()
+    local log = {}
+    local game = { update = function(_, dt) log[#log + 1] = "game:" .. dt end }
+    local pause_screen = { update = function(_, dt) log[#log + 1] = "pause:" .. dt end }
+    local sm = screen_manager.new(game)
+    sm:promote(pause_screen)
+    sm:update(0.016)
+    eq(#log, 2, "both screens on the stack must update")
+    eq(log[1], "pause:0.016", "top of stack updates first")
+    eq(log[2], "game:0.016", "screen beneath the overlay still updates")
+end)
+
 -- ── Cycle 8: draw() skips to the topmost opaque screen ───────────────────────
 
 test("draw() skips screens below the topmost opaque screen", function()

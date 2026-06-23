@@ -33,6 +33,12 @@ end
 
 love.window = { setTitle = function() end, setMode = function() end }
 love.graphics.setBackgroundColor = function() end
+love.graphics.setColor           = function(...) end
+love.graphics.rectangle          = function(...) end
+love.graphics.setFont            = function(...) end
+love.graphics.print              = function(...) end
+love.graphics.printf             = function(...) end
+love.graphics.draw               = function(...) end
 
 local function with_restored_config(fn)
     local saved_win_tile          = config.WIN_TILE
@@ -165,10 +171,12 @@ test("swiping the board while the Game screen is focused reaches its own swipe h
     love.load()
     love.keypressed("return") -- Main Menu cursor 0 (New Game) -> replace with Game screen
 
-    local renderer = require("renderer")
-    local original_draw = renderer.draw
+    local tile_draw = require("tile_draw")
+    local original_draw = tile_draw.draw
     local before, after
-    renderer.draw = function(cells) before = cells end
+
+    tile_draw.draw = function(value, px, py, ...) before[#before + 1] = { value, px, py } end
+    before = {}
     love.draw()
 
     love.mousepressed(400, 300, 1, false)
@@ -176,15 +184,19 @@ test("swiping the board while the Game screen is focused reaches its own swipe h
     love.mousereleased(140, 300, 1, false)
     love.update(0)
 
-    renderer.draw = function(cells) after = cells end
+    tile_draw.draw = function(value, px, py, ...) after[#after + 1] = { value, px, py } end
+    after = {}
     love.draw()
-    renderer.draw = original_draw
+    tile_draw.draw = original_draw
     math.random = original_random
 
-    local changed = false
-    for r = 1, #before do
-        for c = 1, #before[r] do
-            if before[r][c] ~= after[r][c] then changed = true end
+    local changed = #before ~= #after
+    if not changed then
+        for i, cmd in ipairs(before) do
+            if cmd[1] ~= after[i][1] or cmd[2] ~= after[i][2] or cmd[3] ~= after[i][3] then
+                changed = true
+                break
+            end
         end
     end
     eq(changed, true,

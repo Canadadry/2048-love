@@ -1,4 +1,4 @@
-local tile_draw = require("renderer.tile_draw")
+local tile_draw = require("tile_draw")
 
 local pass, fail = 0, 0
 

@@ -15,8 +15,8 @@ love = {
     },
 }
 
-local hud   = require("renderer.hud")
-local board = require("renderer.board")
+local hud   = require("hud")
+local board = require("board")
 
 local pass, fail = 0, 0
 
@@ -49,7 +49,7 @@ end
 
 -- Tracer bullet: the icon anchors to the board's top-right corner, inset by `pad`
 test("hud_tree anchors the icon's right edge to board's right edge minus pad", function()
-    local tree = hud.hud_tree(0, true, {})
+    local tree = hud.hud_tree(0, {})
     local board_px, _, pad, board_x = board.metrics()
     local icon = find_kind(tree, "Group")
     if not icon then error("expected an icon Group command") end
@@ -57,41 +57,31 @@ test("hud_tree anchors the icon's right edge to board's right edge minus pad", f
 end)
 
 test("hud_tree centers the icon and score vertically against each other", function()
-    local tree = hud.hud_tree(0, true, {})
+    local tree = hud.hud_tree(0, {})
     local icon  = find_kind(tree, "Group")
     local score = find_kind(tree, "Text")
     eq(icon.y + icon.h / 2, score.y + score.h / 2, "vertical center")
 end)
 
 test("hud_tree icon is at least 44x44 for touch targets", function()
-    local tree = hud.hud_tree(0, true, {})
+    local tree = hud.hud_tree(0, {})
     local icon = find_kind(tree, "Group")
     if icon.w < 44 then error("width " .. icon.w .. " < 44") end
     if icon.h < 44 then error("height " .. icon.h .. " < 44") end
 end)
 
 test("hit_test fires on_pause_tap on a hit inside the icon, and nothing on a miss", function()
-    local tree = hud.hud_tree(0, true, {})
+    local tree = hud.hud_tree(0, {})
     local icon = find_kind(tree, "Group")
     local cx, cy = icon.x + icon.w / 2, icon.y + icon.h / 2
 
     local fired = false
-    hud.hit_test(0, true, { on_pause_tap = function() fired = true end }, cx, cy)
+    hud.hit_test(0, { on_pause_tap = function() fired = true end }, cx, cy)
     eq(fired, true, "expected on_pause_tap to fire on a hit")
 
     fired = false
-    hud.hit_test(0, true, { on_pause_tap = function() fired = true end }, 0, 0)
+    hud.hit_test(0, { on_pause_tap = function() fired = true end }, 0, 0)
     eq(fired, false, "expected no callback to fire on a miss")
-end)
-
-test("hud_tree with show_icon=false omits the icon entirely", function()
-    local tree = hud.hud_tree(0, false, {})
-    if find_kind(tree, "Group") then error("expected no icon Group command when show_icon=false") end
-    if not find_kind(tree, "Text") then error("expected the score Text command to still be present") end
-end)
-
-test("draw with show_icon=false runs without erroring", function()
-    hud.draw(0, false)
 end)
 
 print(string.format("\n%d passed, %d failed", pass, fail))

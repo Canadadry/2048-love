@@ -1,18 +1,13 @@
-local config  = require("config")
-local builder = require("lib.ui.layout.builder")
-local ui      = require("lib.ui.layout.ui")
-local painter = require("lib.ui.painter.painter")
-local board   = require("renderer.board")
+local config     = require("config")
+local builder    = require("lib.ui.layout.builder")
+local ui         = require("lib.ui.layout.ui")
+local painter    = require("lib.ui.painter.painter")
+local board      = require("board")
+local font_cache = require("font_cache")
 
 local M = {}
 
-local font_cache = {}
-local function get_font(size)
-    if not font_cache[size] then
-        font_cache[size] = love.graphics.newFont(size)
-    end
-    return font_cache[size]
-end
+local get_font = font_cache.get_font
 
 local board_metrics = board.metrics
 

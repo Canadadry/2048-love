@@ -73,7 +73,13 @@ end
 
 function SM:quit() love.event.quit() end
 
-function SM:update(dt)    dispatch(self, "update", dt) end
+function SM:update(dt)
+    local stack = self._stack
+    for i = #stack, 1, -1 do
+        local s = stack[i]
+        if s and s.update then s:update(dt) end
+    end
+end
 function SM:keypressed(k) dispatch(self, "keypressed", k) end
 function SM:resize(w, h)  dispatch(self, "resize", w, h) end
 

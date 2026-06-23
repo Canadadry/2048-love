@@ -1,4 +1,4 @@
-local board = require("renderer.board")
+local board = require("board")
 
 local pass, fail = 0, 0
 

@@ -2,8 +2,10 @@ local check        = require("check")
 local config       = require("config")
 local grid         = require("grid")
 local tile         = require("tile")
-local hud          = require("renderer.hud")
-local renderer     = require("renderer")
+local board        = require("board")
+local tile_draw    = require("tile_draw")
+local hud          = require("hud")
+local font_cache   = require("font_cache")
 local swipe        = require("swipe")
 local pause_screen = require("screens.pause_screen")
 
@@ -11,6 +13,11 @@ local M = {}
 local Screen = {}
 
 local DIRS = { left = true, right = true, up = true, down = true }
+local get_font = font_cache.get_font
+
+local function cell_key(r, c, n)
+    return (r - 1) * n + c
+end
 
 function M.new(host, deps, cells, rand)
     local g = cells and grid.new_from(cells, rand) or grid.new(rand)
@@ -88,6 +95,7 @@ local function open_pause(self)
 end
 
 function Screen:update(dt)
+    tile_draw.update(dt)
     if #self._tiles == 0 then
         if self._pause_pending then
             self._pause_pending = false
@@ -107,7 +115,7 @@ function Screen:update(dt)
 end
 
 function Screen:tap(x, y)
-    hud.hit_test(self:score(), true, { on_pause_tap = function() open_pause(self) end }, x, y)
+    hud.hit_test(self:score(), { on_pause_tap = function() open_pause(self) end }, x, y)
 end
 
 local function resolve_release(self, dir, is_tap, x, y)
@@ -161,8 +169,41 @@ function Screen:resume()
 end
 
 function Screen:draw()
-    renderer.set_tileset(config.TILESET)
-    renderer.draw(self:cells(), self:score(), false, false, self:anim_tiles(), 0, false, 0, {})
+    tile_draw.set_tileset(config.TILESET)
+
+    local cells      = self:cells()
+    local anim_tiles = self:anim_tiles()
+    local board_px, tile_px, pad, board_x, board_y = board.metrics()
+    local n       = config.GRID_SIZE
+    local font_sz = math.max(12, math.floor(tile_px * 0.30))
+    local font    = get_font(font_sz)
+
+    board.draw_background(board_x, board_y, board_px)
+    love.graphics.setFont(font)
+
+    local dest = {}
+    for _, t in ipairs(anim_tiles) do
+        dest[cell_key(t.to_row, t.to_col, n)] = true
+    end
+
+    for r = 1, n do
+        for c = 1, n do
+            local px, py = board.cell_to_px(r, c, tile_px, pad, board_x, board_y)
+            local val = dest[cell_key(r, c, n)] and 0 or cells[r][c]
+            tile_draw.draw(val, px, py, tile_px, pad, font)
+        end
+    end
+
+    for _, t in ipairs(anim_tiles) do
+        local progress = t:progress()
+        local fx, fy   = board.cell_to_px(t.from_row, t.from_col, tile_px, pad, board_x, board_y)
+        local tx, ty   = board.cell_to_px(t.to_row,   t.to_col,   tile_px, pad, board_x, board_y)
+        local px = math.floor(fx + (tx - fx) * progress)
+        local py = math.floor(fy + (ty - fy) * progress)
+        tile_draw.draw(t.value, px, py, tile_px, pad, font, t.scale)
+    end
+
+    hud.draw(self:score())
 end
 
 function Screen:keypressed(key)

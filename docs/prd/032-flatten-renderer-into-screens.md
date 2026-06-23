@@ -1,7 +1,7 @@
 ---
 title: "Refactor: Flatten renderer/* into the screens that own it"
 description: "game/renderer/init.lua has decayed into dead code and a leaky facade since the screen-stack refactor (PRD 031); fold its live logic into game_screen.lua and flatten its submodules to match the rest of the codebase."
-status: needs-triage
+status: done
 ---
 
 ## Problem Statement

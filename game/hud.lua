@@ -1,19 +1,14 @@
-local builder = require("lib.ui.layout.builder")
-local ui      = require("lib.ui.layout.ui")
-local painter = require("lib.ui.painter.painter")
-local board   = require("renderer.board")
+local builder    = require("lib.ui.layout.builder")
+local ui         = require("lib.ui.layout.ui")
+local painter    = require("lib.ui.painter.painter")
+local board      = require("board")
+local font_cache = require("font_cache")
 
 local M = {}
 
 local SCORE_TEXT_COLOR = { 120, 110, 102, 255 }
 
-local font_cache = {}
-local function get_font(size)
-    if not font_cache[size] then
-        font_cache[size] = love.graphics.newFont(size)
-    end
-    return font_cache[size]
-end
+local get_font = font_cache.get_font
 
 local function icon_size(tile_px)
     local font_sz = math.max(12, math.floor(tile_px * 0.30))
@@ -55,7 +50,7 @@ local function icon_node(sz, on_pause_tap)
     )
 end
 
-function M.hud_tree(score, show_icon, callbacks)
+function M.hud_tree(score, callbacks)
     callbacks = callbacks or {}
     local board_px, tile_px, pad, board_x, board_y = board.metrics()
     local font_sz = math.max(12, math.floor(tile_px * 0.30))
@@ -70,10 +65,8 @@ function M.hud_tree(score, show_icon, callbacks)
             font  = font,
             color = SCORE_TEXT_COLOR,
         }),
+        icon_node(sz, callbacks.on_pause_tap),
     }
-    if show_icon then
-        table.insert(children, icon_node(sz, callbacks.on_pause_tap))
-    end
 
     local tree = painter.Tree()
     builder.Build(tree, builder.Node(
@@ -85,8 +78,8 @@ function M.hud_tree(score, show_icon, callbacks)
     return tree
 end
 
-function M.draw(score, show_icon)
-    local tree = M.hud_tree(score, show_icon, nil)
+function M.draw(score)
+    local tree = M.hud_tree(score, nil)
     for _, cmd in ipairs(tree.Commands) do
         if cmd.painter then
             painter.Draw(cmd, cmd.painter)
@@ -94,8 +87,8 @@ function M.draw(score, show_icon)
     end
 end
 
-function M.hit_test(score, show_icon, callbacks, x, y)
-    local tree = M.hud_tree(score, show_icon, callbacks)
+function M.hit_test(score, callbacks, x, y)
+    local tree = M.hud_tree(score, callbacks)
     local cb = ui.HitTest(tree, x, y)
     if cb then
         cb()
