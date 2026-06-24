@@ -39,6 +39,13 @@ love.graphics.setFont            = function(...) end
 love.graphics.print              = function(...) end
 love.graphics.printf             = function(...) end
 love.graphics.draw               = function(...) end
+love.graphics.newFont            = function(size)
+    return {
+        getWidth  = function(self, s) return #s * 7 end,
+        getHeight = function(self) return 18 end,
+        getWrap   = function(self, text, width) return 0, { text } end,
+    }
+end
 
 local function with_restored_config(fn)
     local saved_win_tile          = config.WIN_TILE

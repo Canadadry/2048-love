@@ -1,39 +1,23 @@
 -- Run from: cd game && lua ../tests/test_all.lua
-love = {
-    graphics   = { getDimensions = function() return 600, 600 end },
-    filesystem = {
-        getDirectoryItems = function(_) return {} end,
-        read              = function(_) return nil end,
-        write             = function(_, _) return true end,
-    },
-}
+local function fresh_love_stub()
+    return {
+        graphics   = { getDimensions = function() return 600, 600 end },
+        filesystem = {
+            getDirectoryItems = function(_) return {} end,
+            read              = function(_) return nil end,
+            write             = function(_, _) return true end,
+        },
+    }
+end
 
-local suites = {
-    "../tests/test_grid.lua",
-    "../tests/test_tile.lua",
-    "../tests/test_particle.lua",
-    "../tests/test_tileset.lua",
-    "../tests/test_swipe.lua",
-    "../tests/test_menu.lua",
-    "../tests/test_menu_screen.lua",
-    "../tests/test_optionsmodel.lua",
-    "../tests/test_settings.lua",
-    "../tests/test_main.lua",
-    "../tests/test_stack.lua",
-    "../tests/test_screen_manager.lua",
-    "../tests/test_options_screen.lua",
-    "../tests/test_pause_screen.lua",
-    "../tests/test_main_menu_screen.lua",
-    "../tests/test_game_over_screen.lua",
-    "../tests/test_win_screen.lua",
-    "../tests/test_game_screen.lua",
-    "../tests/test_board.lua",
-    "../tests/test_tile_draw.lua",
-    "../tests/test_hud.lua",
-    -- runs last: replaces the global `love` stub wholesale, dropping
-    -- love.filesystem, which settings.lua/tileset.lua need in earlier suites.
-    "lib/ui/painter/painter_test.lua",
-}
+-- lib/ui/layout/*_test.lua is excluded: it has no love stub of its own and
+-- runs under the separate `make test-ui-layout` target instead.
+local find = io.popen("find . -name '*_test.lua' -not -path './lib/ui/layout/*' | sort")
+local suites = {}
+for path in find:lines() do
+    suites[#suites + 1] = path:gsub("^%./", "")
+end
+find:close()
 
 local real_exit = os.exit
 local failed_suites = 0
@@ -43,6 +27,10 @@ os.exit = function(code)
 end
 
 for _, path in ipairs(suites) do
+    -- reset before each suite: some suites replace `love` wholesale (e.g.
+    -- dropping .filesystem), which would otherwise leak into later suites
+    -- that rely on the default stub.
+    love = fresh_love_stub()
     local ok, err = pcall(dofile, path)
     if not ok then
         if type(err) ~= "string" or not err:find("__suite_failed__") then
