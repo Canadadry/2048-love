@@ -30,33 +30,35 @@ M.EFFECTS_ENABLED    = true
 M.TILESET            = ""
 M.TILESET_ANIM_FPS   = 12
 
-M.PARTICLE_COUNT_MIN    = 500
-M.PARTICLE_COUNT_MAX    = 1000
-M.PARTICLE_SIZE         = 5
-M.PARTICLE_LIFETIME_MIN = 1.5
-M.PARTICLE_LIFETIME_MAX = 4.5
-M.PARTICLE_SPEED_MIN    = 0.15
-M.PARTICLE_SPEED_MAX    = 0.45
-M.PARTICLE_GRAVITY      = 0.6
+M.PARTICLE = {
+    COUNT_MIN    = 500,
+    COUNT_MAX    = 1000,
+    SIZE         = 5,
+    LIFETIME_MIN = 1.5,
+    LIFETIME_MAX = 4.5,
+    SPEED_MIN    = 0.15,
+    SPEED_MAX    = 0.45,
+    GRAVITY      = 0.6,
 
--- PICO-8 base palette, as {r,g,b} triples in the 0-1 range
-M.PARTICLE_COLORS = {
-    { 0.00, 0.00, 0.00 }, -- black
-    { 0.11, 0.17, 0.33 }, -- dark blue
-    { 0.49, 0.15, 0.33 }, -- dark purple
-    { 0.00, 0.53, 0.32 }, -- dark green
-    { 0.67, 0.32, 0.21 }, -- brown
-    { 0.37, 0.34, 0.31 }, -- dark gray
-    { 0.76, 0.76, 0.78 }, -- light gray
-    { 1.00, 0.95, 0.91 }, -- white
-    { 1.00, 0.00, 0.30 }, -- red
-    { 1.00, 0.64, 0.00 }, -- orange
-    { 1.00, 0.93, 0.15 }, -- yellow
-    { 0.00, 0.89, 0.21 }, -- green
-    { 0.16, 0.68, 1.00 }, -- blue
-    { 0.51, 0.46, 0.61 }, -- lavender
-    { 1.00, 0.47, 0.66 }, -- pink
-    { 1.00, 0.80, 0.67 }, -- peach
+    -- PICO-8 base palette, as {r,g,b} triples in the 0-1 range
+    COLORS = {
+        { 0.00, 0.00, 0.00 }, -- black
+        { 0.11, 0.17, 0.33 }, -- dark blue
+        { 0.49, 0.15, 0.33 }, -- dark purple
+        { 0.00, 0.53, 0.32 }, -- dark green
+        { 0.67, 0.32, 0.21 }, -- brown
+        { 0.37, 0.34, 0.31 }, -- dark gray
+        { 0.76, 0.76, 0.78 }, -- light gray
+        { 1.00, 0.95, 0.91 }, -- white
+        { 1.00, 0.00, 0.30 }, -- red
+        { 1.00, 0.64, 0.00 }, -- orange
+        { 1.00, 0.93, 0.15 }, -- yellow
+        { 0.00, 0.89, 0.21 }, -- green
+        { 0.16, 0.68, 1.00 }, -- blue
+        { 0.51, 0.46, 0.61 }, -- lavender
+        { 1.00, 0.47, 0.66 }, -- pink
+        { 1.00, 0.80, 0.67 }, -- peach
+    },
 }
 
 return M

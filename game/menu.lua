@@ -141,7 +141,7 @@ M.GAME_OVER_BG_COLOR = GAME_OVER_DIM_COLOR
 
 local function draw_win_particles(particles)
     if not particles or #particles == 0 then return end
-    local size  = config.PARTICLE_SIZE
+    local size  = config.PARTICLE.SIZE
     local w, h  = love.graphics.getDimensions()
     for _, p in ipairs(particles) do
         love.graphics.setColor(p.color)

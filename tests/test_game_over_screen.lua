@@ -116,12 +116,5 @@ test("draw() runs without erroring", function()
     eq(true, true, "no crash")
 end)
 
--- ── Cycle 6: opaque() returns false ──────────────────────────────────────────
-
-test("opaque() is false so the board beneath stays visible", function()
-    local screen = new_screen()
-    eq(screen:opaque(), false, "game over screen must be a translucent overlay")
-end)
-
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

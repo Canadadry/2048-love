@@ -182,19 +182,12 @@ test("draw() runs without erroring", function()
     eq(true, true, "no crash")
 end)
 
--- ── Cycle 7: opaque() returns false ──────────────────────────────────────────
-
-test("opaque() is false so the board beneath stays visible", function()
-    local screen = new_screen()
-    eq(screen:opaque(), false, "win screen must be a translucent overlay")
-end)
-
 -- ── Cycle 8: enter() spawns particles per config.EFFECTS_ENABLED ─────────────
 
 test("entering with effects enabled populates win_particles in range", function()
     local screen = new_screen()
     local n = #screen:win_particles()
-    if n < config.PARTICLE_COUNT_MIN or n > config.PARTICLE_COUNT_MAX then
+    if n < config.PARTICLE.COUNT_MIN or n > config.PARTICLE.COUNT_MAX then
         error("win_particles count out of range: " .. n)
     end
 end)

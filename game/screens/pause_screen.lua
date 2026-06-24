@@ -25,10 +25,6 @@ function Screen:cursor()
     return self._mixin:cursor()
 end
 
-function Screen:opaque()
-    return false
-end
-
 function Screen:keypressed(key)
     if key == "escape" then
         self.host:dismiss()

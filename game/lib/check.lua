@@ -31,4 +31,12 @@ function M.one_of(v, set, name)
         (name or "value") .. " has invalid value: " .. tostring(v))
 end
 
+function M.fields(t, defaults, name)
+    M.tbl(t, name)
+    for field in pairs(defaults) do
+        assert(t[field] ~= nil,
+            (name or "value") .. " is missing field '" .. field .. "'")
+    end
+end
+
 return M

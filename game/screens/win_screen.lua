@@ -1,6 +1,6 @@
 local menu        = require("menu")
 local config      = require("config")
-local particle    = require("particle")
+local particle    = require("lib.particle")
 local menu_screen = require("lib.menu_screen")
 
 local M = {}
@@ -8,6 +8,7 @@ local Screen = {}
 
 function M.new(host, game)
     local self = setmetatable({ host = host, game = game }, { __index = Screen })
+    self._particle_system = particle.new(config.PARTICLE)
     self._mixin = menu_screen.new({
         items = {
             { label = "Continue",  on_activate = function() game:mark_win_seen(); host:dismiss() end },
@@ -20,7 +21,7 @@ end
 
 function Screen:enter()
     self._mixin:enter()
-    self._particles = config.EFFECTS_ENABLED and particle.spawn() or {}
+    self._particles = config.EFFECTS_ENABLED and self._particle_system:spawn() or {}
 end
 
 function Screen:win_particles()
@@ -64,8 +65,5 @@ function Screen:draw()
     menu.draw_win_particles(self._particles)
 end
 
-function Screen:opaque()
-    return false
-end
 
 return M

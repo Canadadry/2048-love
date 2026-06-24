@@ -63,13 +63,13 @@ test("keypressed reaches only the top screen, not a paused one beneath", functio
     eq(received[1], "pause:left", "only the top screen receives the key")
 end)
 
-test("unknown method calls forward to the top screen only", function()
+test("top() returns the current top screen, updated after promote", function()
     local game = { score = function() return 10 end }
     local pause_screen = { score = function() return 99 end }
     local sm = screen_manager.new(game)
-    eq(sm:score(), 10, "score forwarded from initial top")
+    eq(sm:top():score(), 10, "top() is the initial screen")
     sm:promote(pause_screen)
-    eq(sm:score(), 99, "score forwarded from new top after promote, not the paused screen")
+    eq(sm:top():score(), 99, "top() is the new screen after promote, not the paused one")
 end)
 
 -- ── Cycle 4: dismiss exits top, resumes new top ──────────────────────────────
@@ -86,13 +86,13 @@ test("dismiss() exits the top screen and resumes the new top", function()
     eq(#log, 2, "no extra lifecycle calls")
 end)
 
-test("dismiss() returns dispatch to the underlying screen", function()
+test("dismiss() returns top() to the underlying screen", function()
     local game = { score = function() return 10 end }
     local pause_screen = { score = function() return 99 end }
     local sm = screen_manager.new(game)
     sm:promote(pause_screen)
     sm:dismiss()
-    eq(sm:score(), 10, "dispatch goes back to the resumed screen")
+    eq(sm:top():score(), 10, "top() goes back to the resumed screen")
 end)
 
 -- ── Cycle 5: dismiss() on a single-screen stack errors ───────────────────────
@@ -168,28 +168,21 @@ test("update(dt) reaches every screen on the stack, top-to-bottom, regardless of
     eq(log[2], "game:0.016", "screen beneath the overlay still updates")
 end)
 
--- ── Cycle 8: draw() skips to the topmost opaque screen ───────────────────────
+-- ── Cycle 8: draw() draws every screen back-to-front ─────────────────────────
 
-test("draw() skips screens below the topmost opaque screen", function()
+test("draw() draws every screen on the stack, bottom-to-top", function()
     local log = {}
-    local a = { opaque = function() return true end,  draw = function() log[#log + 1] = "a" end }
-    local b = { opaque = function() return true end,  draw = function() log[#log + 1] = "b" end }
-    local c = { opaque = function() return false end, draw = function() log[#log + 1] = "c" end }
+    local a = { draw = function() log[#log + 1] = "a" end }
+    local b = { draw = function() log[#log + 1] = "b" end }
+    local c = { draw = function() log[#log + 1] = "c" end }
     local sm = screen_manager.new(a)
     sm:promote(b)
     sm:promote(c)
     sm:draw()
-    eq(#log, 2, "only draws from the topmost opaque screen upward")
-    eq(log[1], "b", "topmost opaque screen draws first")
-    eq(log[2], "c", "overlay draws on top of it")
-end)
-
-test("draw() treats a screen without opaque() as opaque", function()
-    local log = {}
-    local game = { draw = function() log[#log + 1] = "game" end }
-    local sm = screen_manager.new(game)
-    sm:draw()
-    eq(log[1], "game", "screen without opaque() defaults to opaque and draws")
+    eq(#log, 3, "every screen on the stack must draw")
+    eq(log[1], "a", "bottom screen draws first")
+    eq(log[2], "b", "middle screen draws second")
+    eq(log[3], "c", "top screen draws last, on top of everything beneath it")
 end)
 
 test("draw() does not crash when the top screen has no draw()", function()

@@ -56,8 +56,5 @@ function Screen:draw()
     menu.draw_menu(self:spec(), UNSELECTED)
 end
 
-function Screen:opaque()
-    return false
-end
 
 return M

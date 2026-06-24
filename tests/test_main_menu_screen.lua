@@ -181,12 +181,5 @@ test("draw() runs without erroring", function()
     eq(true, true, "no crash")
 end)
 
--- ── Cycle 10: opaque() defaults to true (stack root, never an overlay) ──────
-
-test("opaque() is true by default since it is not overridden", function()
-    local screen = new_screen()
-    eq(screen.opaque, nil, "opaque() is not overridden by this screen")
-end)
-
 print(string.format("\n%d passed, %d failed", pass, fail))
 if fail > 0 then os.exit(1) end

@@ -55,38 +55,44 @@ function love.resize(w, h)
 end
 
 function love.mousepressed(x, y, button, istouch)
-    if host.mousepressed then host:mousepressed(x, y, button, istouch); return end
+    local screen = host:top()
+    if screen.mousepressed then screen:mousepressed(x, y, button, istouch); return end
     if istouch then return end
     if button ~= 1 then return end
     swiper:touchpressed("mouse", x, y)
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
-    if host.mousemoved then host:mousemoved(x, y, dx, dy, istouch); return end
+    local screen = host:top()
+    if screen.mousemoved then screen:mousemoved(x, y, dx, dy, istouch); return end
     if istouch then return end
     swiper:touchmoved("mouse", x, y)
 end
 
 function love.mousereleased(x, y, button, istouch)
-    if host.mousereleased then host:mousereleased(x, y, button, istouch); return end
+    local screen = host:top()
+    if screen.mousereleased then screen:mousereleased(x, y, button, istouch); return end
     if istouch then return end
     if button ~= 1 then return end
     local _, is_tap = swiper:touchreleased("mouse", x, y)
-    if is_tap then host:tap(x, y) end
+    if is_tap then screen:tap(x, y) end
 end
 
 function love.touchpressed(id, x, y)
-    if host.touchpressed then host:touchpressed(id, x, y); return end
+    local screen = host:top()
+    if screen.touchpressed then screen:touchpressed(id, x, y); return end
     swiper:touchpressed(id, x, y)
 end
 
 function love.touchmoved(id, x, y)
-    if host.touchmoved then host:touchmoved(id, x, y); return end
+    local screen = host:top()
+    if screen.touchmoved then screen:touchmoved(id, x, y); return end
     swiper:touchmoved(id, x, y)
 end
 
 function love.touchreleased(id, x, y)
-    if host.touchreleased then host:touchreleased(id, x, y); return end
+    local screen = host:top()
+    if screen.touchreleased then screen:touchreleased(id, x, y); return end
     local _, is_tap = swiper:touchreleased(id, x, y)
-    if is_tap then host:tap(x, y) end
+    if is_tap then screen:tap(x, y) end
 end
