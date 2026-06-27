@@ -58,8 +58,8 @@ local function interactive_centers(tree)
 end
 
 -- maps a 0-based item index (Win Tile=0, Theme=1, Animations=2, Effects=3,
--- Back=5; the hint at index 4 is non-interactive) to its tap coordinates.
-local INTERACTIVE_INDEX = { [0] = 1, [1] = 2, [2] = 3, [3] = 4, [5] = 5 }
+-- Sound=4, Back=6; the hint at index 5 is non-interactive) to its tap coordinates.
+local INTERACTIVE_INDEX = { [0] = 1, [1] = 2, [2] = 3, [3] = 4, [4] = 5, [6] = 6 }
 
 local function tap_item(screen, item_index)
     local centers = interactive_centers(menu.menu_tree(screen:spec(), screen:cursor(), nil))
@@ -94,11 +94,13 @@ test("down/up move the cursor between items, wrapping at both ends and skipping 
     screen:keypressed("down")
     eq(screen:cursor(), 3, "down moves to Effects")
     screen:keypressed("down")
-    eq(screen:cursor(), 5, "down skips the hint and lands on Back")
+    eq(screen:cursor(), 4, "down moves to Sound")
+    screen:keypressed("down")
+    eq(screen:cursor(), 6, "down skips the hint and lands on Back")
     screen:keypressed("down")
     eq(screen:cursor(), 0, "down wraps from Back back to Win Tile")
     screen:keypressed("up")
-    eq(screen:cursor(), 5, "up wraps from Win Tile to Back")
+    eq(screen:cursor(), 6, "up wraps from Win Tile to Back")
 end)
 
 -- ── Cycle 4: left/right on Win Tile toggles + persists config.WIN_TILE ───────
@@ -191,27 +193,53 @@ test("toggling Effects persists the new value via settings.set", function()
     screen:keypressed("left")
 end)
 
--- ── Cycle 7: left/right on the Back item is inert ────────────────────────────
+-- ── Cycle 7: Sound toggle ─────────────────────────────────────────────────────
+
+test("left/right on the Sound item toggles config.SOUND.ENABLED, applied immediately", function()
+    local screen = new_screen()
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    eq(screen:cursor(), 4, "cursor on Sound")
+    screen:keypressed("right")
+    eq(config.SOUND.ENABLED, false, "sound toggled off")
+    screen:keypressed("left")
+    eq(config.SOUND.ENABLED, true, "sound toggled back on")
+end)
+
+test("toggling Sound persists the new value via settings.set", function()
+    local screen = new_screen()
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("right")
+    eq(settings.get("sound_enabled", nil), false, "sound_enabled persisted on toggle")
+    screen:keypressed("left")
+end)
+
+-- ── Cycle 8: left/right on the Back item is inert ────────────────────────────
 
 test("left/right on the Back item change nothing observable", function()
     config.TILESET = ""
     local screen = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:cursor(), 5, "cursor on Back")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:cursor(), 6, "cursor on Back")
     local settings_before = settings.get("effects_enabled", nil)
     screen:keypressed("right")
-    eq(screen:cursor(), 5, "cursor unchanged by right")
+    eq(screen:cursor(), 6, "cursor unchanged by right")
     eq(config.EFFECTS_ENABLED, true, "no row's config mutated by right on Back")
     eq(settings.get("effects_enabled", nil), settings_before, "no settings write from right on Back")
     screen:keypressed("left")
-    eq(screen:cursor(), 5, "cursor unchanged by left")
+    eq(screen:cursor(), 6, "cursor unchanged by left")
     eq(config.EFFECTS_ENABLED, true, "no row's config mutated by left on Back")
 end)
 
 test("left/right on the Back item never calls settings.set", function()
     local screen = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:cursor(), 5, "cursor on Back")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:cursor(), 6, "cursor on Back")
     local calls = 0
     local real_set = settings.set
     settings.set = function(...) calls = calls + 1; return real_set(...) end
@@ -221,7 +249,7 @@ test("left/right on the Back item never calls settings.set", function()
     eq(calls, 0, "settings.set must not be called for the Back item")
 end)
 
--- ── Cycle 8: tap focus-then-activate semantics ───────────────────────────────
+-- ── Cycle 9: tap focus-then-activate semantics ───────────────────────────────
 
 test("tapping an unfocused item focuses it without changing its value", function()
     local screen = new_screen()
@@ -250,14 +278,14 @@ test("tapping the already-focused Win Tile item persists the new value via setti
     tap_item(screen, 0)                -- revert
 end)
 
--- ── Cycle 9: tap on Back / return on Back replaces with main menu ────────────
+-- ── Cycle 10: tap on Back / return on Back replaces with main menu ───────────
 
 test("tapping the Back item twice (focus, then activate) calls host:replace() once", function()
     local screen, host = new_screen()
-    tap_item(screen, 5)
-    eq(screen:cursor(), 5, "first tap focuses Back")
+    tap_item(screen, 6)
+    eq(screen:cursor(), 6, "first tap focuses Back")
     eq(#host.replace_calls, 0, "still on options after focus-only tap")
-    tap_item(screen, 5)
+    tap_item(screen, 6)
     eq(#host.replace_calls, 1, "second tap on focused Back calls replace")
     eq(host.replace_calls[1], host._main_menu, "replaced with main menu screen")
 end)
@@ -274,14 +302,14 @@ end)
 
 test("return while Back is focused calls host:replace() with the main menu screen", function()
     local screen, host = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:cursor(), 5, "cursor on Back")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:cursor(), 6, "cursor on Back")
     screen:keypressed("return")
     eq(#host.replace_calls, 1, "return on Back calls replace")
     eq(host.replace_calls[1], host._main_menu, "replaced with main menu screen")
 end)
 
--- ── Cycle 10: draw() runs without erroring ────────────────────────────────────
+-- ── Cycle 11: draw() runs without erroring ────────────────────────────────────
 
 test("draw() runs without erroring", function()
     local screen = new_screen()

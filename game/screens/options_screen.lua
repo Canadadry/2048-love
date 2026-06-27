@@ -61,6 +61,10 @@ function Screen:enter()
             function() return config.EFFECTS_ENABLED end,
             function(v) config.EFFECTS_ENABLED = v; settings.set("effects_enabled", v) end,
             bool_label),
+        value_row("Sound", BOOLEAN_VALUES,
+            function() return config.SOUND.ENABLED end,
+            function(v) config.SOUND.ENABLED = v; settings.set("sound_enabled", v) end,
+            bool_label),
         { label = "Up/Down to focus a row, Left/Right to change its value, or tap a row", focusable = false },
         { label = "Back", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end, focus_before_activate = true },
     }
