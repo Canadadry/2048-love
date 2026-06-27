@@ -1,7 +1,7 @@
 LOVE = /Applications/love.app/Contents/MacOS/love
 LOVE_FILE = 2048.love
 
-.PHONY: run dev build test-game test-tool-tileset test-tool-dl test-tool-theme test-all dl theme themes ui-example
+.PHONY: run dev build test-game test-tool-tileset test-tool-dl test-tool-theme test-all dl theme themes ui-example install-hooks
 
 build:
 	cd game && zip -r ../$(LOVE_FILE) .
@@ -11,6 +11,9 @@ run:
 
 dev:
 	$(LOVE) game --win-tile=32
+
+install-hooks:
+	git config core.hooksPath .githooks
 
 test-game:
 	cd game && lua ../tests/test_all.lua

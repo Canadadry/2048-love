@@ -25,6 +25,7 @@ love.graphics.printf             = function(...) end
 love.graphics.draw               = function(...) end
 love.graphics.newCanvas          = function() return {} end
 love.graphics.setCanvas          = function(...) end
+love.graphics.setBlendMode       = function(...) end
 love.graphics.clear              = function(...) end
 love.graphics.newFont            = function(size)
     return {
@@ -143,13 +144,13 @@ test("Main Menu -> New Game -> Pause -> Main Menu walk lands back on a fresh Mai
     love.event = { quit = function() quit_calls = quit_calls + 1 end }
 
     love.keypressed("return") -- Main Menu cursor 0 (New Game) -> replace with Game screen (animated)
-    love.update(0.5)          -- drain main_menu->game transition
+    love.update(config.TRANSITION_DURATION + 0.1) -- drain main_menu->game transition
     love.keypressed("escape") -- Game -> replace with Pause (animated transition)
-    love.update(0.5)          -- drain game->pause transition so Pause becomes current
+    love.update(config.TRANSITION_DURATION + 0.1) -- drain game->pause transition so Pause becomes current
     love.keypressed("down")   -- Pause cursor 0 -> 1 (New Game)
     love.keypressed("down")   -- Pause cursor 1 -> 2 (Main Menu)
     love.keypressed("return") -- Pause cursor 2 -> replace with a fresh Main Menu (animated)
-    love.update(0.5)          -- drain pause->main_menu transition
+    love.update(config.TRANSITION_DURATION + 0.1) -- drain pause->main_menu transition
 
     love.keypressed("down")   -- fresh Main Menu cursor 0 -> 1 (Options), proves cursor was reset
     love.keypressed("down")   -- Main Menu cursor 1 -> 2 (Quit)
@@ -169,7 +170,7 @@ test("swiping the board while the Game screen is focused reaches its own swipe h
     dofile("main.lua")
     love.load()
     love.keypressed("return") -- Main Menu cursor 0 (New Game) -> replace with Game screen (animated)
-    love.update(0.5)          -- drain transition so Game screen is current
+    love.update(config.TRANSITION_DURATION + 0.1) -- drain transition so Game screen is current
 
     local tile_draw = require("tile_draw")
     local original_draw = tile_draw.draw
