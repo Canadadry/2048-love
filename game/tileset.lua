@@ -38,6 +38,16 @@ function M.list_available()
     return M.list_names(love.filesystem.getDirectoryItems("assets"))
 end
 
+local function load_image(name, image)
+    local iw, ih  = image:getDimensions()
+    local max_tex = love.graphics.getSystemLimits().texturesize
+    print(string.format("tileset(%q): image %dx%d, GPU max texture size %d", name, iw, ih, max_tex))
+    assert(iw <= max_tex and ih <= max_tex, string.format(
+        "tileset '%s' image is %dx%d but this GPU's max texture size is %d — rebuild it with a smaller --tile-width/--tile-height or fewer frames",
+        name, iw, ih, max_tex))
+    return iw, ih
+end
+
 function M.load(name)
     if not name or name == "" then return nil end
     local lua_path = "assets/" .. name .. ".lua"
@@ -47,12 +57,19 @@ function M.load(name)
     if not love.filesystem.getInfo(png_path) then return nil end
     local meta  = M.parse_meta(chunk())
     local image = love.graphics.newImage(png_path)
-    local iw, ih = image:getDimensions()
-    local max_tex = love.graphics.getSystemLimits().texturesize
-    print(string.format("tileset.load(%q): image %dx%d, GPU max texture size %d", name, iw, ih, max_tex))
-    assert(iw <= max_tex and ih <= max_tex, string.format(
-        "tileset '%s' image is %dx%d but this GPU's max texture size is %d — rebuild it with a smaller --tile-width/--tile-height or fewer frames",
-        name, iw, ih, max_tex))
+    local iw, ih = load_image(name, image)
+    return { image = image, meta = meta, iw = iw, ih = ih }
+end
+
+-- Like load() but takes a pre-decoded ImageData (from a background thread).
+function M.finish_load(name, image_data)
+    if not name or name == "" then return nil end
+    local lua_path = "assets/" .. name .. ".lua"
+    local chunk = love.filesystem.load(lua_path)
+    if not chunk then return nil end
+    local meta  = M.parse_meta(chunk())
+    local image = love.graphics.newImage(image_data)
+    local iw, ih = load_image(name, image)
     return { image = image, meta = meta, iw = iw, ih = ih }
 end
 

@@ -1,0 +1,6 @@
+require("love.image")
+local ch_in  = love.thread.getChannel("tileset_loader_in")
+local ch_out = love.thread.getChannel("tileset_loader_out")
+local path   = ch_in:demand()
+local ok, result = pcall(love.image.newImageData, path)
+ch_out:push(ok and result or false)

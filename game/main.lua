@@ -5,6 +5,7 @@ local settings       = require("lib.settings")
 
 local SCREENS = {
     main_menu = require("screens.main_menu_screen"),
+    loading   = require("screens.loading_screen"),
     game      = require("screens.game_screen"),
     pause     = require("screens.pause_screen"),
     win       = require("screens.win_screen"),

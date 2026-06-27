@@ -12,11 +12,7 @@ function M.needs_reload(requested_name, loaded)
     return requested_name ~= loaded
 end
 
-function M.set_tileset(name)
-    if not M.needs_reload(name, loaded_name) then return end
-    loaded_name = name
-    local ts = tileset.load(name)
-    if not ts then ts_data = nil; return end
+local function build_ts_data(ts)
     local quads        = {}
     local frame_counts = {}
     local values       = { 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 }
@@ -35,7 +31,7 @@ function M.set_tileset(name)
             end
         end
     end
-    ts_data = {
+    return {
         image        = ts.image,
         quads        = quads,
         frame_counts = frame_counts,
@@ -43,6 +39,22 @@ function M.set_tileset(name)
         tile_h       = ts.meta.tile_h,
         anim_time    = 0,
     }
+end
+
+function M.set_tileset(name)
+    if not M.needs_reload(name, loaded_name) then return end
+    loaded_name = name
+    local ts = tileset.load(name)
+    if not ts then ts_data = nil; return end
+    ts_data = build_ts_data(ts)
+end
+
+-- Called by the loading screen after a background thread delivers ImageData.
+function M.finish_tileset(name, image_data)
+    loaded_name = name
+    local ts = tileset.finish_load(name, image_data)
+    if not ts then ts_data = nil; return end
+    ts_data = build_ts_data(ts)
 end
 
 function M.update(dt)

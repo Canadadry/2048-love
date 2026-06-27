@@ -37,7 +37,7 @@ end
 local function new_screen()
     local game_screen_sentinel = { sentinel = true }
     local options_screen_sentinel = { sentinel = "options" }
-    local host = stub_host({ game = game_screen_sentinel, options = options_screen_sentinel })
+    local host = stub_host({ loading = game_screen_sentinel, game = game_screen_sentinel, options = options_screen_sentinel })
     local screen = main_menu_screen.new(host)
     screen:enter()
     return screen, host, game_screen_sentinel

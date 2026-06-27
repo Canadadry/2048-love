@@ -12,7 +12,7 @@ function M.new(host)
     local self = setmetatable({ host = host }, { __index = Screen })
     self._mixin = menu_screen.new({
         items = {
-            { label = "New Game", on_activate = function() host:replace(host:spawn("game"), PUSH_FWD, T_DUR) end },
+            { label = "New Game", on_activate = function() host:replace(host:spawn("loading"), PUSH_FWD, T_DUR) end },
             { label = "Options",  on_activate = function() host:replace(host:spawn("options"), PUSH_FWD, T_DUR) end },
             { label = "Quit",     on_activate = function() host:quit() end },
         },
