@@ -3,15 +3,17 @@ local check = require("lib.check")
 local M = {}
 local Mixin = {}
 
-function M.new(config)
-    check.tbl(config, "config")
-    check.tbl(config.items, "config.items")
-    assert(#config.items > 0, "config.items must be a non-empty list")
+function M.new(cfg)
+    check.tbl(cfg, "config")
+    check.tbl(cfg.items, "config.items")
+    assert(#cfg.items > 0, "config.items must be a non-empty list")
     return setmetatable({
-        _items        = config.items,
-        _wrap         = config.wrap or false,
-        _cursor_start = config.cursor_start or 0,
-        _cursor       = config.cursor_start or 0,
+        _items        = cfg.items,
+        _wrap         = cfg.wrap or false,
+        _cursor_start = cfg.cursor_start or 0,
+        _cursor       = cfg.cursor_start or 0,
+        _on_select    = cfg.on_select,
+        _on_change    = cfg.on_change,
     }, { __index = Mixin })
 end
 
@@ -48,18 +50,28 @@ end
 
 function Mixin:keypressed(key)
     if key == "down" then
+        local prev = self._cursor
         self._cursor = step(self, 1) - 1
+        if self._cursor ~= prev and self._on_select then self._on_select() end
     elseif key == "up" then
+        local prev = self._cursor
         self._cursor = step(self, -1) - 1
+        if self._cursor ~= prev and self._on_select then self._on_select() end
     elseif key == "return" then
         local item = self:current_item()
         if item.on_activate then item.on_activate() end
     elseif key == "left" then
         local item = self:current_item()
-        if item.on_left then item.on_left() end
+        if item.on_left then
+            if self._on_change then self._on_change() end
+            item.on_left()
+        end
     elseif key == "right" then
         local item = self:current_item()
-        if item.on_right then item.on_right() end
+        if item.on_right then
+            if self._on_change then self._on_change() end
+            item.on_right()
+        end
     end
 end
 

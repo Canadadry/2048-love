@@ -2,6 +2,7 @@ local config         = require("config")
 local screen_manager = require("lib.screen_manager")
 local swipe          = require("lib.swipe")
 local settings       = require("lib.settings")
+local sound          = require("lib.sound")
 
 local GAMEPAD_KEY = {
     a            = "return",
@@ -45,7 +46,11 @@ function love.load()
     love.window.setTitle("2048")
     love.window.setMode(config.WINDOW_W, config.WINDOW_H, { resizable = true, minwidth = 300, minheight = 300 })
     love.graphics.setBackgroundColor(0.98, 0.97, 0.94)
-    host = screen_manager.new(nil, SCREENS)
+    host = screen_manager.new(nil, SCREENS, {
+        on_transition = function()
+            if config.SOUND.ENABLED then sound.play(config.SOUND.TRANSITION) end
+        end,
+    })
     host:replace(host:spawn("main_menu"))
     local w, h = love.graphics.getDimensions()
     swiper     = swipe.new(math.min(w, h) * 0.10)

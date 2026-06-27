@@ -2,8 +2,13 @@ local check = require("lib.check")
 
 local SM = {}
 
-function SM.new(initial, registry)
-    local self = setmetatable({ _current = initial, _registry = registry or {} }, { __index = SM })
+function SM.new(initial, registry, opts)
+    opts = opts or {}
+    local self = setmetatable({
+        _current       = initial,
+        _registry      = registry or {},
+        _on_transition = opts.on_transition,
+    }, { __index = SM })
     if initial and initial.enter then initial:enter() end
     return self
 end
@@ -32,6 +37,7 @@ function SM:replace(screen, fn, duration)
     guard_transition(self, function()
         local old = self._current
         if fn and duration then
+            if self._on_transition then self._on_transition() end
             local w, h = love.graphics.getDimensions()
             self._transition = {
                 out        = old,

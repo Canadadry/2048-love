@@ -30,6 +30,14 @@ M.EFFECTS_ENABLED    = true
 M.TILESET            = ""
 M.TILESET_ANIM_FPS   = 12
 
+M.SOUND = {
+    ENABLED    = true,
+    TRANSITION = "assets/Audio/open_001.ogg",
+    SELECT     = "assets/Audio/tick_001.ogg",
+    CHANGE     = "assets/Audio/switch_001.ogg",
+    SLIDE      = "assets/Audio/click_001.ogg",
+}
+
 M.PARTICLE = {
     COUNT_MIN    = 500,
     COUNT_MAX    = 1000,

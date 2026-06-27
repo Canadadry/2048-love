@@ -1,6 +1,7 @@
-local menu_screen = require("lib.menu_screen")
-local menu        = require("menu")
-local transitions = require("lib.transitions")
+local menu_screen  = require("lib.menu_screen")
+local menu         = require("menu")
+local transitions  = require("lib.transitions")
+local menu_sounds  = require("menu_sounds")
 
 local PUSH_FWD = transitions.push("left")
 local T_DUR    = 0.25
@@ -16,6 +17,7 @@ function M.new(host)
             { label = "Options",  on_activate = function() host:replace(host:spawn("options"), PUSH_FWD, T_DUR) end },
             { label = "Quit",     on_activate = function() host:quit() end },
         },
+        on_select = menu_sounds.on_select,
     })
     return self
 end

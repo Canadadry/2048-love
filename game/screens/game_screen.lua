@@ -1,4 +1,5 @@
 local check        = require("lib.check")
+local sound        = require("lib.sound")
 local config       = require("config")
 local grid         = require("grid")
 local tile         = require("tile")
@@ -55,6 +56,7 @@ function Screen:is_animating() return #self._tiles > 0 end
 local function apply_move(self, dir)
     local result = self._grid:move(dir)
     if result.moved then
+        if config.SOUND.ENABLED then sound.play(config.SOUND.SLIDE) end
         self._score = self._score + result.score_delta
         self._grid:spawn_tile()
         if config.ANIMATIONS_ENABLED then

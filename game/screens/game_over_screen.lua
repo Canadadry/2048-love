@@ -1,6 +1,7 @@
 local menu        = require("menu")
 local menu_screen = require("lib.menu_screen")
 local transitions = require("lib.transitions")
+local menu_sounds = require("menu_sounds")
 
 local PUSH_BCK = transitions.push("right")
 local T_DUR    = 0.25
@@ -17,6 +18,7 @@ function M.new(host, game)
             { label = "New Game",  on_activate = function() game:restart(); host:replace(game, PUSH_BCK, T_DUR) end },
             { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end },
         },
+        on_select = menu_sounds.on_select,
     })
     return self
 end

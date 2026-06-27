@@ -5,6 +5,7 @@ local settings     = require("lib.settings")
 local menu         = require("menu")
 local menu_screen  = require("lib.menu_screen")
 local transitions  = require("lib.transitions")
+local menu_sounds  = require("menu_sounds")
 
 local PUSH_BCK = transitions.push("right")
 local T_DUR    = 0.25
@@ -64,7 +65,7 @@ function Screen:enter()
         { label = "Back", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end, focus_before_activate = true },
     }
 
-    self._mixin = menu_screen.new({ items = items, wrap = true })
+    self._mixin = menu_screen.new({ items = items, wrap = true, on_select = menu_sounds.on_select, on_change = menu_sounds.on_change })
 end
 
 function Screen:cursor()
