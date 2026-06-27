@@ -42,6 +42,7 @@ function love.load()
     config.ANIMATIONS_ENABLED = settings.get("animations_enabled", config.ANIMATIONS_ENABLED)
     config.EFFECTS_ENABLED    = settings.get("effects_enabled", config.EFFECTS_ENABLED)
     config.SOUND.ENABLED      = settings.get("sound_enabled", config.SOUND.ENABLED)
+    config.MUSIC.ENABLED      = settings.get("music_enabled", config.MUSIC.ENABLED)
     for _, v in ipairs(arg or {}) do
         local n = v:match("^%-%-win%-tile=(%d+)$")
         if n then

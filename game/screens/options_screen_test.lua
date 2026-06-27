@@ -30,6 +30,7 @@ i18n.load(table.concat({
     "options.animations,Animations,Animations",
     "options.effects,Effects,Effets",
     "options.sound,Sound,Son",
+    "options.music,Music,Musique",
     "options.language,Language,Langue",
     "options.on,ON,OUI",
     "options.off,OFF,NON",
@@ -76,8 +77,8 @@ local function interactive_centers(tree)
 end
 
 -- maps a 0-based item index (Win Tile=0, Theme=1, Animations=2, Effects=3,
--- Sound=4, Language=5, Back=7; the hint at index 6 is non-interactive) to its tap coordinates.
-local INTERACTIVE_INDEX = { [0] = 1, [1] = 2, [2] = 3, [3] = 4, [4] = 5, [5] = 6, [7] = 7 }
+-- Sound=4, Music=5, Language=6, Back=8; the hint at index 7 is non-interactive) to its tap coordinates.
+local INTERACTIVE_INDEX = { [0]=1, [1]=2, [2]=3, [3]=4, [4]=5, [5]=6, [6]=7, [8]=8 }
 
 local function tap_item(screen, item_index)
     local centers = interactive_centers(menu.menu_tree(screen:spec(), screen:cursor(), nil))
@@ -114,13 +115,15 @@ test("down/up move the cursor between items, wrapping at both ends and skipping 
     screen:keypressed("down")
     eq(screen:cursor(), 4, "down moves to Sound")
     screen:keypressed("down")
-    eq(screen:cursor(), 5, "down moves to Language")
+    eq(screen:cursor(), 5, "down moves to Music")
     screen:keypressed("down")
-    eq(screen:cursor(), 7, "down skips the hint and lands on Back")
+    eq(screen:cursor(), 6, "down moves to Language")
+    screen:keypressed("down")
+    eq(screen:cursor(), 8, "down skips the hint and lands on Back")
     screen:keypressed("down")
     eq(screen:cursor(), 0, "down wraps from Back back to Win Tile")
     screen:keypressed("up")
-    eq(screen:cursor(), 7, "up wraps from Win Tile to Back")
+    eq(screen:cursor(), 8, "up wraps from Win Tile to Back")
 end)
 
 -- ── Cycle 4: left/right on Win Tile toggles + persists config.WIN_TILE ───────
@@ -239,27 +242,55 @@ test("toggling Sound persists the new value via settings.set", function()
     screen:keypressed("left")
 end)
 
--- ── Cycle 8: left/right on the Back item is inert ────────────────────────────
+-- ── Cycle 8: Music toggle ─────────────────────────────────────────────────────
+
+test("left/right on the Music item toggles config.MUSIC.ENABLED, applied immediately", function()
+    local screen = new_screen()
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    eq(screen:cursor(), 5, "cursor on Music")
+    screen:keypressed("right")
+    eq(config.MUSIC.ENABLED, false, "music toggled off")
+    screen:keypressed("left")
+    eq(config.MUSIC.ENABLED, true, "music toggled back on")
+end)
+
+test("toggling Music persists the new value via settings.set", function()
+    local screen = new_screen()
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("down")
+    screen:keypressed("right")
+    eq(settings.get("music_enabled", nil), false, "music_enabled persisted on toggle")
+    screen:keypressed("left")
+end)
+
+-- ── Cycle 9: left/right on the Back item is inert ────────────────────────────
 
 test("left/right on the Back item change nothing observable", function()
     config.TILESET = ""
     local screen = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:cursor(), 7, "cursor on Back")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:cursor(), 8, "cursor on Back")
     local settings_before = settings.get("effects_enabled", nil)
     screen:keypressed("right")
-    eq(screen:cursor(), 7, "cursor unchanged by right")
+    eq(screen:cursor(), 8, "cursor unchanged by right")
     eq(config.EFFECTS_ENABLED, true, "no row's config mutated by right on Back")
     eq(settings.get("effects_enabled", nil), settings_before, "no settings write from right on Back")
     screen:keypressed("left")
-    eq(screen:cursor(), 7, "cursor unchanged by left")
+    eq(screen:cursor(), 8, "cursor unchanged by left")
     eq(config.EFFECTS_ENABLED, true, "no row's config mutated by left on Back")
 end)
 
 test("left/right on the Back item never calls settings.set", function()
     local screen = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:cursor(), 7, "cursor on Back")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:cursor(), 8, "cursor on Back")
     local calls = 0
     local real_set = settings.set
     settings.set = function(...) calls = calls + 1; return real_set(...) end
@@ -302,10 +333,10 @@ end)
 
 test("tapping the Back item twice (focus, then activate) calls host:replace() once", function()
     local screen, host = new_screen()
-    tap_item(screen, 7)
-    eq(screen:cursor(), 7, "first tap focuses Back")
+    tap_item(screen, 8)
+    eq(screen:cursor(), 8, "first tap focuses Back")
     eq(#host.replace_calls, 0, "still on options after focus-only tap")
-    tap_item(screen, 7)
+    tap_item(screen, 8)
     eq(#host.replace_calls, 1, "second tap on focused Back calls replace")
     eq(host.replace_calls[1], host._main_menu, "replaced with main menu screen")
 end)
@@ -322,8 +353,8 @@ end)
 
 test("return while Back is focused calls host:replace() with the main menu screen", function()
     local screen, host = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:cursor(), 7, "cursor on Back")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:cursor(), 8, "cursor on Back")
     screen:keypressed("return")
     eq(#host.replace_calls, 1, "return on Back calls replace")
     eq(host.replace_calls[1], host._main_menu, "replaced with main menu screen")
@@ -346,7 +377,7 @@ test("boolean option values reflect the active language immediately after cyclin
     local spec_en = screen:spec()
     eq(spec_en.items[3].value, "ON", "Animations value is ON in English")
     -- Switch to French
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
     screen:keypressed("right")
     eq(i18n.lang(), "fr", "language switched to fr")
     local spec_fr = screen:spec()
@@ -361,7 +392,7 @@ test("item labels reflect the active language immediately after cycling Language
     eq(spec_en.items[1].label, "Win Tile", "Win Tile label is English before change")
     eq(spec_en.title, "Options", "title is English before change")
     -- Navigate to Language and switch to French
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
     screen:keypressed("right")
     eq(i18n.lang(), "fr", "language switched to fr")
     local spec_fr = screen:spec()
@@ -372,17 +403,17 @@ end)
 
 -- ── Cycle 12: Language row ────────────────────────────────────────────────────
 
-test("Language row is at cursor index 5 and can be focused with down", function()
+test("Language row is at cursor index 6 and can be focused with down", function()
     local screen = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:cursor(), 5, "fifth down lands on Language")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:cursor(), 6, "sixth down lands on Language")
 end)
 
 test("right on Language advances i18n active language to the next one", function()
     i18n.set_lang("en")
     local screen = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
-    eq(screen:cursor(), 5, "cursor on Language")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    eq(screen:cursor(), 6, "cursor on Language")
     screen:keypressed("right")
     eq(i18n.lang(), "fr", "right advanced language to fr")
     i18n.set_lang("en")
@@ -391,7 +422,7 @@ end)
 test("cycling Language persists the new language code via settings.set", function()
     i18n.set_lang("en")
     local screen = new_screen()
-    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
+    screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
     screen:keypressed("right")
     eq(settings.get("language", nil), "fr", "language persisted on cycle")
     i18n.set_lang("en")

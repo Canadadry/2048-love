@@ -4,6 +4,7 @@ local menu        = require("menu")
 local menu_screen = require("lib.menu_screen")
 local transitions = require("lib.transitions")
 local menu_sounds = require("menu_sounds")
+local music       = require("lib.music")
 
 local PUSH_BCK = transitions.push("right")
 local T_DUR    = config.TRANSITION_DURATION
@@ -26,6 +27,7 @@ function M.new(host, game)
 end
 
 function Screen:enter()
+    music.play(config.MUSIC.GAME)
     self._mixin:enter()
 end
 

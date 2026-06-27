@@ -1,5 +1,6 @@
 local check        = require("lib.check")
 local sound        = require("lib.sound")
+local music        = require("lib.music")
 local config       = require("config")
 local grid         = require("grid")
 local tile         = require("tile")
@@ -164,6 +165,7 @@ function Screen:touchreleased(id, x, y)
 end
 
 function Screen:enter()
+    music.play(config.MUSIC.GAME)
     local w, h = love.graphics.getDimensions()
     self._swipe:set_threshold(math.min(w, h) * 0.10)
 end

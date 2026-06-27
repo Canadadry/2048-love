@@ -40,11 +40,13 @@ local function with_restored_config(fn)
     local saved_tileset           = config.TILESET
     local saved_animations        = config.ANIMATIONS_ENABLED
     local saved_effects           = config.EFFECTS_ENABLED
+    local saved_music             = config.MUSIC.ENABLED
     fn()
-    config.WIN_TILE          = saved_win_tile
-    config.TILESET           = saved_tileset
+    config.WIN_TILE           = saved_win_tile
+    config.TILESET            = saved_tileset
     config.ANIMATIONS_ENABLED = saved_animations
     config.EFFECTS_ENABLED    = saved_effects
+    config.MUSIC.ENABLED      = saved_music
 end
 
 -- ── Tracer bullet ─────────────────────────────────────────────────────────────
@@ -71,6 +73,17 @@ test("startup seeds config.ANIMATIONS_ENABLED and config.EFFECTS_ENABLED from sa
         love.load()
         eq(config.ANIMATIONS_ENABLED, false, "config.ANIMATIONS_ENABLED seeded from saved settings")
         eq(config.EFFECTS_ENABLED, false, "config.EFFECTS_ENABLED seeded from saved settings")
+    end)
+end)
+
+test("startup seeds config.MUSIC.ENABLED from saved settings", function()
+    with_restored_config(function()
+        reset_fs()
+        settings.set("music_enabled", false)
+        arg = {}
+        dofile("main.lua")
+        love.load()
+        eq(config.MUSIC.ENABLED, false, "config.MUSIC.ENABLED seeded from saved settings")
     end)
 end)
 

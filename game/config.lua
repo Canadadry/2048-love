@@ -45,6 +45,12 @@ M.SOUND = {
     SLIDE      = "assets/Audio/click_001.ogg",
 }
 
+M.MUSIC = {
+    ENABLED = true,
+    MENU    = "assets/music/fallpromar-lofi-music-chill-421750.mp3",
+    GAME    = "assets/music/rohitvaliant-puzzle-masters-rohit-valiant-402154.mp3",
+}
+
 M.PARTICLE = {
     COUNT_MIN    = 500,
     COUNT_MAX    = 1000,

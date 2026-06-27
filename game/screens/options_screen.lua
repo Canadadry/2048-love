@@ -7,6 +7,7 @@ local menu         = require("menu")
 local menu_screen  = require("lib.menu_screen")
 local transitions  = require("lib.transitions")
 local menu_sounds  = require("menu_sounds")
+local music        = require("lib.music")
 
 local PUSH_BCK = transitions.push("right")
 local T_DUR    = config.TRANSITION_DURATION
@@ -50,6 +51,7 @@ local function refresh_items(items)
 end
 
 function Screen:enter()
+    music.play(config.MUSIC.MENU)
     local host = self.host
     local win_tile_values = { 16, 2048 }
     local theme_values    = tileset.list_available()
@@ -81,6 +83,14 @@ function Screen:enter()
         value_row(function() return i18n.t("options.sound") end, BOOLEAN_VALUES,
             function() return config.SOUND.ENABLED end,
             function(v) config.SOUND.ENABLED = v; settings.set("sound_enabled", v) end,
+            bool_label),
+        value_row(function() return i18n.t("options.music") end, BOOLEAN_VALUES,
+            function() return config.MUSIC.ENABLED end,
+            function(v)
+                config.MUSIC.ENABLED = v
+                settings.set("music_enabled", v)
+                if not v then music.stop() else music.play(config.MUSIC.MENU) end
+            end,
             bool_label),
         value_row(function() return i18n.t("options.language") end, lang_values,
             current_lang_entry,
