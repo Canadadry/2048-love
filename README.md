@@ -37,6 +37,14 @@ make test-tool-theme    # theme-builder Python tests
 make test-all           # all of the above
 ```
 
+`test-game` passes arguments through to the Lua runner:
+
+```
+cd game && lua ../tests/test_all.lua -f stack      # only suites whose path contains "stack"
+cd game && lua ../tests/test_all.lua -t "move left" # only tests whose name contains "move left"
+cd game && lua ../tests/test_all.lua -f grid -t "move left" # combine both
+```
+
 ## Tools
 
 ### curl-giphy

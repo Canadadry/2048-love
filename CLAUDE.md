@@ -13,3 +13,13 @@ Avoid `cd`. Each `cd` prefixed onto a command requires separate authorization an
 ## Makefile
 
 Use the `Makefile` targets for testing, running, and building rather than invoking the underlying tools directly. Check the `Makefile` for the current list of targets before reaching for a raw command.
+
+## Running a subset of tests
+
+`make test-game` runs all Lua suites. To focus on a subset, invoke the runner directly with `-f` (filter by filename) or `-t` (filter by test name):
+
+```
+cd game && lua ../tests/test_all.lua -f stack
+cd game && lua ../tests/test_all.lua -t "move left"
+cd game && lua ../tests/test_all.lua -f grid -t "move left"
+```
