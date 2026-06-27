@@ -1,24 +1,8 @@
 local swipe = require("lib.swipe")
 
-local pass, fail = 0, 0
-
-local function test(name, fn)
-    local ok, err = pcall(fn)
-    if ok then
-        print("PASS " .. name)
-        pass = pass + 1
-    else
-        print("FAIL " .. name)
-        print("     " .. tostring(err))
-        fail = fail + 1
-    end
-end
-
-local function eq(a, b, msg)
-    if a ~= b then
-        error((msg or "eq") .. ": expected " .. tostring(b) .. ", got " .. tostring(a), 2)
-    end
-end
+local T    = require("lib.t")
+local test = T.test
+local eq   = T.eq
 
 -- Tracer bullet
 test("swipe right returns 'right'", function()
@@ -137,5 +121,4 @@ test("a new touch id can become active once the first one releases", function()
     eq(s:touchreleased(2, 320, 200), "right") -- id 2 now resolves normally
 end)
 
-print(string.format("\n%d passed, %d failed", pass, fail))
-if fail > 0 then os.exit(1) end
+T.report()

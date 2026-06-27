@@ -1,24 +1,8 @@
 local tileset = require("tileset")
 
-local pass, fail = 0, 0
-
-local function test(name, fn)
-    local ok, err = pcall(fn)
-    if ok then
-        print("PASS " .. name)
-        pass = pass + 1
-    else
-        print("FAIL " .. name)
-        print("     " .. tostring(err))
-        fail = fail + 1
-    end
-end
-
-local function eq(a, b, msg)
-    if a ~= b then
-        error((msg or "eq") .. ": expected " .. tostring(b) .. ", got " .. tostring(a), 2)
-    end
-end
+local T    = require("lib.t")
+local test = T.test
+local eq   = T.eq
 
 -- Tracer bullet: parse_meta extracts tile_w from sidecar table
 test("parse_meta returns tile_w", function()
@@ -79,5 +63,4 @@ test("list_names sorts png-derived names alphabetically with None prepended", fu
     eq(names[3], "zebra", "zebra after apple")
 end)
 
-print(string.format("\n%d passed, %d failed", pass, fail))
-if fail > 0 then os.exit(1) end
+T.report()

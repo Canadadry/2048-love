@@ -1,6 +1,7 @@
-local ui = require("lib.ui.layout.ui")
-local frame = require("lib.ui.layout.frame")
+local ui      = require("lib.ui.layout.ui")
+local frame   = require("lib.ui.layout.frame")
 local testing = require("lib.ui.layout.testing")
+local T       = require("lib.t")
 
 local TestTree = ui.Tree({
     measureContent = function(userdata, painter) return painter or { x = 0, y = 0 } end,
@@ -784,22 +785,19 @@ local tests = {
 }
 
 for name, tt in pairs(tests) do
-    print("running test " .. name)
-    local tree = TestTree()
-    tt.Gen(tree)
-    -- print("gen tree :" .. PrintValue(tree, ""))
-    ui.DrawTree(tree)
-
-    for i, expected in ipairs(tt.Stack) do
-        if not testing.match(expected, tree.Commands[i]) then
-            print(string.format(
-                "[%s:%d] exp -%s- got -%s-",
-                name,
-                i,
-                testing.PrintValue(expected),
-                testing.PrintValue(tree.Commands[i])
-            ))
+    T.test(name, function()
+        local tree = TestTree()
+        tt.Gen(tree)
+        ui.DrawTree(tree)
+        for i, expected in ipairs(tt.Stack) do
+            if not testing.match(expected, tree.Commands[i]) then
+                error(string.format("[%d] exp -%s- got -%s-",
+                    i,
+                    testing.PrintValue(expected),
+                    testing.PrintValue(tree.Commands[i])), 2)
+            end
         end
-    end
+    end)
 end
-print("done")
+
+T.report()

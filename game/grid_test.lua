@@ -1,24 +1,8 @@
 local grid = require("grid")
 
-local pass, fail = 0, 0
-
-local function test(name, fn)
-    local ok, err = pcall(fn)
-    if ok then
-        print("PASS " .. name)
-        pass = pass + 1
-    else
-        print("FAIL " .. name)
-        print("     " .. tostring(err))
-        fail = fail + 1
-    end
-end
-
-local function eq(a, b, msg)
-    if a ~= b then
-        error((msg or "eq") .. ": expected " .. tostring(b) .. ", got " .. tostring(a), 2)
-    end
-end
+local T    = require("lib.t")
+local test = T.test
+local eq   = T.eq
 
 -- Tracer bullet: new grid starts with exactly 2 tiles
 test("new() starts with exactly 2 tiles on the board", function()
@@ -289,5 +273,4 @@ test("move() returns a non-empty moves list when tiles slide", function()
     eq(#result.moves > 0, true, "moves should be non-empty")
 end)
 
-print(string.format("\n%d passed, %d failed", pass, fail))
-if fail > 0 then os.exit(1) end
+T.report()

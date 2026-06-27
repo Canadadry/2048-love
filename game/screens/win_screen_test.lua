@@ -21,25 +21,9 @@ local win_screen = require("screens.win_screen")
 local menu       = require("menu")
 local config     = require("config")
 
-local pass, fail = 0, 0
-
-local function test(name, fn)
-    local ok, err = pcall(fn)
-    if ok then
-        print("PASS " .. name)
-        pass = pass + 1
-    else
-        print("FAIL " .. name)
-        print("     " .. tostring(err))
-        fail = fail + 1
-    end
-end
-
-local function eq(a, b, msg)
-    if a ~= b then
-        error((msg or "eq") .. ": expected " .. tostring(b) .. ", got " .. tostring(a), 2)
-    end
-end
+local T    = require("lib.t")
+local test = T.test
+local eq   = T.eq
 
 local function stub_host(main_menu_screen)
     return {
@@ -215,5 +199,4 @@ test("particles individually disappear as their lifetimes expire, not all at onc
     eq(saw_partial_drop, true, "particle count should drop gradually, not all at once")
 end)
 
-print(string.format("\n%d passed, %d failed", pass, fail))
-if fail > 0 then os.exit(1) end
+T.report()

@@ -26,25 +26,9 @@ local config         = require("config")
 local settings       = require("lib.settings")
 local menu           = require("menu")
 
-local pass, fail = 0, 0
-
-local function test(name, fn)
-    local ok, err = pcall(fn)
-    if ok then
-        print("PASS " .. name)
-        pass = pass + 1
-    else
-        print("FAIL " .. name)
-        print("     " .. tostring(err))
-        fail = fail + 1
-    end
-end
-
-local function eq(a, b, msg)
-    if a ~= b then
-        error((msg or "eq") .. ": expected " .. tostring(b) .. ", got " .. tostring(a), 2)
-    end
-end
+local T    = require("lib.t")
+local test = T.test
+local eq   = T.eq
 
 local function stub_host()
     return { dismiss_count = 0, dismiss = function(self) self.dismiss_count = self.dismiss_count + 1 end }
@@ -296,5 +280,4 @@ test("draw() runs without erroring", function()
     eq(true, true, "no crash")
 end)
 
-print(string.format("\n%d passed, %d failed", pass, fail))
-if fail > 0 then os.exit(1) end
+T.report()

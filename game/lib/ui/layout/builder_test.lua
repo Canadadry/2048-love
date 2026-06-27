@@ -1,6 +1,7 @@
-local ui = require("lib.ui.layout.ui")
+local ui      = require("lib.ui.layout.ui")
 local builder = require("lib.ui.layout.builder")
 local testing = require("lib.ui.layout.testing")
+local T       = require("lib.t")
 
 local TestTree = ui.Tree({
     measureContent = function(userdata, painter) return painter or { x = 0, y = 0 } end,
@@ -95,31 +96,28 @@ local tests = {
     },
 }
 
-do
+T.test("unknown class errors", function()
     local ok, err = pcall(builder.Frame, "not-a-real-class")
-    if ok then
-        print("[unknown class errors] expected an error, got none")
-    elseif not tostring(err):find("unknown ui class") then
-        print("[unknown class errors] unexpected error: " .. tostring(err))
+    if ok then error("expected an error, got none") end
+    if not tostring(err):find("unknown ui class") then
+        error("unexpected error: " .. tostring(err))
     end
-end
+end)
 
 for name, tt in pairs(tests) do
-    print("running test " .. name)
-    local tree = TestTree()
-    tt.Gen(tree)
-    ui.DrawTree(tree)
-
-    for i, expected in ipairs(tt.Stack) do
-        if not testing.match(expected, tree.Commands[i]) then
-            print(string.format(
-                "[%s:%d] exp -%s- got -%s-",
-                name,
-                i,
-                testing.PrintValue(expected),
-                testing.PrintValue(tree.Commands[i])
-            ))
+    T.test(name, function()
+        local tree = TestTree()
+        tt.Gen(tree)
+        ui.DrawTree(tree)
+        for i, expected in ipairs(tt.Stack) do
+            if not testing.match(expected, tree.Commands[i]) then
+                error(string.format("[%d] exp -%s- got -%s-",
+                    i,
+                    testing.PrintValue(expected),
+                    testing.PrintValue(tree.Commands[i])), 2)
+            end
         end
-    end
+    end)
 end
-print("done")
+
+T.report()

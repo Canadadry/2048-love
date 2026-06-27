@@ -1,5 +1,6 @@
-local ci = require("lib.ui.layout.compute_internals")
+local ci      = require("lib.ui.layout.compute_internals")
 local testing = require("lib.ui.layout.testing")
+local T       = require("lib.t")
 
 local tests = {
     ["single element, grows correctly"] = {
@@ -31,19 +32,14 @@ local tests = {
 
 
 for name, tt in pairs(tests) do
-    print("running test: " .. name)
-    ci.grow_along_axis(tt.growables, tt.remaining)
-
-    if not testing.match(tt.expected, tt.growables) then
-        print(string.format(
-            "[%s] exp -%s- got -%s-",
-            name,
-            testing.PrintValue(tt.expected),
-            testing.PrintValue(tt.growables)
-        ))
-        print("Expected: ", testing.PrintValue(tt.expected))
-        print("Got: ", testing.PrintValue(tt.growables))
-    end
+    T.test(name, function()
+        ci.grow_along_axis(tt.growables, tt.remaining)
+        if not testing.match(tt.expected, tt.growables) then
+            error(string.format("exp -%s- got -%s-",
+                testing.PrintValue(tt.expected),
+                testing.PrintValue(tt.growables)), 2)
+        end
+    end)
 end
 
-print("Done.")
+T.report()

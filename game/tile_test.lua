@@ -1,25 +1,9 @@
 local tile   = require("tile")
 local config = require("config")
 
-local pass, fail = 0, 0
-
-local function test(name, fn)
-    local ok, err = pcall(fn)
-    if ok then
-        print("PASS " .. name)
-        pass = pass + 1
-    else
-        print("FAIL " .. name)
-        print("     " .. tostring(err))
-        fail = fail + 1
-    end
-end
-
-local function eq(a, b, msg)
-    if a ~= b then
-        error((msg or "eq") .. ": expected " .. tostring(b) .. ", got " .. tostring(a), 2)
-    end
-end
+local T    = require("lib.t")
+local test = T.test
+local eq   = T.eq
 
 test("tile.is_done() is false before duration elapses", function()
     local t = tile.new(2, 1, 1, 1, 2, 0.1)
@@ -104,5 +88,4 @@ test("tile.new() stores row/col fields correctly", function()
     eq(t.to_col,   1, "to_col")
 end)
 
-print(string.format("\n%d passed, %d failed", pass, fail))
-if fail > 0 then os.exit(1) end
+T.report()

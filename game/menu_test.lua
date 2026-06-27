@@ -17,19 +17,8 @@ love = {
 }
 local menu = require("menu")
 
-local pass, fail = 0, 0
-
-local function test(name, fn)
-    local ok, err = pcall(fn)
-    if ok then
-        print("PASS " .. name)
-        pass = pass + 1
-    else
-        print("FAIL " .. name)
-        print("     " .. tostring(err))
-        fail = fail + 1
-    end
-end
+local T    = require("lib.t")
+local test = T.test
 
 local function button_centers(tree)
     local centers = {}
@@ -134,5 +123,4 @@ test("btn_w_ratio narrows button-style items relative to the default ratio", fun
     end
 end)
 
-print(string.format("\n%d passed, %d failed", pass, fail))
-if fail > 0 then os.exit(1) end
+T.report()

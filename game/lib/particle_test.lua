@@ -1,25 +1,9 @@
 local particle = require("lib.particle")
 local config   = require("config")
 
-local pass, fail = 0, 0
-
-local function test(name, fn)
-    local ok, err = pcall(fn)
-    if ok then
-        print("PASS " .. name)
-        pass = pass + 1
-    else
-        print("FAIL " .. name)
-        print("     " .. tostring(err))
-        fail = fail + 1
-    end
-end
-
-local function eq(a, b, msg)
-    if a ~= b then
-        error((msg or "eq") .. ": expected " .. tostring(b) .. ", got " .. tostring(a), 2)
-    end
-end
+local T    = require("lib.t")
+local test = T.test
+local eq   = T.eq
 
 test("spawn(n) returns exactly n particles", function()
     local system = particle.new(config.PARTICLE)
@@ -150,5 +134,4 @@ test("new() accepts a cfg with extra fields beyond the defaults", function()
     eq(#system:spawn(1), 1, "count")
 end)
 
-print(string.format("\n%d passed, %d failed", pass, fail))
-if fail > 0 then os.exit(1) end
+T.report()
