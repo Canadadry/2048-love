@@ -20,8 +20,10 @@ function M.push(dir)
         local w, h = love.graphics.getDimensions()
         local ox, oy, ix, iy = M.push_offsets(dir, progress, w, h)
         love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.draw(canvas_out, ox, oy)
         love.graphics.draw(canvas_in,  ix, iy)
+        love.graphics.setBlendMode("alpha")
     end
 end
 

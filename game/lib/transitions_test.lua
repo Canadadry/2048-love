@@ -69,9 +69,10 @@ end)
 
 test("push fn resets color to white before drawing canvases to prevent tinting", function()
     local calls = {}
-    love.graphics.setColor = function(r, g, b, a)
+    love.graphics.setColor    = function(r, g, b, a)
         calls[#calls + 1] = { kind = "setColor", r = r, g = g, b = b, a = a }
     end
+    love.graphics.setBlendMode = function() end
     love.graphics.draw = function()
         calls[#calls + 1] = { kind = "draw" }
     end
@@ -91,6 +92,39 @@ test("push fn resets color to white before drawing canvases to prevent tinting",
     if not first_draw_at then error("draw was never called") end
     if white_at >= first_draw_at then
         error("setColor(1,1,1,1) must be called before the first draw")
+    end
+end)
+
+test("push fn uses premultiplied blend mode when drawing canvases and restores it after", function()
+    local calls = {}
+    love.graphics.setColor    = function() end
+    love.graphics.setBlendMode = function(mode, alphamode)
+        calls[#calls + 1] = { kind = "setBlendMode", mode = mode, alphamode = alphamode }
+    end
+    love.graphics.draw = function()
+        calls[#calls + 1] = { kind = "draw" }
+    end
+
+    local fn = transitions.push("left")
+    fn({}, {}, 0.5)
+
+    local pm_at, first_draw_at, restore_at
+    for i, c in ipairs(calls) do
+        if c.kind == "setBlendMode" and c.mode == "alpha" and c.alphamode == "premultiplied" then
+            if not pm_at then pm_at = i end
+        elseif c.kind == "draw" then
+            if not first_draw_at then first_draw_at = i end
+        elseif c.kind == "setBlendMode" and c.mode == "alpha" and c.alphamode ~= "premultiplied" then
+            restore_at = i
+        end
+    end
+    if not pm_at           then error("setBlendMode('alpha','premultiplied') was never called") end
+    if not first_draw_at   then error("draw was never called") end
+    if pm_at >= first_draw_at then
+        error("setBlendMode premultiplied must be called before the first draw")
+    end
+    if not restore_at or restore_at <= first_draw_at then
+        error("blend mode must be restored to alpha after the draws")
     end
 end)
 
