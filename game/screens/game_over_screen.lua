@@ -44,7 +44,7 @@ function Screen:spec()
     return {
         title             = "Game Over",
         title_font_offset = 8,
-        bg_color          = menu.GAME_OVER_BG_COLOR,
+        bg_color          = menu.BG_COLOR,
         text_color        = menu.WHITE_COLOR,
         item_style        = "button",
         btn_w_ratio       = 0.4,

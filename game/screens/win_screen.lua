@@ -56,7 +56,7 @@ function Screen:spec()
     return {
         title             = "You Win!",
         title_font_offset = 8,
-        bg_color          = menu.WIN_BG_COLOR,
+        bg_color          = menu.BG_COLOR,
         item_style        = "button",
         items             = self._mixin:items(),
     }

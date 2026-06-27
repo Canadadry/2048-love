@@ -44,7 +44,7 @@ function Screen:spec()
     return {
         title             = "Paused",
         title_font_offset = 8,
-        bg_color          = menu.GAME_OVER_BG_COLOR,
+        bg_color          = menu.BG_COLOR,
         text_color        = menu.WHITE_COLOR,
         item_style        = "button",
         items             = self._mixin:items(),
