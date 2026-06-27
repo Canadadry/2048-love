@@ -3,6 +3,19 @@ local screen_manager = require("lib.screen_manager")
 local swipe          = require("lib.swipe")
 local settings       = require("lib.settings")
 
+local GAMEPAD_KEY = {
+    a            = "return",
+    b            = "escape",
+    start        = "escape",
+    leftshoulder = "return",
+    dpup         = "up",
+    dpdown       = "down",
+    dpleft       = "left",
+    dpright      = "right",
+}
+local AXIS_DEADZONE   = 0.5
+local axis_triggered  = {}
+
 local SCREENS = {
     main_menu = require("screens.main_menu_screen"),
     loading   = require("screens.loading_screen"),
@@ -102,4 +115,49 @@ function love.touchreleased(id, x, y)
     if screen.touchreleased then screen:touchreleased(id, x, y); return end
     local _, is_tap = swiper:touchreleased(id, x, y)
     if is_tap then screen:tap(x, y) end
+end
+
+function love.gamepadpressed(_, button)
+    local key = GAMEPAD_KEY[button]
+    if key then love.keypressed(key) end
+end
+
+function love.gamepadaxis(joystick, axis, value)
+    local id = tostring(joystick:getID())
+
+    if axis == "triggerleft" then
+        local tid = id .. "triggerleft"
+        if value > AXIS_DEADZONE then
+            if not axis_triggered[tid] then
+                axis_triggered[tid] = true
+                love.keypressed("escape")
+            end
+        else
+            axis_triggered[tid] = nil
+        end
+        return
+    end
+
+    if axis ~= "leftx" and axis ~= "lefty" and axis ~= "rightx" and axis ~= "righty" then return end
+    local neg_id  = id .. axis .. "-"
+    local pos_id  = id .. axis .. "+"
+    local is_x    = axis == "leftx" or axis == "rightx"
+    local neg_key = is_x and "left" or "up"
+    local pos_key = is_x and "right" or "down"
+    if value < -AXIS_DEADZONE then
+        if not axis_triggered[neg_id] then
+            axis_triggered[neg_id] = true
+            axis_triggered[pos_id] = nil
+            love.keypressed(neg_key)
+        end
+    elseif value > AXIS_DEADZONE then
+        if not axis_triggered[pos_id] then
+            axis_triggered[pos_id] = true
+            axis_triggered[neg_id] = nil
+            love.keypressed(pos_key)
+        end
+    else
+        axis_triggered[neg_id] = nil
+        axis_triggered[pos_id] = nil
+    end
 end
