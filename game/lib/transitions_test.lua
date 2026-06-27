@@ -67,4 +67,31 @@ test("push(dir) returns a callable function", function()
     eq(type(fn), "function", "push() must return a function")
 end)
 
+test("push fn resets color to white before drawing canvases to prevent tinting", function()
+    local calls = {}
+    love.graphics.setColor = function(r, g, b, a)
+        calls[#calls + 1] = { kind = "setColor", r = r, g = g, b = b, a = a }
+    end
+    love.graphics.draw = function()
+        calls[#calls + 1] = { kind = "draw" }
+    end
+
+    local fn = transitions.push("left")
+    fn({}, {}, 0.5)
+
+    local white_at, first_draw_at
+    for i, c in ipairs(calls) do
+        if c.kind == "setColor" and c.r == 1 and c.g == 1 and c.b == 1 and c.a == 1 then
+            if not white_at then white_at = i end
+        elseif c.kind == "draw" then
+            if not first_draw_at then first_draw_at = i end
+        end
+    end
+    if not white_at      then error("setColor(1,1,1,1) was never called") end
+    if not first_draw_at then error("draw was never called") end
+    if white_at >= first_draw_at then
+        error("setColor(1,1,1,1) must be called before the first draw")
+    end
+end)
+
 T.report()
