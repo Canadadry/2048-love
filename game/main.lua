@@ -55,6 +55,7 @@ function love.resize(w, h)
 end
 
 function love.mousepressed(x, y, button, istouch)
+    if host:is_transitioning() then return end
     local screen = host:top()
     if screen.mousepressed then screen:mousepressed(x, y, button, istouch); return end
     if istouch then return end
@@ -63,6 +64,7 @@ function love.mousepressed(x, y, button, istouch)
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
+    if host:is_transitioning() then return end
     local screen = host:top()
     if screen.mousemoved then screen:mousemoved(x, y, dx, dy, istouch); return end
     if istouch then return end
@@ -70,6 +72,7 @@ function love.mousemoved(x, y, dx, dy, istouch)
 end
 
 function love.mousereleased(x, y, button, istouch)
+    if host:is_transitioning() then return end
     local screen = host:top()
     if screen.mousereleased then screen:mousereleased(x, y, button, istouch); return end
     if istouch then return end
@@ -79,18 +82,21 @@ function love.mousereleased(x, y, button, istouch)
 end
 
 function love.touchpressed(id, x, y)
+    if host:is_transitioning() then return end
     local screen = host:top()
     if screen.touchpressed then screen:touchpressed(id, x, y); return end
     swiper:touchpressed(id, x, y)
 end
 
 function love.touchmoved(id, x, y)
+    if host:is_transitioning() then return end
     local screen = host:top()
     if screen.touchmoved then screen:touchmoved(id, x, y); return end
     swiper:touchmoved(id, x, y)
 end
 
 function love.touchreleased(id, x, y)
+    if host:is_transitioning() then return end
     local screen = host:top()
     if screen.touchreleased then screen:touchreleased(id, x, y); return end
     local _, is_tap = swiper:touchreleased(id, x, y)

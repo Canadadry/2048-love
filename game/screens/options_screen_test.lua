@@ -31,7 +31,13 @@ local test = T.test
 local eq   = T.eq
 
 local function stub_host()
-    return { dismiss_count = 0, dismiss = function(self) self.dismiss_count = self.dismiss_count + 1 end }
+    local main_menu_sentinel = { sentinel = "main_menu" }
+    return {
+        replace_calls = {},
+        replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
+        spawn         = function(self, name) if name == "main_menu" then return main_menu_sentinel end end,
+        _main_menu    = main_menu_sentinel,
+    }
 end
 
 local function new_screen()
@@ -63,10 +69,11 @@ end
 
 -- ── Cycle 1: Tracer bullet ────────────────────────────────────────────────────
 
-test("escape calls host:dismiss()", function()
+test("escape calls host:replace() with the main menu screen", function()
     local screen, host = new_screen()
     screen:keypressed("escape")
-    eq(host.dismiss_count, 1, "escape must dismiss the options screen")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], host._main_menu, "replaced with main menu screen")
 end)
 
 -- ── Cycle 2: enter() defaults cursor to the first item (Win Tile) ────────────
@@ -243,33 +250,35 @@ test("tapping the already-focused Win Tile item persists the new value via setti
     tap_item(screen, 0)                -- revert
 end)
 
--- ── Cycle 9: tap on Back / return on Back dismiss ────────────────────────────
+-- ── Cycle 9: tap on Back / return on Back replaces with main menu ────────────
 
-test("tapping the Back item twice (focus, then activate) calls host:dismiss() once", function()
+test("tapping the Back item twice (focus, then activate) calls host:replace() once", function()
     local screen, host = new_screen()
     tap_item(screen, 5)
     eq(screen:cursor(), 5, "first tap focuses Back")
-    eq(host.dismiss_count, 0, "still on options after focus-only tap")
+    eq(#host.replace_calls, 0, "still on options after focus-only tap")
     tap_item(screen, 5)
-    eq(host.dismiss_count, 1, "second tap on focused Back dismisses")
+    eq(#host.replace_calls, 1, "second tap on focused Back calls replace")
+    eq(host.replace_calls[1], host._main_menu, "replaced with main menu screen")
 end)
 
 test("return has no observable effect on the Options screen, except when Back is focused", function()
     config.TILESET = ""
     local screen, host = new_screen()
     screen:keypressed("return")
-    eq(host.dismiss_count, 0, "return does not dismiss when Back isn't focused")
+    eq(#host.replace_calls, 0, "return does not navigate when Back isn't focused")
     eq(screen:cursor(), 0, "cursor unchanged by return")
     eq(config.WIN_TILE, 2048, "win tile unchanged by return")
     eq(config.TILESET, "", "theme unchanged by return")
 end)
 
-test("return while Back is focused calls host:dismiss()", function()
+test("return while Back is focused calls host:replace() with the main menu screen", function()
     local screen, host = new_screen()
     screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down"); screen:keypressed("down")
     eq(screen:cursor(), 5, "cursor on Back")
     screen:keypressed("return")
-    eq(host.dismiss_count, 1, "return on Back dismisses")
+    eq(#host.replace_calls, 1, "return on Back calls replace")
+    eq(host.replace_calls[1], host._main_menu, "replaced with main menu screen")
 end)
 
 -- ── Cycle 10: draw() runs without erroring ────────────────────────────────────

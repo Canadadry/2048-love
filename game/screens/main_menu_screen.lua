@@ -1,5 +1,9 @@
 local menu_screen = require("lib.menu_screen")
 local menu        = require("menu")
+local transitions = require("lib.transitions")
+
+local PUSH_FWD = transitions.push("left")
+local T_DUR    = 0.25
 
 local M = {}
 local Screen = {}
@@ -8,8 +12,8 @@ function M.new(host)
     local self = setmetatable({ host = host }, { __index = Screen })
     self._mixin = menu_screen.new({
         items = {
-            { label = "New Game", on_activate = function() host:replace(host:spawn("game")) end },
-            { label = "Options",  on_activate = function() host:promote(host:spawn("options")) end },
+            { label = "New Game", on_activate = function() host:replace(host:spawn("game"), PUSH_FWD, T_DUR) end },
+            { label = "Options",  on_activate = function() host:replace(host:spawn("options"), PUSH_FWD, T_DUR) end },
             { label = "Quit",     on_activate = function() host:quit() end },
         },
     })

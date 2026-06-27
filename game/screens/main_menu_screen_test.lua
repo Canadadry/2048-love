@@ -28,8 +28,6 @@ local function stub_host(spawned)
     return {
         replace_calls = {},
         replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
-        promote_calls = {},
-        promote       = function(self, screen) table.insert(self.promote_calls, screen) end,
         quit_count    = 0,
         quit          = function(self) self.quit_count = self.quit_count + 1 end,
         spawn         = function(self, name) return spawned[name] end,
@@ -84,13 +82,13 @@ test("return with cursor=0 (New Game) calls host:replace() with a fresh game scr
     eq(host.replace_calls[1], game_screen_sentinel, "replaced with the screen from make_game_screen()")
 end)
 
--- ── Cycle 4: return at cursor=1 (Options) calls host:promote() ──────────────
+-- ── Cycle 4: return at cursor=1 (Options) calls host:replace() ──────────────
 
-test("return with cursor=1 (Options) calls host:promote() with an options screen", function()
+test("return with cursor=1 (Options) calls host:replace() with an options screen", function()
     local screen, host = new_screen()
     screen:keypressed("down")
     screen:keypressed("return")
-    eq(#host.promote_calls, 1, "host:promote() called once")
+    eq(#host.replace_calls, 1, "host:replace() called once")
 end)
 
 -- ── Cycle 5: return at cursor=2 (Quit) calls host:quit() ────────────────────
@@ -123,11 +121,11 @@ test("tapping New Game activates index 0 even if cursor was elsewhere", function
     eq(host.replace_calls[1], game_screen_sentinel, "tap on New Game replaced with make_game_screen() result")
 end)
 
-test("tapping Options calls host:promote()", function()
+test("tapping Options calls host:replace()", function()
     local screen, host = new_screen()
     local centers = button_centers(menu.menu_tree(screen:spec(), 0, nil))
     screen:tap(centers[2].x, centers[2].y)
-    eq(#host.promote_calls, 1, "host:promote() called once")
+    eq(#host.replace_calls, 1, "host:replace() called once")
 end)
 
 test("tapping Quit calls host:quit()", function()
@@ -141,7 +139,6 @@ test("tapping outside any button does nothing", function()
     local screen, host = new_screen()
     screen:tap(-100, -100)
     eq(#host.replace_calls, 0, "no replace on a miss")
-    eq(#host.promote_calls, 0, "no promote on a miss")
     eq(host.quit_count, 0, "no quit on a miss")
 end)
 
@@ -153,7 +150,6 @@ test("unrelated keys do not move the cursor or fire any action", function()
     screen:keypressed("escape")
     eq(screen:cursor(), 0, "cursor unchanged")
     eq(#host.replace_calls, 0, "no replace")
-    eq(#host.promote_calls, 0, "no promote")
     eq(host.quit_count, 0, "no quit")
 end)
 

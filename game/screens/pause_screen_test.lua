@@ -26,8 +26,6 @@ local eq   = T.eq
 
 local function stub_host(main_menu_screen)
     return {
-        dismiss_count = 0,
-        dismiss       = function(self) self.dismiss_count = self.dismiss_count + 1 end,
         replace_calls = {},
         replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
         quit_count    = 0,
@@ -51,10 +49,11 @@ end
 
 -- ── Cycle 1: Tracer bullet ────────────────────────────────────────────────────
 
-test("escape calls host:dismiss()", function()
-    local screen, host = new_screen()
+test("escape calls host:replace() with the game screen", function()
+    local screen, host, game = new_screen()
     screen:keypressed("escape")
-    eq(host.dismiss_count, 1, "escape must dismiss the pause screen")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
 -- ── Cycle 2: enter() resets cursor to 0 ───────────────────────────────────────
@@ -89,22 +88,24 @@ test("cursor moves up and clamps at 0", function()
     eq(screen:cursor(), 0, "cursor clamped at 0")
 end)
 
--- ── Cycle 4: return at cursor=0 (Resume) dismisses ───────────────────────────
+-- ── Cycle 4: return at cursor=0 (Resume) replaces with game ─────────────────
 
-test("return with cursor=0 (Resume) calls host:dismiss()", function()
-    local screen, host = new_screen()
+test("return with cursor=0 (Resume) calls host:replace() with the game screen", function()
+    local screen, host, game = new_screen()
     screen:keypressed("return")
-    eq(host.dismiss_count, 1, "resumed via Enter")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
--- ── Cycle 5: return at cursor=1 (New Game) restarts+dismisses ───────────────
+-- ── Cycle 5: return at cursor=1 (New Game) restarts and replaces ─────────────
 
-test("return with cursor=1 (New Game) restarts the game and dismisses", function()
+test("return with cursor=1 (New Game) restarts the game and calls host:replace() with the game screen", function()
     local screen, host, game = new_screen()
     screen:keypressed("down")
     screen:keypressed("return")
     eq(game.restart_count, 1, "game:restart() called")
-    eq(host.dismiss_count, 1, "pause screen dismissed after restart")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
 -- ── Cycle 6: return at cursor=2 (Main Menu) replaces stack ───────────────────
@@ -143,19 +144,21 @@ local function button_center(screen, i)
     return centers[i].x, centers[i].y
 end
 
-test("tapping the Resume button calls host:dismiss()", function()
-    local screen, host = new_screen()
+test("tapping the Resume button calls host:replace() with the game screen", function()
+    local screen, host, game = new_screen()
     local x, y = button_center(screen, 1)
     screen:tap(x, y)
-    eq(host.dismiss_count, 1, "Resume button dismisses")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
-test("tapping the New Game button restarts and dismisses", function()
+test("tapping the New Game button restarts and calls host:replace() with the game screen", function()
     local screen, host, game = new_screen()
     local x, y = button_center(screen, 2)
     screen:tap(x, y)
     eq(game.restart_count, 1, "New Game button restarts")
-    eq(host.dismiss_count, 1, "New Game button dismisses")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
 test("tapping the Main Menu button calls host:replace()", function()
@@ -175,7 +178,7 @@ end)
 test("tapping outside any button does nothing", function()
     local screen, host, game = new_screen()
     screen:tap(-100, -100)
-    eq(host.dismiss_count, 0, "no dismiss on a miss")
+    eq(#host.replace_calls, 0, "no replace on a miss")
     eq(game.restart_count, 0, "no restart on a miss")
     eq(host.quit_count, 0, "no quit on a miss")
 end)

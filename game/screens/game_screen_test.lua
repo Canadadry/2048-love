@@ -28,12 +28,8 @@ local eq   = T.eq
 local function stub_host()
     local spawn_calls = { win = {}, game_over = {}, pause = {} }
     return {
-        promote_calls = {},
-        promote       = function(self, screen) table.insert(self.promote_calls, screen) end,
         replace_calls = {},
         replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
-        dismiss_count = 0,
-        dismiss       = function(self) self.dismiss_count = self.dismiss_count + 1 end,
         quit_count    = 0,
         quit          = function(self) self.quit_count = self.quit_count + 1 end,
         spawn_calls   = spawn_calls,
@@ -125,9 +121,9 @@ test("is_animating() returns false once update(dt) drains the animation", functi
     eq(screen:is_animating(), false, "animation should be done")
 end)
 
--- ── Cycle 4: Escape while idle promotes the real pause screen ────────────────
+-- ── Cycle 4: Escape while idle replaces with the real pause screen ───────────
 
-test("escape while idle promotes a pause screen wired to this game screen", function()
+test("escape while idle replaces with a pause screen wired to this game screen", function()
     local screen, host = new_screen({
         {0, 2, 0, 4},
         {0, 0, 0, 0},
@@ -135,15 +131,15 @@ test("escape while idle promotes a pause screen wired to this game screen", func
         {0, 0, 0, 0},
     })
     screen:keypressed("escape")
-    eq(#host.promote_calls, 1, "host:promote() called once")
-    local promoted = host.promote_calls[1]
-    eq(promoted.host, host, "pause screen wired to the same host")
-    eq(promoted.game, screen, "pause screen wired to this game screen")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    local replaced = host.replace_calls[1]
+    eq(replaced.host, host, "pause screen wired to the same host")
+    eq(replaced.game, screen, "pause screen wired to this game screen")
 end)
 
 -- ── Cycle 5: deferred pause mid-animation; queue discarded once it opens ─────
 
-test("escape mid-animation does not pause immediately", function()
+test("escape mid-animation does not replace immediately", function()
     local screen, host = new_screen({
         {0, 2, 0, 4},
         {0, 0, 0, 0},
@@ -152,10 +148,10 @@ test("escape mid-animation does not pause immediately", function()
     })
     screen:keypressed("left")   -- triggers animation
     screen:keypressed("escape") -- pressed during animation
-    eq(#host.promote_calls, 0, "should not promote pause while animating")
+    eq(#host.replace_calls, 0, "should not replace while animating")
 end)
 
-test("escape mid-animation pauses once the animation drains", function()
+test("escape mid-animation replaces with pause once the animation drains", function()
     local screen, host = new_screen({
         {0, 2, 0, 4},
         {0, 0, 0, 0},
@@ -165,7 +161,7 @@ test("escape mid-animation pauses once the animation drains", function()
     screen:keypressed("left")
     screen:keypressed("escape")
     screen:update(1.0) -- drain animation
-    eq(#host.promote_calls, 1, "pause promoted once animation finishes")
+    eq(#host.replace_calls, 1, "pause replaced once animation finishes")
 end)
 
 test("queued moves are discarded when the deferred pause opens", function()
@@ -179,15 +175,15 @@ test("queued moves are discarded when the deferred pause opens", function()
     screen:queue_move("right")    -- queued during animation
     screen:keypressed("escape")   -- pause pending
     screen:update(1.0)            -- animation drains -> pause opens, queue cleared
-    eq(#host.promote_calls, 1, "pause promoted")
+    eq(#host.replace_calls, 1, "pause replaced")
     local score_after_pause = screen:score()
     screen:update(0)
     eq(screen:score(), score_after_pause, "no queued move fires after the deferred pause opens")
 end)
 
--- ── Cycle 6: a winning move promotes deps.make_win(self) ────────────────────
+-- ── Cycle 6: a winning move replaces with win screen ────────────────────────
 
-test("a move that completes the win tile promotes deps.make_win(self)", function()
+test("a move that completes the win tile calls host:replace() with a win screen", function()
     local screen, host = new_screen({
         {1024, 1024, 0, 0},
         {0,    0,    0, 0},
@@ -195,14 +191,14 @@ test("a move that completes the win tile promotes deps.make_win(self)", function
         {0,    0,    0, 0},
     })
     screen:keypressed("left")
-    eq(#host.promote_calls, 1, "host:promote() called once")
+    eq(#host.replace_calls, 1, "host:replace() called once")
     eq(#host.spawn_calls.win, 1, "host:spawn('win') called once")
     eq(host.spawn_calls.win[1], screen, "host:spawn('win') received this game screen")
 end)
 
--- ── Cycle 7: a game-ending move promotes deps.make_game_over(self) ──────────
+-- ── Cycle 7: a game-ending move replaces with game over screen ───────────────
 
-test("a move that leaves no legal moves promotes deps.make_game_over(self)", function()
+test("a move that leaves no legal moves calls host:replace() with a game over screen", function()
     local screen, host = new_screen({
         {2, 4, 2, 4},
         {4, 2, 4, 2},
@@ -210,7 +206,7 @@ test("a move that leaves no legal moves promotes deps.make_game_over(self)", fun
         {4, 2, 4, 2},
     })
     screen:keypressed("left")
-    eq(#host.promote_calls, 1, "host:promote() called once")
+    eq(#host.replace_calls, 1, "host:replace() called once")
     eq(#host.spawn_calls.game_over, 1, "host:spawn('game_over') called once")
     eq(host.spawn_calls.game_over[1], screen, "host:spawn('game_over') received this game screen")
 end)
@@ -306,7 +302,7 @@ test("restart() clears pause_pending and the move queue", function()
     screen:keypressed("escape") -- pause pending
     screen:restart()
     screen:update(1.0)
-    eq(#host.promote_calls, 0, "no pause promoted after restart clears pause_pending")
+    eq(#host.replace_calls, 0, "no pause replace after restart clears pause_pending")
 end)
 
 -- ── Cycle 11: resize() finishes in-flight tiles immediately ─────────────────
@@ -339,7 +335,7 @@ local function pause_icon_center()
     end
 end
 
-test("tapping the HUD pause icon promotes pause", function()
+test("tapping the HUD pause icon calls host:replace() with the pause screen", function()
     local screen, host = new_screen({
         {0, 2, 0, 4},
         {0, 0, 0, 0},
@@ -348,7 +344,7 @@ test("tapping the HUD pause icon promotes pause", function()
     })
     local x, y = pause_icon_center()
     screen:tap(x, y)
-    eq(#host.promote_calls, 1, "tapping the pause icon promotes pause")
+    eq(#host.replace_calls, 1, "tapping the pause icon calls host:replace()")
 end)
 
 test("tapping elsewhere on the idle board does nothing", function()
@@ -359,7 +355,7 @@ test("tapping elsewhere on the idle board does nothing", function()
         {0, 0, 0, 0},
     })
     screen:tap(-100, -100)
-    eq(#host.promote_calls, 0, "no pause target outside the icon")
+    eq(#host.replace_calls, 0, "no replace target outside the icon")
 end)
 
 -- ── Cycle 13: mouse/touch swipe queues a move via the screen's own swipe ────
@@ -406,12 +402,12 @@ test("a short drag below the threshold resolves as a tap instead of a swipe", fu
     local x, y = pause_icon_center()
     screen:mousepressed(x, y, 1, false)
     screen:mousereleased(x, y, 1, false)
-    eq(#host.promote_calls, 1, "a tap (no movement) on the pause icon promotes pause")
+    eq(#host.replace_calls, 1, "a tap (no movement) on the pause icon calls host:replace()")
 end)
 
--- ── Cycle 14: resume() recomputes the swipe threshold from window size ──────
+-- ── Cycle 14: enter() recomputes the swipe threshold from window size ────────
 
-test("resume() recomputes the swipe threshold from the current window size", function()
+test("enter() recomputes the swipe threshold from the current window size", function()
     local screen = new_screen({
         {0, 2, 0, 4},
         {0, 0, 0, 0},
@@ -420,7 +416,7 @@ test("resume() recomputes the swipe threshold from the current window size", fun
     })
     local original_dimensions = love.graphics.getDimensions
     love.graphics.getDimensions = function() return 2000, 2000 end -- new threshold: 200px
-    screen:resume()
+    screen:enter()
     love.graphics.getDimensions = original_dimensions
 
     screen:mousepressed(100, 100, 1, false)
@@ -429,8 +425,8 @@ test("resume() recomputes the swipe threshold from the current window size", fun
     screen:update(1.0)
 
     local cells = screen:cells()
-    eq(cells[1][2], 2, "tile unmoved: 150px swipe is below the resumed 200px threshold")
-    eq(cells[1][4], 4, "tile unmoved: 150px swipe is below the resumed 200px threshold")
+    eq(cells[1][2], 2, "tile unmoved: 150px swipe is below the re-entered 200px threshold")
+    eq(cells[1][4], 4, "tile unmoved: 150px swipe is below the re-entered 200px threshold")
 end)
 
 -- ── Cycle 15: draw() composes the board/tile/HUD rendering directly ─────────

@@ -1,5 +1,9 @@
 local menu        = require("menu")
 local menu_screen = require("lib.menu_screen")
+local transitions = require("lib.transitions")
+
+local PUSH_BCK = transitions.push("right")
+local T_DUR    = 0.25
 
 local M = {}
 local Screen = {}
@@ -8,9 +12,9 @@ function M.new(host, game)
     local self = setmetatable({ host = host, game = game }, { __index = Screen })
     self._mixin = menu_screen.new({
         items = {
-            { label = "Resume",    on_activate = function() host:dismiss() end },
-            { label = "New Game",  on_activate = function() game:restart(); host:dismiss() end },
-            { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu")) end },
+            { label = "Resume",    on_activate = function() host:replace(game, PUSH_BCK, T_DUR) end },
+            { label = "New Game",  on_activate = function() game:restart(); host:replace(game, PUSH_BCK, T_DUR) end },
+            { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end },
             { label = "Quit",      on_activate = function() host:quit() end },
         },
     })
@@ -27,7 +31,7 @@ end
 
 function Screen:keypressed(key)
     if key == "escape" then
-        self.host:dismiss()
+        self.host:replace(self.game, PUSH_BCK, T_DUR)
         return
     end
     self._mixin:keypressed(key)

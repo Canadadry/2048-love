@@ -2,6 +2,10 @@ local menu        = require("menu")
 local config      = require("config")
 local particle    = require("lib.particle")
 local menu_screen = require("lib.menu_screen")
+local transitions = require("lib.transitions")
+
+local PUSH_BCK = transitions.push("right")
+local T_DUR    = 0.25
 
 local M = {}
 local Screen = {}
@@ -11,9 +15,9 @@ function M.new(host, game)
     self._particle_system = particle.new(config.PARTICLE)
     self._mixin = menu_screen.new({
         items = {
-            { label = "Continue",  on_activate = function() game:mark_win_seen(); host:dismiss() end },
-            { label = "Restart",   on_activate = function() game:restart(); host:dismiss() end },
-            { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu")) end },
+            { label = "Continue",  on_activate = function() game:mark_win_seen(); host:replace(game, PUSH_BCK, T_DUR) end },
+            { label = "Restart",   on_activate = function() game:restart(); host:replace(game, PUSH_BCK, T_DUR) end },
+            { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end },
         },
     })
     return self

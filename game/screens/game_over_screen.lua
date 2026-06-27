@@ -1,5 +1,9 @@
 local menu        = require("menu")
 local menu_screen = require("lib.menu_screen")
+local transitions = require("lib.transitions")
+
+local PUSH_BCK = transitions.push("right")
+local T_DUR    = 0.25
 
 local M = {}
 local Screen = {}
@@ -10,7 +14,8 @@ function M.new(host, game)
     local self = setmetatable({ host = host, game = game }, { __index = Screen })
     self._mixin = menu_screen.new({
         items = {
-            { label = "New Game", on_activate = function() game:restart(); host:dismiss() end },
+            { label = "New Game",  on_activate = function() game:restart(); host:replace(game, PUSH_BCK, T_DUR) end },
+            { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end },
         },
     })
     return self
@@ -44,8 +49,8 @@ function Screen:spec()
     }
 end
 
--- Game Over's lone button is never drawn as "selected" (no cursor highlight,
--- matching the pre-refactor behavior); -1 never matches a 0-based item index.
+-- Game Over's buttons are never drawn as "selected" (no cursor highlight);
+-- -1 never matches a 0-based item index.
 local UNSELECTED = -1
 
 function Screen:tap(x, y)

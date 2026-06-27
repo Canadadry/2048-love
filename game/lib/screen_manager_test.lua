@@ -13,120 +13,28 @@ test("new() calls enter() on the initial screen", function()
     eq(entered, true, "initial screen must be entered")
 end)
 
--- ── Cycle 2: promote pauses old top, enters new, keeps old on stack ──────────
+-- ── Cycle 2: instant replace() exits old, enters new ─────────────────────────
 
-test("promote() pauses old top and enters the new screen", function()
+test("replace() exits the old screen and enters the new one", function()
     local log = {}
-    local game = { pause = function() log[#log + 1] = "game.pause" end }
-    local pause_screen = { enter = function() log[#log + 1] = "pause.enter" end }
-    local sm = screen_manager.new(game)
-    sm:promote(pause_screen)
-    eq(log[1], "game.pause",  "old top must be paused first")
-    eq(log[2], "pause.enter", "new screen must be entered second")
+    local old = { exit = function() log[#log + 1] = "old.exit" end }
+    local new_screen = { enter = function() log[#log + 1] = "new.enter" end }
+    local sm = screen_manager.new(old)
+    sm:replace(new_screen)
+    eq(log[1], "old.exit",   "old screen must be exited first")
+    eq(log[2], "new.enter",  "new screen must be entered second")
     eq(#log, 2, "no extra lifecycle calls")
 end)
 
-test("promote() does not exit the old top", function()
-    local exited = false
-    local game = { exit = function() exited = true end }
-    local sm = screen_manager.new(game)
-    sm:promote({})
-    eq(exited, false, "old top must remain on the stack, not exited")
+test("replace() makes top() return the new screen", function()
+    local old = { id = "old" }
+    local new_screen = { id = "new" }
+    local sm = screen_manager.new(old)
+    sm:replace(new_screen)
+    eq(sm:top().id, "new", "top() must be the new screen after replace")
 end)
 
--- ── Cycle 3: dispatch reaches only the top screen ────────────────────────────
-
-test("keypressed reaches only the top screen, not a paused one beneath", function()
-    local received = {}
-    local game = { keypressed = function(_, k) received[#received + 1] = "game:" .. k end }
-    local pause_screen = { keypressed = function(_, k) received[#received + 1] = "pause:" .. k end }
-    local sm = screen_manager.new(game)
-    sm:promote(pause_screen)
-    sm:keypressed("left")
-    eq(#received, 1, "exactly one handler called")
-    eq(received[1], "pause:left", "only the top screen receives the key")
-end)
-
-test("top() returns the current top screen, updated after promote", function()
-    local game = { score = function() return 10 end }
-    local pause_screen = { score = function() return 99 end }
-    local sm = screen_manager.new(game)
-    eq(sm:top():score(), 10, "top() is the initial screen")
-    sm:promote(pause_screen)
-    eq(sm:top():score(), 99, "top() is the new screen after promote, not the paused one")
-end)
-
--- ── Cycle 4: dismiss exits top, resumes new top ──────────────────────────────
-
-test("dismiss() exits the top screen and resumes the new top", function()
-    local log = {}
-    local game = { resume = function() log[#log + 1] = "game.resume" end }
-    local pause_screen = { exit = function() log[#log + 1] = "pause.exit" end }
-    local sm = screen_manager.new(game)
-    sm:promote(pause_screen)
-    sm:dismiss()
-    eq(log[1], "pause.exit",   "old top must be exited first")
-    eq(log[2], "game.resume",  "new top must be resumed second")
-    eq(#log, 2, "no extra lifecycle calls")
-end)
-
-test("dismiss() returns top() to the underlying screen", function()
-    local game = { score = function() return 10 end }
-    local pause_screen = { score = function() return 99 end }
-    local sm = screen_manager.new(game)
-    sm:promote(pause_screen)
-    sm:dismiss()
-    eq(sm:top():score(), 10, "top() goes back to the resumed screen")
-end)
-
--- ── Cycle 5: dismiss() on a single-screen stack errors ───────────────────────
-
-test("dismiss() on a single-screen stack raises an error", function()
-    local sm = screen_manager.new({})
-    local ok = pcall(function() sm:dismiss() end)
-    eq(ok, false, "dismiss() with nothing left to dismiss to must error")
-end)
-
--- ── Cycle 6: replace() exits all, leaves single new root ────────────────────
-
-test("replace() exits every screen top-to-bottom and enters the new root", function()
-    local log = {}
-    local game = { exit = function() log[#log + 1] = "game.exit" end }
-    local pause_screen = { exit = function() log[#log + 1] = "pause.exit" end }
-    local menu = { enter = function() log[#log + 1] = "menu.enter" end }
-    local sm = screen_manager.new(game)
-    sm:promote(pause_screen)
-    sm:replace(menu)
-    eq(log[1], "pause.exit", "topmost screen exits first")
-    eq(log[2], "game.exit",  "screens exit top-to-bottom")
-    eq(log[3], "menu.enter", "new root entered last")
-    eq(#log, 3, "no extra lifecycle calls")
-end)
-
-test("replace() leaves a single-entry stack with nothing left to dismiss", function()
-    local game = { exit = function() end }
-    local menu = {}
-    local sm = screen_manager.new(game)
-    sm:promote({ exit = function() end })
-    sm:replace(menu)
-    local ok = pcall(function() sm:dismiss() end)
-    eq(ok, false, "replace() must leave only the new root on the stack")
-end)
-
--- ── Cycle 7: missing lifecycle methods are no-ops ────────────────────────────
-
-test("promote() does not crash when screens lack pause()/enter()", function()
-    local sm = screen_manager.new({})
-    sm:promote({})
-    eq(true, true, "no crash")
-end)
-
-test("dismiss() does not crash when screens lack exit()/resume()", function()
-    local sm = screen_manager.new({})
-    sm:promote({})
-    sm:dismiss()
-    eq(true, true, "no crash")
-end)
+-- ── Cycle 3: missing lifecycle methods are no-ops ────────────────────────────
 
 test("replace() does not crash when screens lack exit()/enter()", function()
     local sm = screen_manager.new({})
@@ -134,56 +42,144 @@ test("replace() does not crash when screens lack exit()/enter()", function()
     eq(true, true, "no crash")
 end)
 
-test("update does not crash when the top screen has no update()", function()
+test("update does not crash when the current screen has no update()", function()
     local sm = screen_manager.new({})
     sm:update(0.016)
     eq(true, true, "no crash")
 end)
 
-test("update(dt) reaches every screen on the stack, top-to-bottom, regardless of focus", function()
-    local log = {}
-    local game = { update = function(_, dt) log[#log + 1] = "game:" .. dt end }
-    local pause_screen = { update = function(_, dt) log[#log + 1] = "pause:" .. dt end }
-    local sm = screen_manager.new(game)
-    sm:promote(pause_screen)
-    sm:update(0.016)
-    eq(#log, 2, "both screens on the stack must update")
-    eq(log[1], "pause:0.016", "top of stack updates first")
-    eq(log[2], "game:0.016", "screen beneath the overlay still updates")
-end)
-
--- ── Cycle 8: draw() draws every screen back-to-front ─────────────────────────
-
-test("draw() draws every screen on the stack, bottom-to-top", function()
-    local log = {}
-    local a = { draw = function() log[#log + 1] = "a" end }
-    local b = { draw = function() log[#log + 1] = "b" end }
-    local c = { draw = function() log[#log + 1] = "c" end }
-    local sm = screen_manager.new(a)
-    sm:promote(b)
-    sm:promote(c)
-    sm:draw()
-    eq(#log, 3, "every screen on the stack must draw")
-    eq(log[1], "a", "bottom screen draws first")
-    eq(log[2], "b", "middle screen draws second")
-    eq(log[3], "c", "top screen draws last, on top of everything beneath it")
-end)
-
-test("draw() does not crash when the top screen has no draw()", function()
+test("draw() does not crash when the current screen has no draw()", function()
     local sm = screen_manager.new({})
     sm:draw()
     eq(true, true, "no crash")
 end)
 
--- ── Cycle 9: re-entrancy guard on promote/replace/dismiss ────────────────────
-
-test("promote() errors if a screen's enter() calls promote() again", function()
-    local sm
-    local b = { enter = function() sm:promote({}) end }
-    sm = screen_manager.new({})
-    local ok = pcall(function() sm:promote(b) end)
-    eq(ok, false, "nested promote during an in-progress transition must error")
+test("keypressed does not crash when the current screen has no keypressed()", function()
+    local sm = screen_manager.new({})
+    sm:keypressed("left")
+    eq(true, true, "no crash")
 end)
+
+-- ── Cycle 4: dispatch reaches only current screen ────────────────────────────
+
+test("update(dt) dispatches to _current only (no stack)", function()
+    local log = {}
+    local screen = { update = function(_, dt) log[#log + 1] = "screen:" .. dt end }
+    local sm = screen_manager.new(screen)
+    sm:update(0.016)
+    eq(#log, 1, "exactly one update call")
+    eq(log[1], "screen:0.016", "current screen updated")
+end)
+
+test("keypressed dispatches to the current screen", function()
+    local received = {}
+    local screen = { keypressed = function(_, k) received[#received + 1] = k end }
+    local sm = screen_manager.new(screen)
+    sm:keypressed("left")
+    eq(#received, 1, "exactly one call")
+    eq(received[1], "left", "key forwarded to current screen")
+end)
+
+test("top() returns the current screen", function()
+    local screen = { id = "a" }
+    local sm = screen_manager.new(screen)
+    eq(sm:top().id, "a", "top() is the initial screen")
+end)
+
+-- ── Cycle 5: animated transition — both screens update ───────────────────────
+
+test("during an animated transition, both outgoing and incoming screens receive update(dt)", function()
+    love.graphics.newCanvas = function() return {} end
+    local log = {}
+    local outgoing = { update = function(_, dt) log[#log + 1] = "out:" .. dt end }
+    local incoming = { enter = function() end, update = function(_, dt) log[#log + 1] = "in:" .. dt end }
+    local sm = screen_manager.new(outgoing)
+    sm:replace(incoming, function() end, 0.3)
+    sm:update(0.1)
+    eq(#log, 2, "both screens must update during transition")
+    -- order: implementation-defined, but both must appear
+    local has_out = log[1] == "out:0.1" or log[2] == "out:0.1"
+    local has_in  = log[1] == "in:0.1"  or log[2] == "in:0.1"
+    eq(has_out, true, "outgoing screen updated")
+    eq(has_in,  true, "incoming screen updated")
+end)
+
+-- ── Cycle 6: transition completes when elapsed >= duration ───────────────────
+
+test("transition ends after enough dt: exit() called on outgoing, current becomes incoming", function()
+    love.graphics.newCanvas = function() return {} end
+    local log = {}
+    local outgoing = { exit = function() log[#log + 1] = "out.exit" end }
+    local incoming = { enter = function() end }
+    local sm = screen_manager.new(outgoing)
+    sm:replace(incoming, function() end, 0.3)
+    sm:update(0.4) -- exceeds duration
+    eq(#log, 1, "exit() called once on outgoing")
+    eq(log[1], "out.exit", "outgoing screen exited at transition end")
+    eq(sm:top(), incoming, "top() is now the incoming screen")
+end)
+
+test("top() returns the outgoing screen while transition is in progress", function()
+    love.graphics.newCanvas = function() return {} end
+    local outgoing = { id = "out" }
+    local incoming = { enter = function() end, id = "in" }
+    local sm = screen_manager.new(outgoing)
+    sm:replace(incoming, function() end, 0.5)
+    eq(sm:top().id, "out", "top() is still the outgoing screen during transition")
+    sm:update(0.6) -- complete transition
+    eq(sm:top().id, "in", "top() switches to incoming only after transition ends")
+end)
+
+-- ── Cycle 7: input is blocked during transition ───────────────────────────────
+
+test("keypressed is silently swallowed during an animated transition", function()
+    love.graphics.newCanvas = function() return {} end
+    local received = {}
+    local outgoing = { keypressed = function(_, k) received[#received + 1] = k end }
+    local incoming = { enter = function() end }
+    local sm = screen_manager.new(outgoing)
+    sm:replace(incoming, function() end, 0.5)
+    sm:keypressed("left")
+    eq(#received, 0, "keypressed must be swallowed during transition")
+end)
+
+test("resize is silently swallowed during an animated transition", function()
+    love.graphics.newCanvas = function() return {} end
+    local resize_called = false
+    local outgoing = { resize = function() resize_called = true end }
+    local incoming = { enter = function() end }
+    local sm = screen_manager.new(outgoing)
+    sm:replace(incoming, function() end, 0.5)
+    sm:resize(800, 600)
+    eq(resize_called, false, "resize must be swallowed during transition")
+end)
+
+test("keypressed dispatches again after transition completes", function()
+    love.graphics.newCanvas = function() return {} end
+    local received = {}
+    local outgoing = {}
+    local incoming = { enter = function() end, keypressed = function(_, k) received[#received + 1] = k end }
+    local sm = screen_manager.new(outgoing)
+    sm:replace(incoming, function() end, 0.3)
+    sm:update(0.5) -- complete transition
+    sm:keypressed("right")
+    eq(#received, 1, "keypressed dispatches to incoming after transition ends")
+    eq(received[1], "right", "correct key forwarded")
+end)
+
+-- ── Cycle 8: replace while transition in progress errors ─────────────────────
+
+test("calling replace() while a transition is already in progress raises an error", function()
+    love.graphics.newCanvas = function() return {} end
+    local outgoing = {}
+    local incoming = { enter = function() end }
+    local sm = screen_manager.new(outgoing)
+    sm:replace(incoming, function() end, 0.5)
+    local ok = pcall(function() sm:replace({}, function() end, 0.3) end)
+    eq(ok, false, "replace() during an active transition must error")
+end)
+
+-- ── Cycle 9: re-entrancy guard on instant replace ────────────────────────────
 
 test("replace() errors if a screen's enter() calls replace() again", function()
     local sm
@@ -193,23 +189,35 @@ test("replace() errors if a screen's enter() calls replace() again", function()
     eq(ok, false, "nested replace during an in-progress transition must error")
 end)
 
-test("dismiss() errors if a screen's exit() calls dismiss() again", function()
-    local sm
-    local c = { exit = function() sm:dismiss() end }
-    sm = screen_manager.new({})
-    sm:promote({})
-    sm:promote(c)
-    local ok = pcall(function() sm:dismiss() end)
-    eq(ok, false, "nested dismiss during an in-progress transition must error")
-end)
-
 test("the manager recovers after a guarded transition errors", function()
     local sm
-    local b = { enter = function() sm:promote({}) end }
+    local menu = { enter = function() sm:replace({}) end }
     sm = screen_manager.new({})
-    pcall(function() sm:promote(b) end)
-    local ok = pcall(function() sm:promote({}) end)
-    eq(ok, true, "a later, non-nested transition must still succeed")
+    pcall(function() sm:replace(menu) end)
+    local ok = pcall(function() sm:replace({}) end)
+    eq(ok, true, "a later, non-nested replace must still succeed")
+end)
+
+-- ── Cycle 10: is_transitioning() ─────────────────────────────────────────────
+
+test("is_transitioning() returns false when idle", function()
+    local sm = screen_manager.new({})
+    eq(sm:is_transitioning(), false, "not transitioning at rest")
+end)
+
+test("is_transitioning() returns true during an animated transition", function()
+    love.graphics.newCanvas = function() return {} end
+    local sm = screen_manager.new({})
+    sm:replace({ enter = function() end }, function() end, 0.5)
+    eq(sm:is_transitioning(), true, "transitioning after animated replace")
+end)
+
+test("is_transitioning() returns false after the transition completes", function()
+    love.graphics.newCanvas = function() return {} end
+    local sm = screen_manager.new({})
+    sm:replace({ enter = function() end }, function() end, 0.3)
+    sm:update(0.4)
+    eq(sm:is_transitioning(), false, "not transitioning after it ends")
 end)
 
 -- ── quit() ────────────────────────────────────────────────────────────────────

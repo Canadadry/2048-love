@@ -27,8 +27,6 @@ local eq   = T.eq
 
 local function stub_host(main_menu_screen)
     return {
-        dismiss_count = 0,
-        dismiss       = function(self) self.dismiss_count = self.dismiss_count + 1 end,
         replace_calls = {},
         replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
         spawn         = function(self, name) if name == "main_menu" then return main_menu_screen end end,
@@ -55,11 +53,12 @@ end
 
 -- ── Cycle 1: Tracer bullet ────────────────────────────────────────────────────
 
-test("Enter at cursor 0 (Continue) marks win seen and dismisses", function()
+test("Enter at cursor 0 (Continue) marks win seen and calls host:replace() with the game screen", function()
     local screen, host, game = new_screen()
     screen:keypressed("return")
     eq(game.mark_win_seen_count, 1, "game:mark_win_seen() called")
-    eq(host.dismiss_count, 1, "host:dismiss() called")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
     eq(game.restart_count, 0, "Continue must not restart")
 end)
 
@@ -93,14 +92,15 @@ test("up moves cursor back to 0 and clamps", function()
     eq(screen:cursor(), 0, "cursor clamped at 0")
 end)
 
--- ── Cycle 4: Enter at cursor 1 (Restart) restarts and dismisses ─────────────
+-- ── Cycle 4: Enter at cursor 1 (Restart) restarts and replaces ──────────────
 
-test("Enter at cursor 1 (Restart) restarts the game and dismisses", function()
+test("Enter at cursor 1 (Restart) restarts the game and calls host:replace() with the game screen", function()
     local screen, host, game = new_screen()
     screen:keypressed("down")
     screen:keypressed("return")
     eq(game.restart_count, 1, "game:restart() called")
-    eq(host.dismiss_count, 1, "host:dismiss() called")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
     eq(game.mark_win_seen_count, 0, "Restart must not mark win seen")
 end)
 
@@ -126,21 +126,23 @@ local function button_centers(tree)
     return centers
 end
 
-test("tapping Continue marks win seen and dismisses", function()
+test("tapping Continue marks win seen and calls host:replace() with the game screen", function()
     local screen, host, game = new_screen()
     local centers = button_centers(menu.menu_tree(screen:spec(), screen:cursor(), nil))
     eq(#centers, 3, "expected exactly three buttons")
     screen:tap(centers[1].x, centers[1].y)
     eq(game.mark_win_seen_count, 1, "game:mark_win_seen() called")
-    eq(host.dismiss_count, 1, "host:dismiss() called")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
-test("tapping Restart restarts the game and dismisses", function()
+test("tapping Restart restarts the game and calls host:replace() with the game screen", function()
     local screen, host, game = new_screen()
     local centers = button_centers(menu.menu_tree(screen:spec(), screen:cursor(), nil))
     screen:tap(centers[2].x, centers[2].y)
     eq(game.restart_count, 1, "game:restart() called")
-    eq(host.dismiss_count, 1, "host:dismiss() called")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
 test("tapping Main Menu calls host:replace() with the main menu screen", function()
@@ -153,7 +155,7 @@ end)
 test("tapping outside any button does nothing", function()
     local screen, host, game = new_screen()
     screen:tap(-100, -100)
-    eq(host.dismiss_count, 0, "no dismiss on a miss")
+    eq(#host.replace_calls, 0, "no replace on a miss")
     eq(game.restart_count, 0, "no restart on a miss")
     eq(game.mark_win_seen_count, 0, "no mark_win_seen on a miss")
 end)

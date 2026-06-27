@@ -4,6 +4,10 @@ local optionsmodel = require("lib.optionsmodel")
 local settings     = require("lib.settings")
 local menu         = require("menu")
 local menu_screen  = require("lib.menu_screen")
+local transitions  = require("lib.transitions")
+
+local PUSH_BCK = transitions.push("right")
+local T_DUR    = 0.25
 
 local BOOLEAN_VALUES = { true, false }
 
@@ -57,7 +61,7 @@ function Screen:enter()
             function(v) config.EFFECTS_ENABLED = v; settings.set("effects_enabled", v) end,
             bool_label),
         { label = "Up/Down to focus a row, Left/Right to change its value, or tap a row", focusable = false },
-        { label = "Back", on_activate = function() host:dismiss() end, focus_before_activate = true },
+        { label = "Back", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end, focus_before_activate = true },
     }
 
     self._mixin = menu_screen.new({ items = items, wrap = true })
@@ -69,7 +73,7 @@ end
 
 function Screen:keypressed(key)
     if key == "escape" then
-        self.host:dismiss()
+        self.host:replace(self.host:spawn("main_menu"), PUSH_BCK, T_DUR)
         return
     end
     self._mixin:keypressed(key)

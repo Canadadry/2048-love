@@ -7,6 +7,10 @@ local tile_draw    = require("tile_draw")
 local hud          = require("hud")
 local font_cache   = require("lib.font_cache")
 local swipe        = require("lib.swipe")
+local transitions  = require("lib.transitions")
+
+local PUSH_FWD = transitions.push("left")
+local T_DUR    = 0.25
 
 local M = {}
 local Screen = {}
@@ -63,9 +67,9 @@ local function apply_move(self, dir)
         end
     end
     if result.win and not self._win_seen then
-        self.host:promote(self.host:spawn("win", self))
+        self.host:replace(self.host:spawn("win", self), PUSH_FWD, T_DUR)
     elseif result.game_over then
-        self.host:promote(self.host:spawn("game_over", self))
+        self.host:replace(self.host:spawn("game_over", self), PUSH_FWD, T_DUR)
     end
 end
 
@@ -89,7 +93,7 @@ end
 
 local function open_pause(self)
     self._queue = {}
-    self.host:promote(self.host:spawn("pause", self))
+    self.host:replace(self.host:spawn("pause", self), PUSH_FWD, T_DUR)
 end
 
 function Screen:update(dt)
@@ -157,13 +161,13 @@ function Screen:touchreleased(id, x, y)
     resolve_release(self, dir, is_tap, x, y)
 end
 
-function Screen:resize(w, h)
-    for _, t in ipairs(self._tiles) do t:finish() end
-end
-
-function Screen:resume()
+function Screen:enter()
     local w, h = love.graphics.getDimensions()
     self._swipe:set_threshold(math.min(w, h) * 0.10)
+end
+
+function Screen:resize(w, h)
+    for _, t in ipairs(self._tiles) do t:finish() end
 end
 
 function Screen:draw()

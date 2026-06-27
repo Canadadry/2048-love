@@ -24,10 +24,11 @@ local T    = require("lib.t")
 local test = T.test
 local eq   = T.eq
 
-local function stub_host()
+local function stub_host(main_menu_screen)
     return {
-        dismiss_count = 0,
-        dismiss       = function(self) self.dismiss_count = self.dismiss_count + 1 end,
+        replace_calls = {},
+        replace       = function(self, screen) table.insert(self.replace_calls, screen) end,
+        spawn         = function(self, name) if name == "main_menu" then return main_menu_screen end end,
     }
 end
 
@@ -36,33 +37,37 @@ local function stub_game()
 end
 
 local function new_screen()
-    local host = stub_host()
+    local main_menu_screen = { sentinel = true }
+    local host = stub_host(main_menu_screen)
     local game = stub_game()
     local screen = game_over_screen.new(host, game)
-    return screen, host, game
+    screen:enter()
+    return screen, host, game, main_menu_screen
 end
 
 -- ── Cycle 1: Tracer bullet ────────────────────────────────────────────────────
 
-test("Enter restarts the game and dismisses the game over screen", function()
+test("Enter restarts the game and calls host:replace() with the game screen", function()
     local screen, host, game = new_screen()
     screen:keypressed("return")
     eq(game.restart_count, 1, "game:restart() called")
-    eq(host.dismiss_count, 1, "host:dismiss() called")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
 -- ── Cycle 2: any arrow key also restarts ─────────────────────────────────────
 
 for _, key in ipairs({ "left", "right", "up", "down" }) do
-    test("arrow key '" .. key .. "' restarts the game and dismisses", function()
+    test("arrow key '" .. key .. "' restarts the game and calls host:replace() with the game screen", function()
         local screen, host, game = new_screen()
         screen:keypressed(key)
         eq(game.restart_count, 1, "game:restart() called")
-        eq(host.dismiss_count, 1, "host:dismiss() called")
+        eq(#host.replace_calls, 1, "host:replace() called once")
+        eq(host.replace_calls[1], game, "replaced with the game screen")
     end)
 end
 
--- ── Cycle 3: tapping the Restart button restarts ────────────────────────────
+-- ── Cycle 3: tapping the New Game button restarts ────────────────────────────
 
 local function button_centers(tree)
     local centers = {}
@@ -74,25 +79,36 @@ local function button_centers(tree)
     return centers
 end
 
-test("tapping the Restart button restarts the game and dismisses", function()
+test("tapping the New Game button restarts and calls host:replace() with the game screen", function()
     local screen, host, game = new_screen()
     local centers = button_centers(menu.menu_tree(screen:spec(), -1, nil))
-    eq(#centers, 1, "expected exactly one button")
+    eq(#centers, 2, "expected exactly two buttons")
     screen:tap(centers[1].x, centers[1].y)
     eq(game.restart_count, 1, "game:restart() called")
-    eq(host.dismiss_count, 1, "host:dismiss() called")
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], game, "replaced with the game screen")
 end)
 
--- ── Cycle 4: tapping outside the button does nothing ────────────────────────
+-- ── Cycle 4: tapping the Main Menu button replaces with main menu ────────────
 
-test("tapping outside the Restart button does nothing", function()
+test("tapping the Main Menu button calls host:replace() with the main menu screen", function()
+    local screen, host, _, main_menu_screen = new_screen()
+    local centers = button_centers(menu.menu_tree(screen:spec(), -1, nil))
+    screen:tap(centers[2].x, centers[2].y)
+    eq(#host.replace_calls, 1, "host:replace() called once")
+    eq(host.replace_calls[1], main_menu_screen, "replaced with the main menu screen")
+end)
+
+-- ── Cycle 5: tapping outside the button does nothing ────────────────────────
+
+test("tapping outside the buttons does nothing", function()
     local screen, host, game = new_screen()
     screen:tap(-100, -100)
     eq(game.restart_count, 0, "no restart on a miss")
-    eq(host.dismiss_count, 0, "no dismiss on a miss")
+    eq(#host.replace_calls, 0, "no replace on a miss")
 end)
 
--- ── Cycle 5: draw() delegates to menu.draw_game_over ─────────────────────────
+-- ── Cycle 6: draw() delegates to menu.draw_game_over ─────────────────────────
 
 test("draw() runs without erroring", function()
     local screen = new_screen()
