@@ -1,4 +1,5 @@
 local config       = require("config")
+local i18n         = require("lib.i18n")
 local tileset      = require("tileset")
 local optionsmodel = require("lib.optionsmodel")
 local settings     = require("lib.settings")
@@ -13,11 +14,11 @@ local T_DUR    = config.TRANSITION_DURATION
 local BOOLEAN_VALUES = { true, false }
 
 local function theme_label(name)
-    return name == "" and "None (classic)" or name
+    return name == "" and i18n.t("options.theme_none") or name
 end
 
 local function bool_label(enabled)
-    return enabled and "ON" or "OFF"
+    return enabled and i18n.t("options.on") or i18n.t("options.off")
 end
 
 local M = {}
@@ -27,9 +28,10 @@ function M.new(host)
     return setmetatable({ host = host }, { __index = Screen })
 end
 
-local function value_row(label, values, get, set, format)
+local function value_row(label_fn, values, get, set, format)
     format = format or tostring
-    local item = { label = label, value = format(get()) }
+    local value_fn = function() return format(get()) end
+    local item = { label = label_fn(), _label_fn = label_fn, value = value_fn(), _value_fn = value_fn }
     local function cycle(step)
         local v = step(values, get())
         set(v)
@@ -40,33 +42,52 @@ local function value_row(label, values, get, set, format)
     return item
 end
 
+local function refresh_items(items)
+    for _, item in ipairs(items) do
+        if item._label_fn then item.label = item._label_fn() end
+        if item._value_fn then item.value = item._value_fn() end
+    end
+end
+
 function Screen:enter()
     local host = self.host
     local win_tile_values = { 16, 2048 }
     local theme_values    = tileset.list_available()
 
+    local lang_values = i18n.languages()
+    local function current_lang_entry()
+        for _, lang in ipairs(lang_values) do
+            if lang.code == i18n.lang() then return lang end
+        end
+        return lang_values[1]
+    end
+
     local items = {
-        value_row("Win Tile", win_tile_values,
+        value_row(function() return i18n.t("options.win_tile") end, win_tile_values,
             function() return config.WIN_TILE end,
             function(v) config.WIN_TILE = v; settings.set("win_tile", v) end),
-        value_row("Theme", theme_values,
+        value_row(function() return i18n.t("options.theme") end, theme_values,
             function() return config.TILESET end,
             function(v) config.TILESET = v; settings.set("theme", v) end,
             theme_label),
-        value_row("Animations", BOOLEAN_VALUES,
+        value_row(function() return i18n.t("options.animations") end, BOOLEAN_VALUES,
             function() return config.ANIMATIONS_ENABLED end,
             function(v) config.ANIMATIONS_ENABLED = v; settings.set("animations_enabled", v) end,
             bool_label),
-        value_row("Effects", BOOLEAN_VALUES,
+        value_row(function() return i18n.t("options.effects") end, BOOLEAN_VALUES,
             function() return config.EFFECTS_ENABLED end,
             function(v) config.EFFECTS_ENABLED = v; settings.set("effects_enabled", v) end,
             bool_label),
-        value_row("Sound", BOOLEAN_VALUES,
+        value_row(function() return i18n.t("options.sound") end, BOOLEAN_VALUES,
             function() return config.SOUND.ENABLED end,
             function(v) config.SOUND.ENABLED = v; settings.set("sound_enabled", v) end,
             bool_label),
-        { label = "Up/Down to focus a row, Left/Right to change its value, or tap a row", focusable = false },
-        { label = "Back", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end, focus_before_activate = true },
+        value_row(function() return i18n.t("options.language") end, lang_values,
+            current_lang_entry,
+            function(v) i18n.set_lang(v.code); settings.set("language", v.code) end,
+            function(v) return v.name end),
+        { label = i18n.t("options.hint"), _label_fn = function() return i18n.t("options.hint") end, focusable = false },
+        { label = i18n.t("menu.back"), _label_fn = function() return i18n.t("menu.back") end, on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end, focus_before_activate = true },
     }
 
     self._mixin = menu_screen.new({ items = items, wrap = true, on_select = menu_sounds.on_select, on_change = menu_sounds.on_change })
@@ -85,7 +106,9 @@ function Screen:keypressed(key)
 end
 
 function Screen:spec()
-    return { title = "Options", bg_color = menu.BG_COLOR, item_style = "row", items = self._mixin:items() }
+    local items = self._mixin:items()
+    refresh_items(items)
+    return { title = i18n.t("screen.options"), bg_color = menu.BG_COLOR, item_style = "row", items = items }
 end
 
 function Screen:tap(x, y)

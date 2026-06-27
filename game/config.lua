@@ -23,6 +23,9 @@ M.DEFAULT_TILE_COLOR = { bg = { 0.24, 0.23, 0.20 }, fg = { 1.00, 1.00, 1.00 } }
 
 M.WIN_TILE           = 2048
 
+M.LANG_FILE          = "assets/i18n.csv"
+M.DEFAULT_LANG       = "en"
+
 M.TRANSITION_EASE     = tween.ease(tween.Curve.Bounce, tween.Mode.Out)
 M.TRANSITION_DURATION = 1
 

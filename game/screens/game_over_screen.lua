@@ -1,4 +1,5 @@
 local config      = require("config")
+local i18n        = require("lib.i18n")
 local menu        = require("menu")
 local menu_screen = require("lib.menu_screen")
 local transitions = require("lib.transitions")
@@ -16,8 +17,8 @@ function M.new(host, game)
     local self = setmetatable({ host = host, game = game }, { __index = Screen })
     self._mixin = menu_screen.new({
         items = {
-            { label = "New Game",  on_activate = function() game:restart(); host:replace(game, PUSH_BCK, T_DUR) end },
-            { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end },
+            { label = i18n.t("menu.new_game"),  on_activate = function() game:restart(); host:replace(game, PUSH_BCK, T_DUR) end },
+            { label = i18n.t("menu.main_menu"), on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end },
         },
         on_select = menu_sounds.on_select,
     })
@@ -42,7 +43,7 @@ end
 
 function Screen:spec()
     return {
-        title             = "Game Over",
+        title             = i18n.t("screen.game_over"),
         title_font_offset = 8,
         bg_color          = menu.BG_COLOR,
         text_color        = menu.WHITE_COLOR,

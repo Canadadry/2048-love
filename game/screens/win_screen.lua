@@ -1,5 +1,6 @@
 local menu        = require("menu")
 local config      = require("config")
+local i18n        = require("lib.i18n")
 local particle    = require("lib.particle")
 local menu_screen = require("lib.menu_screen")
 local transitions = require("lib.transitions")
@@ -16,9 +17,9 @@ function M.new(host, game)
     self._particle_system = particle.new(config.PARTICLE)
     self._mixin = menu_screen.new({
         items = {
-            { label = "Continue",  on_activate = function() game:mark_win_seen(); host:replace(game, PUSH_BCK, T_DUR) end },
-            { label = "Restart",   on_activate = function() game:restart(); host:replace(game, PUSH_BCK, T_DUR) end },
-            { label = "Main Menu", on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end },
+            { label = i18n.t("menu.continue"),  on_activate = function() game:mark_win_seen(); host:replace(game, PUSH_BCK, T_DUR) end },
+            { label = i18n.t("menu.restart"),   on_activate = function() game:restart(); host:replace(game, PUSH_BCK, T_DUR) end },
+            { label = i18n.t("menu.main_menu"), on_activate = function() host:replace(host:spawn("main_menu"), PUSH_BCK, T_DUR) end },
         },
         on_select = menu_sounds.on_select,
     })
@@ -54,7 +55,7 @@ end
 
 function Screen:spec()
     return {
-        title             = "You Win!",
+        title             = i18n.t("screen.you_win"),
         title_font_offset = 8,
         bg_color          = menu.BG_COLOR,
         item_style        = "button",

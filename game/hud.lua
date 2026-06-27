@@ -3,6 +3,7 @@ local ui         = require("lib.ui.layout.ui")
 local painter    = require("lib.ui.painter.painter")
 local board      = require("board")
 local font_cache = require("lib.font_cache")
+local i18n       = require("lib.i18n")
 
 local M = {}
 
@@ -60,7 +61,7 @@ function M.hud_tree(score, callbacks)
 
     local children = {
         builder.Leaf("grow-x h-fit", painter.Text {
-            text  = "Score: " .. score,
+            text  = i18n.t("hud.score") .. score,
             align = "left",
             font  = font,
             color = SCORE_TEXT_COLOR,
