@@ -8,7 +8,7 @@ local transitions  = require("lib.transitions")
 local menu_sounds  = require("menu_sounds")
 
 local PUSH_BCK = transitions.push("right")
-local T_DUR    = 0.25
+local T_DUR    = config.TRANSITION_DURATION
 
 local BOOLEAN_VALUES = { true, false }
 

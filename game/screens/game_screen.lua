@@ -11,7 +11,7 @@ local swipe        = require("lib.swipe")
 local transitions  = require("lib.transitions")
 
 local PUSH_FWD = transitions.push("left")
-local T_DUR    = 0.25
+local T_DUR    = config.TRANSITION_DURATION
 
 local M = {}
 local Screen = {}

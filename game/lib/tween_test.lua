@@ -88,4 +88,31 @@ test("current > duration clamps to to", function()
     eq(ease(10, 20, 1, 2), 20, "current past duration must return to")
 end)
 
+-- ── tween.ease — simplified progress easer ───────────────────────────────────
+
+test("ease() returns a function", function()
+    local f = tween.ease(tween.Curve.Linear, tween.Mode.In)
+    eq(type(f), "function", "ease() must return a function")
+end)
+
+test("ease() at progress 0 returns 0", function()
+    local f = tween.ease(tween.Curve.Linear, tween.Mode.In)
+    eq(f(0), 0, "progress 0 must map to 0")
+end)
+
+test("ease() at progress 1 returns 1", function()
+    local f = tween.ease(tween.Curve.Linear, tween.Mode.In)
+    eq(f(1), 1, "progress 1 must map to 1")
+end)
+
+test("ease(Sine/Out) at midpoint is ahead of linear (eases out = fast start)", function()
+    local sine_out = tween.ease(tween.Curve.Sine, tween.Mode.Out)
+    local linear   = tween.ease(tween.Curve.Linear, tween.Mode.In)
+    local s = sine_out(0.5)
+    local l = linear(0.5)
+    if s <= l then
+        error("Sine/Out at 0.5 should be > linear 0.5, got " .. s .. " vs " .. l)
+    end
+end)
+
 T.report()

@@ -3,7 +3,7 @@ local tile_draw   = require("tile_draw")
 local transitions = require("lib.transitions")
 
 local PUSH_FWD     = transitions.push("left")
-local T_DUR        = 0.25
+local T_DUR        = config.TRANSITION_DURATION
 local BOUNCE_SPEED = 0.6   -- seconds to cross the track once
 
 local BG    = { 0.98, 0.97, 0.94 }

@@ -51,6 +51,7 @@ function love.load()
         on_transition = function()
             if config.SOUND.ENABLED then sound.play(config.SOUND.TRANSITION) end
         end,
+        ease_fn = config.TRANSITION_EASE,
     })
     host:replace(host:spawn("main_menu"))
     local w, h = love.graphics.getDimensions()

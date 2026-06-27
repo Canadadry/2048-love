@@ -87,4 +87,9 @@ function M.new(curve, mode)
     end
 end
 
+function M.ease(curve, mode)
+    local f = M.new(curve, mode)
+    return function(progress) return f(0, 1, 1, progress) end
+end
+
 return M

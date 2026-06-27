@@ -8,6 +8,7 @@ function SM.new(initial, registry, opts)
         _current       = initial,
         _registry      = registry or {},
         _on_transition = opts.on_transition,
+        _ease_fn       = opts.ease_fn,
     }, { __index = SM })
     if initial and initial.enter then initial:enter() end
     return self
@@ -94,7 +95,8 @@ end
 function SM:draw()
     if self._transition then
         local t = self._transition
-        local progress = math.min(t.elapsed / t.duration, 1)
+        local raw = math.min(t.elapsed / t.duration, 1)
+        local progress = self._ease_fn and self._ease_fn(raw) or raw
         love.graphics.setCanvas(t.canvas_out)
         love.graphics.clear()
         if t.out and t.out.draw then t.out:draw() end

@@ -267,4 +267,39 @@ test("spawn() raises an error for an unregistered screen name", function()
     eq(ok, false, "an unregistered screen name must be rejected")
 end)
 
+-- ── Cycle 11: injected ease_fn is applied to progress in draw() ──────────────
+
+local function mock_draw_love()
+    love.graphics.newCanvas  = function() return {} end
+    love.graphics.setCanvas  = function() end
+    love.graphics.clear      = function() end
+end
+
+test("draw() applies opts.ease_fn to progress before calling the transition fn", function()
+    mock_draw_love()
+    local captured_progress
+    local fn = function(_, _, progress) captured_progress = progress end
+    local double = function(p) return p * 2 end
+    local sm = screen_manager.new({}, {}, { ease_fn = double })
+    sm:replace({ enter = function() end }, fn, 1.0)
+    sm:update(0.25) -- raw progress = 0.25; doubled = 0.5
+    sm:draw()
+    if math.abs(captured_progress - 0.5) > 0.0001 then
+        error("expected eased progress 0.5, got " .. tostring(captured_progress))
+    end
+end)
+
+test("draw() uses linear progress when no ease_fn is provided", function()
+    mock_draw_love()
+    local captured_progress
+    local fn = function(_, _, progress) captured_progress = progress end
+    local sm = screen_manager.new({})
+    sm:replace({ enter = function() end }, fn, 1.0)
+    sm:update(0.4)
+    sm:draw()
+    if math.abs(captured_progress - 0.4) > 0.0001 then
+        error("expected linear progress 0.4, got " .. tostring(captured_progress))
+    end
+end)
+
 T.report()

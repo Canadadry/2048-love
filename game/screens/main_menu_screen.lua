@@ -1,10 +1,11 @@
+local config       = require("config")
 local menu_screen  = require("lib.menu_screen")
 local menu         = require("menu")
 local transitions  = require("lib.transitions")
 local menu_sounds  = require("menu_sounds")
 
 local PUSH_FWD = transitions.push("left")
-local T_DUR    = 0.25
+local T_DUR    = config.TRANSITION_DURATION
 
 local M = {}
 local Screen = {}
