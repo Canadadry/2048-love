@@ -1,6 +1,7 @@
 local config      = require("config")
 local tile_draw   = require("tile_draw")
 local transitions = require("lib.transitions")
+local bg_picker   = require("lib.bg_picker")
 
 local PUSH_FWD     = transitions.push("left")
 local T_DUR        = config.TRANSITION_DURATION
@@ -28,6 +29,9 @@ function M.new(host)
     ch_in:push("assets/" .. name .. ".png")
     thread:start()
 
+    local bg_path = bg_picker.pick("assets/Bg")
+    local bg_img  = bg_path and love.graphics.newImage(bg_path)
+
     return setmetatable({
         host    = host,
         _name   = name,
@@ -36,6 +40,7 @@ function M.new(host)
         _pos    = 0,
         _dir    = 1,
         _loaded = false,
+        _bg     = bg_img,
     }, { __index = Screen })
 end
 
@@ -70,8 +75,15 @@ function Screen:draw()
     local track_x = math.floor((w - track_w) / 2)
     local track_y = math.floor(h / 2) - math.floor(track_h / 2)
 
-    love.graphics.setColor(BG)
-    love.graphics.rectangle("fill", 0, 0, w, h)
+    if self._bg then
+        local iw, ih = self._bg:getDimensions()
+        local bx, by, bs = bg_picker.fit_cover(iw, ih, w, h, config.BG_ZOOM)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.draw(self._bg, bx, by, 0, bs, bs)
+    else
+        love.graphics.setColor(BG)
+        love.graphics.rectangle("fill", 0, 0, w, h)
+    end
 
     love.graphics.setColor(TRACK)
     love.graphics.rectangle("fill", track_x, track_y, track_w, track_h, 4, 4)

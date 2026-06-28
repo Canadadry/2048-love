@@ -37,6 +37,8 @@ M.EFFECTS_ENABLED    = true
 M.TILESET            = ""
 M.TILESET_ANIM_FPS   = 12
 
+M.BG_ZOOM            = 1.05
+
 M.SOUND = {
     ENABLED    = true,
     TRANSITION = "assets/Audio/open_001.ogg",
