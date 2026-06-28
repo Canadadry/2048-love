@@ -34,6 +34,9 @@ love.graphics.newFont            = function(size)
         getWrap   = function(self, text, width) return 0, { text } end,
     }
 end
+love.graphics.newImage           = function(path)
+    return { getPixelWidth = function() return 668 end, getPixelHeight = function() return 428 end }
+end
 
 local function with_restored_config(fn)
     local saved_win_tile          = config.WIN_TILE
@@ -120,9 +123,9 @@ local function setup_main_with_quit_stub()
     love.load()
     local quit_calls = 0
     love.event = { quit = function() quit_calls = quit_calls + 1 end }
-    local spec = { bg_color = menu.BG_COLOR, item_style = "button",
-        items = { { label = "New Game" }, { label = "Options" }, { label = "Quit" } } }
-    local quit_btn = button_centers(menu.menu_tree(spec, 0, nil))[3]
+    local stub_host = { replace = function() end, quit = function() end, spawn = function() return {} end }
+    local mm_screen = require("screens.main_menu_screen").new(stub_host)
+    local quit_btn = button_centers(menu.menu_tree(mm_screen:spec(), mm_screen:cursor(), nil))[3]
     return quit_btn, function() return quit_calls end
 end
 

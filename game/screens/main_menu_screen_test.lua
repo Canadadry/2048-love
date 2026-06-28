@@ -8,6 +8,12 @@ love = {
                 getWrap   = function(self, text, width) return 0, { text } end,
             }
         end,
+        newImage      = function(path)
+            return {
+                getPixelWidth  = function(self) return 668 end,
+                getPixelHeight = function(self) return 428 end,
+            }
+        end,
         setColor  = function(...) end,
         rectangle = function(...) end,
         draw      = function(...) end,

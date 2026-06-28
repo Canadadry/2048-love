@@ -83,7 +83,9 @@ local function build_menu_tree(spec, cursor, on_tap)
     end
 
     local children = {}
-    if spec.title then
+    if spec.logo then
+        children[#children + 1] = builder.Leaf("grow grow", painter.Image { src = spec.logo })
+    elseif spec.title then
         children[#children + 1] = builder.Leaf("grow-x h-fit", painter.Text {
             text  = spec.title,
             align = "center",
@@ -111,7 +113,7 @@ local function build_menu_tree(spec, cursor, on_tap)
         string.format("w-%d h-%d center", w, h),
         painter.Rectangle { color = spec.bg_color },
         {
-            builder.Node(string.format("col gap-%d center", list_gap), nil, children),
+            builder.Node(string.format("col gap-%d grow center p-50", list_gap), nil, children),
         }
     ))
     return tree

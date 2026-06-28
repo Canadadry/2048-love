@@ -9,6 +9,12 @@ local music        = require("lib.music")
 local PUSH_FWD = transitions.push("left")
 local T_DUR    = config.TRANSITION_DURATION
 
+local _logo
+local function get_logo()
+    if not _logo then _logo = love.graphics.newImage("assets/logo.png") end
+    return _logo
+end
+
 local M = {}
 local Screen = {}
 
@@ -39,7 +45,7 @@ function Screen:keypressed(key)
 end
 
 function Screen:spec()
-    return { title = "2048", bg_color = menu.BG_COLOR, item_style = "button", items = self._mixin:items() }
+    return { logo = get_logo(), bg_color = menu.BG_COLOR, item_style = "button", items = self._mixin:items() }
 end
 
 function Screen:draw()

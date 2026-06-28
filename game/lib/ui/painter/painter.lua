@@ -107,7 +107,9 @@ local function Draw(box, painter)
         local sx = box.w / painter.width
         local sy = box.h / painter.height
         local s = math.min(sx, sy)
-        love.graphics.draw(painter.source, box.x, box.y, 0, s, s)
+        local dx = (box.w - painter.width * s) / 2
+        local dy = (box.h - painter.height * s) / 2
+        love.graphics.draw(painter.source, box.x + dx, box.y + dy, 0, s, s)
     elseif painter.kind == "9Patch" then
         love.graphics.setColor(painter.color[1] / 255, painter.color[2] / 255, painter.color[3] / 255,
             painter.color[4] / 255)
