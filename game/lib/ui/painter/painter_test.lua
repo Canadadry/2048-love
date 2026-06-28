@@ -10,9 +10,10 @@ love = {
             }
         end,
         setColor  = function(...) end,
+        setFont   = function(...) end,
         rectangle = function(...) end,
         draw      = function(...) end,
-        printf    = function(...) end,
+        print     = function(...) end,
     }
 }
 

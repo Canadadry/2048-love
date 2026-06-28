@@ -1,6 +1,27 @@
 local kind = require("lib.ui.layout.kind")
 local nine_patch = require("lib.ui.painter.nine_patch")
 local ui = require("lib.ui.layout.ui")
+local Font = require("lib.ui.painter.font")
+local utf8 = require("utf8")
+
+local LOVE_ALIGN = {
+    left   = { x = "begin",  y = "begin" },
+    center = { x = "middle", y = "begin" },
+    right  = { x = "end",    y = "begin" },
+}
+
+local function love_text_font(love_font, align, draw_fn)
+    return Font.new({
+        size    = love_font:getHeight(),
+        align   = align or { x = "begin", y = "begin" },
+        painter = {
+            measure_rune = function(self, cp, size, family)
+                return love_font:getWidth(utf8.char(cp))
+            end,
+            draw_rune = draw_fn or function() end,
+        },
+    })
+end
 
 local function Rectangle(param)
     param = param or {}
@@ -98,10 +119,15 @@ local function Draw(box, painter)
             love.graphics.rectangle("fill", box.x, box.y, box.w, box.h)
         end
         love.graphics.setFont(painter.font)
-        local _, wrapped_text = painter.font:getWrap(painter.text, box.w)
         love.graphics.setColor(painter.color[1] / 255, painter.color[2] / 255, painter.color[3] / 255,
             painter.color[4] / 255)
-        love.graphics.printf(wrapped_text, box.x, box.y, box.w, painter.align)
+        love_text_font(
+            painter.font,
+            LOVE_ALIGN[painter.align] or LOVE_ALIGN.left,
+            function(self, x, y, cp, size, family)
+                love.graphics.print(utf8.char(cp), x, y)
+            end
+        ):draw(painter.text, { x = box.x, y = box.y, width = box.w, height = box.h })
     elseif painter.kind == "Object" then
         painter.draw(painter.data, box.x, box.y, box.w, box.h)
     elseif painter.kind == "Interactive" then
@@ -121,14 +147,6 @@ local function DrawTree(tree)
     end
 end
 
-local function count_lines(text)
-    local count = 0
-    for _ in string.gmatch(text, "[^\n]*") do
-        count = count + 1
-    end
-    return count
-end
-
 local function Measure(userdata, painter)
     if painter == nil then
         return { x = 0, y = 0 }
@@ -140,9 +158,7 @@ local function Measure(userdata, painter)
     elseif painter.kind == "Image" then
         return { x = painter.width, y = painter.height }
     elseif painter.kind == "Text" then
-        local w = painter.font:getWidth(painter.text)
-        local h = painter.font:getHeight() * count_lines(painter.text)
-        return { x = w, y = h }
+        return love_text_font(painter.font):measureText(painter.text, 0)
     elseif painter.kind == "Object" then
         return painter.measure(painter.data)
     elseif painter.kind == "Interactive" then
@@ -174,8 +190,7 @@ local function Wrap(userdata, painter, width)
         local s = width / painter.width
         return painter.height * s
     elseif painter.kind == "Text" then
-        local _, wrapped_text = painter.font:getWrap(painter.text, width)
-        return painter.font:getHeight() * #wrapped_text
+        return love_text_font(painter.font):measureText(painter.text, width).y
     elseif painter.kind == "Object" then
         return painter.measure(painter.data, width)
     elseif painter.kind == "Interactive" then

@@ -11,7 +11,7 @@ love = {
         setColor  = function(...) end,
         rectangle = function(...) end,
         draw      = function(...) end,
-        printf    = function(...) end,
+        print     = function(...) end,
         print     = function(...) end,
         setFont   = function(...) end,
     },
